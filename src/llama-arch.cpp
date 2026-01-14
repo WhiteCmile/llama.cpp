@@ -33,6 +33,7 @@ static const std::map<llm_arch, const char *> LLM_ARCH_NAMES = {
     { LLM_ARCH_QWEN2MOE,         "qwen2moe"         },
     { LLM_ARCH_QWEN2VL,          "qwen2vl"          },
     { LLM_ARCH_QWEN3,            "qwen3"            },
+    { LLM_ARCH_QWEN3EAGLE,       "qwen3eagle"       },
     { LLM_ARCH_QWEN3MOE,         "qwen3moe"         },
     { LLM_ARCH_QWEN3NEXT,        "qwen3next"        },
     { LLM_ARCH_QWEN3VL,          "qwen3vl"          },
@@ -496,6 +497,18 @@ static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
     { LLM_TENSOR_VISEXP_FFN_GATE,                        "blk.%d.vis_gate" },
     { LLM_TENSOR_VISEXP_FFN_DOWN,                        "blk.%d.vis_down" },
     { LLM_TENSOR_VISEXP_FFN_UP,                          "blk.%d.vis_up" },
+    { LLM_TENSOR_EAGLE_FC,                               "eagle.fc" },
+    { LLM_TENSOR_EAGLE_OUTPUT_NORM,                      "eagle.output_norm" },
+    { LLM_TENSOR_EAGLE_HIDDEN_NORM,                      "eagle.hidden_norm" },
+    { LLM_TENSOR_EAGLE_INPUT_NORM,                       "eagle.input_norm" },
+    { LLM_TENSOR_EAGLE_DOWN_PROJ,                        "eagle.down_proj" },
+    { LLM_TENSOR_EAGLE_GATE_PROJ,                        "eagle.gate_proj" },
+    { LLM_TENSOR_EAGLE_UP_PROJ,                          "eagle.up_proj" },
+    { LLM_TENSOR_EAGLE_FFN_NORM,                         "eagle.ffn_norm" },
+    { LLM_TENSOR_EAGLE_K_PROJ,                           "eagle.k_proj" },
+    { LLM_TENSOR_EAGLE_O_PROJ,                           "eagle.o_proj" },
+    { LLM_TENSOR_EAGLE_Q_PORJ,                           "eagle.q_proj" },
+    { LLM_TENSOR_EAGLE_V_PROJ,                           "eagle.v_proj" },
 };
 
 static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
@@ -914,6 +927,37 @@ static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
                 LLM_TENSOR_FFN_GATE,
                 LLM_TENSOR_FFN_DOWN,
                 LLM_TENSOR_FFN_UP,
+            };
+        case LLM_ARCH_QWEN3EAGLE:
+            return {
+                LLM_TENSOR_TOKEN_EMBD,
+                LLM_TENSOR_OUTPUT_NORM,
+                LLM_TENSOR_OUTPUT,
+                LLM_TENSOR_CLS_OUT,
+                LLM_TENSOR_ATTN_NORM,
+                LLM_TENSOR_ATTN_Q,
+                LLM_TENSOR_ATTN_Q_NORM,
+                LLM_TENSOR_ATTN_K,
+                LLM_TENSOR_ATTN_K_NORM,
+                LLM_TENSOR_ATTN_V,
+                LLM_TENSOR_ATTN_OUT,
+                LLM_TENSOR_FFN_NORM,
+                LLM_TENSOR_FFN_GATE,
+                LLM_TENSOR_FFN_DOWN,
+                LLM_TENSOR_FFN_UP,
+                // eagle
+                LLM_TENSOR_EAGLE_FC,
+                LLM_TENSOR_EAGLE_OUTPUT_NORM,
+                LLM_TENSOR_EAGLE_HIDDEN_NORM,
+                LLM_TENSOR_EAGLE_INPUT_NORM,
+                LLM_TENSOR_EAGLE_DOWN_PROJ,
+                LLM_TENSOR_EAGLE_GATE_PROJ,
+                LLM_TENSOR_EAGLE_UP_PROJ,
+                LLM_TENSOR_EAGLE_FFN_NORM,
+                LLM_TENSOR_EAGLE_K_PROJ,
+                LLM_TENSOR_EAGLE_O_PROJ,
+                LLM_TENSOR_EAGLE_Q_PORJ,
+                LLM_TENSOR_EAGLE_V_PROJ,
             };
         case LLM_ARCH_QWEN3MOE:
         case LLM_ARCH_QWEN3VLMOE:
@@ -2454,6 +2498,19 @@ static const std::map<llm_tensor, llm_tensor_info> LLM_TENSOR_INFOS = {
     {LLM_TENSOR_NEXTN_HNORM,                {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL}},
     {LLM_TENSOR_NEXTN_SHARED_HEAD_HEAD,     {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL_MAT}},
     {LLM_TENSOR_NEXTN_SHARED_HEAD_NORM,     {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL}},
+    // eagle
+    {LLM_TENSOR_EAGLE_FC,                   {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_OUTPUT_NORM,          {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_EAGLE_HIDDEN_NORM,          {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_EAGLE_INPUT_NORM,           {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_EAGLE_DOWN_PROJ,            {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_GATE_PROJ,            {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_UP_PROJ,              {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_FFN_NORM,             {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_EAGLE_K_PROJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_O_PROJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_Q_PORJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_EAGLE_V_PROJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
 };
 
 LLM_KV::LLM_KV(llm_arch arch, const char * suffix) : arch(arch), suffix(suffix) {}
