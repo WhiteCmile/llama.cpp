@@ -1045,9 +1045,15 @@ static const char * GGML_OP_NAME[GGML_OP_COUNT] = {
     "OPT_STEP_SGD",
 
     "GLU",
+
+    // new operators
+    "LAYER_MASKED_BYPASSING",
+    "LAYER_MASKED_MUL_MAT",
+    "LAYER_MASKED_FLASH_ATTN_EXT"
 };
 
-static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
+// static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
+static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
 
 static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "none",
@@ -1156,7 +1162,8 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "glu(x)",
 };
 
-static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
+// static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
+static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
 
 static_assert(GGML_OP_POOL_COUNT == 2, "GGML_OP_POOL_COUNT != 2");
 
@@ -1717,6 +1724,7 @@ static struct ggml_tensor * ggml_new_tensor_impl(
         /*.data         =*/ obj_alloc_size > 0 ? (void *)(result + 1) : data,
         /*.name         =*/ { 0 },
         /*.extra        =*/ NULL,
+        /*.layer_id     =*/ 0,
         /*.padding      =*/ { 0 },
     };
 
@@ -3163,6 +3171,26 @@ struct ggml_tensor * ggml_l2_norm_inplace(
     return ggml_l2_norm_impl(ctx, a, eps, true);
 }
 
+// ggml_layer_masked_bypassing
+// For layer skipping
+struct ggml_tensor * ggml_layer_masked_bypassing(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * cur,
+        struct ggml_tensor  * input,
+        struct ggml_tensor  * layer_mask,
+        int                   il) {
+    // struct ggml_tensor * result = ggml_view_tensor(ctx, cur);
+    struct ggml_tensor * result = ggml_dup_tensor(ctx, cur);
+    
+    result->op = GGML_OP_LAYER_MASKED_BYPASSING;
+    result->src[0] = cur;
+    result->src[1] = input;
+    result->src[2] = layer_mask;
+    result->layer_id = il;
+
+    return result;
+}
+
 // ggml_mul_mat
 
 static inline bool ggml_can_mul_mat(const struct ggml_tensor * t0, const struct ggml_tensor * t1) {
@@ -3190,10 +3218,34 @@ struct ggml_tensor * ggml_mul_mat(
     return result;
 }
 
+struct ggml_tensor * ggml_layer_masked_mul_mat(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        struct ggml_tensor  * b,
+        struct ggml_tensor  * layer_mask,
+                       int    il ) {
+    GGML_ASSERT(ggml_can_mul_mat(a, b));
+    GGML_ASSERT(!ggml_is_transposed(a));
+
+    const int64_t ne[4] = { a->ne[1], b->ne[1], b->ne[2], b->ne[3] };
+    struct ggml_tensor * result = ggml_new_tensor(ctx, GGML_TYPE_F32, 4, ne);
+
+    // We add the layer related information into the result tensor
+    result->op     = GGML_OP_LAYER_MASKED_MUL_MAT;
+    result->src[0] = a;
+    result->src[1] = b;
+    // In operator fusion, the function will use src[2] for ids
+    // We use src[3] here for the mask
+    result->src[3] = layer_mask;
+    result->layer_id = il;
+
+    return result;
+}
+
 void ggml_mul_mat_set_prec(
         struct ggml_tensor * a,
         enum ggml_prec       prec) {
-    GGML_ASSERT(a->op == GGML_OP_MUL_MAT);
+    GGML_ASSERT(a->op == GGML_OP_MUL_MAT || a ->op == GGML_OP_LAYER_MASKED_MUL_MAT);
 
     const int32_t prec_i32 = (int32_t) prec;
 
@@ -5288,6 +5340,54 @@ struct ggml_tensor * ggml_flash_attn_ext(
     return result;
 }
 
+struct ggml_tensor * ggml_layer_masked_flash_attn_ext(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * q,
+        struct ggml_tensor  * k,
+        struct ggml_tensor  * v,
+        struct ggml_tensor  * mask,
+        struct ggml_tensor  * layer_mask,
+        int                   layer_id,
+        float                 scale,
+        float                 max_bias,
+        float                 logit_softcap) {
+    GGML_ASSERT(ggml_can_mul_mat(k, q));
+    // TODO: check if vT can be multiplied by (k*qT)
+
+    GGML_ASSERT(q->ne[3] == k->ne[3]);
+    GGML_ASSERT(q->ne[3] == v->ne[3]);
+
+    if (mask) {
+        GGML_ASSERT(ggml_is_contiguous(mask));
+        //GGML_ASSERT(ggml_can_repeat_rows(mask, qk));
+
+        GGML_ASSERT(q->ne[2] % mask->ne[2] == 0);
+        GGML_ASSERT(q->ne[3] % mask->ne[3] == 0);
+    }
+
+    if (max_bias > 0.0f) {
+        GGML_ASSERT(mask);
+    }
+
+    // permute(0, 2, 1, 3)
+    int64_t ne[4] = { v->ne[0], q->ne[2], q->ne[1], q->ne[3] };
+    struct ggml_tensor * result = ggml_new_tensor(ctx, GGML_TYPE_F32, 4, ne);
+
+    float params[] = { scale, max_bias, logit_softcap };
+    ggml_set_op_params(result, params, sizeof(params));
+
+    // result->op     = GGML_OP_FLASH_ATTN_EXT;
+    result->op     = GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT;
+    result->src[0] = q;
+    result->src[1] = k;
+    result->src[2] = v;
+    result->src[3] = mask;
+    result->src[4] = layer_mask;
+    result->layer_id = layer_id;
+
+    return result;
+}
+
 void ggml_flash_attn_ext_set_prec(
         struct ggml_tensor * a,
         enum ggml_prec       prec) {
@@ -6782,6 +6882,12 @@ static void ggml_build_forward_impl(struct ggml_cgraph * cgraph, struct ggml_ten
     const int n0 = cgraph->n_nodes;
 
     ggml_visit_parents(cgraph, tensor);
+
+    // for (int i = n0; i < cgraph->n_nodes; i++) {
+    //     if (strstr(cgraph->nodes[i]->name, "l_out_masked") != NULL) {
+    //         GGML_LOG_INFO("Node[%d] is %s\n", i, cgraph->nodes[i]->name);
+    //     }
+    // }
 
     const int n_new = cgraph->n_nodes - n0;
     GGML_PRINT_DEBUG("%s: visited %d new nodes\n", __func__, n_new);
