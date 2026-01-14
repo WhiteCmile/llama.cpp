@@ -371,6 +371,7 @@ class MODEL_ARCH(IntEnum):
     QWEN2MOE         = auto()
     QWEN2VL          = auto()
     QWEN3            = auto()
+    QWEN3EAGLE       = auto()
     QWEN3MOE         = auto()
     QWEN3NEXT        = auto()
     QWEN3VL          = auto()
@@ -739,6 +740,20 @@ class MODEL_TENSOR(IntEnum):
     A_ENC_CONV_NORM        = auto() # SSM conv
     A_ENC_CONV_PW1         = auto()
     A_ENC_CONV_PW2         = auto()
+    # eagle
+    INPUT_FC_EAGLE         = auto()
+    INPUT_NORM_EAGLE       = auto()
+    HIDDEN_NORM_EAGLE      = auto()
+    ATTN_Q_EAGLE           = auto()
+    ATTN_K_EAGLE           = auto()
+    ATTN_V_EAGLE           = auto()
+    ATTN_OUT_EAGLE         = auto()
+    FFN_NORM_EAGLE         = auto()
+    FFN_GATE_EAGLE         = auto()
+    FFN_DOWN_EAGLE         = auto()
+    FFN_UP_EAGLE           = auto()
+    OUTPUT_NORM_EAGLE      = auto()
+    OUTPUT_EAGLE           = auto()
 
 
 MODEL_ARCH_NAMES: dict[MODEL_ARCH, str] = {
@@ -769,6 +784,7 @@ MODEL_ARCH_NAMES: dict[MODEL_ARCH, str] = {
     MODEL_ARCH.QWEN2MOE:         "qwen2moe",
     MODEL_ARCH.QWEN2VL:          "qwen2vl",
     MODEL_ARCH.QWEN3:            "qwen3",
+    MODEL_ARCH.QWEN3EAGLE:       "qwen3eagle",
     MODEL_ARCH.QWEN3MOE:         "qwen3moe",
     MODEL_ARCH.QWEN3NEXT:        "qwen3next",
     MODEL_ARCH.QWEN3VL:          "qwen3vl",
@@ -1137,6 +1153,19 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.NEXTN_HNORM:               "blk.{bid}.nextn.hnorm",
     MODEL_TENSOR.NEXTN_SHARED_HEAD_HEAD:    "blk.{bid}.nextn.shared_head_head",
     MODEL_TENSOR.NEXTN_SHARED_HEAD_NORM:    "blk.{bid}.nextn.shared_head_norm",
+    # eagle
+    MODEL_TENSOR.INPUT_FC_EAGLE:            "eagle.fc",
+    MODEL_TENSOR.INPUT_NORM_EAGLE:          "eagle.input_norm",
+    MODEL_TENSOR.HIDDEN_NORM_EAGLE:         "eagle.hidden_norm",
+    MODEL_TENSOR.ATTN_Q_EAGLE:              "eagle.q_proj",
+    MODEL_TENSOR.ATTN_K_EAGLE:              "eagle.k_proj",
+    MODEL_TENSOR.ATTN_V_EAGLE:              "eagle.v_proj",
+    MODEL_TENSOR.ATTN_OUT_EAGLE:            "eagle.o_proj",
+    MODEL_TENSOR.FFN_NORM_EAGLE:            "eagle.ffn_norm",
+    MODEL_TENSOR.FFN_GATE_EAGLE:            "eagle.gate_proj",
+    MODEL_TENSOR.FFN_DOWN_EAGLE:            "eagle.down_proj",
+    MODEL_TENSOR.FFN_UP_EAGLE:              "eagle.up_proj",
+    MODEL_TENSOR.OUTPUT_NORM_EAGLE:         "eagle.output_norm",
 }
 
 MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
@@ -1644,6 +1673,36 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.FFN_GATE,
         MODEL_TENSOR.FFN_DOWN,
         MODEL_TENSOR.FFN_UP,
+    ],
+    MODEL_ARCH.QWEN3EAGLE: [
+        MODEL_TENSOR.TOKEN_EMBD,
+        MODEL_TENSOR.OUTPUT_NORM,
+        MODEL_TENSOR.OUTPUT,
+        MODEL_TENSOR.ROPE_FREQS,
+        MODEL_TENSOR.ATTN_NORM,
+        MODEL_TENSOR.ATTN_Q,
+        MODEL_TENSOR.ATTN_Q_NORM,
+        MODEL_TENSOR.ATTN_K,
+        MODEL_TENSOR.ATTN_K_NORM,
+        MODEL_TENSOR.ATTN_V,
+        MODEL_TENSOR.ATTN_OUT,
+        MODEL_TENSOR.FFN_NORM,
+        MODEL_TENSOR.FFN_GATE,
+        MODEL_TENSOR.FFN_DOWN,
+        MODEL_TENSOR.FFN_UP,
+        MODEL_TENSOR.INPUT_FC_EAGLE,
+        MODEL_TENSOR.INPUT_NORM_EAGLE,
+        MODEL_TENSOR.HIDDEN_NORM_EAGLE,
+        MODEL_TENSOR.ATTN_Q_EAGLE,
+        MODEL_TENSOR.ATTN_K_EAGLE,
+        MODEL_TENSOR.ATTN_V_EAGLE,
+        MODEL_TENSOR.ATTN_OUT_EAGLE,
+        MODEL_TENSOR.FFN_NORM_EAGLE,
+        MODEL_TENSOR.FFN_GATE_EAGLE,
+        MODEL_TENSOR.FFN_DOWN_EAGLE,
+        MODEL_TENSOR.FFN_UP_EAGLE,
+        MODEL_TENSOR.OUTPUT_NORM_EAGLE,
+        MODEL_TENSOR.OUTPUT_EAGLE,
     ],
     MODEL_ARCH.QWEN3MOE: [
         MODEL_TENSOR.TOKEN_EMBD,

@@ -123,6 +123,44 @@ class TensorNameMap:
         MODEL_TENSOR.CONV1D: (
             "backbone.embed", # roberta
         ),
+        
+        # eagle
+        MODEL_TENSOR.INPUT_FC_EAGLE: (
+            "eagle.fc",
+        ),
+        MODEL_TENSOR.INPUT_NORM_EAGLE: (
+            "midlayer.input_layernorm",
+        ),
+        MODEL_TENSOR.HIDDEN_NORM_EAGLE: (
+            "midlayer.hidden_norm",
+        ),
+        MODEL_TENSOR.ATTN_Q_EAGLE: (
+            "midlayer.self_attn.q_proj",
+        ),
+        MODEL_TENSOR.ATTN_K_EAGLE: (
+            "midlayer.self_attn.k_proj",
+        ),
+        MODEL_TENSOR.ATTN_V_EAGLE: (
+            "midlayer.self_attn.v_proj",
+        ),
+        MODEL_TENSOR.ATTN_OUT_EAGLE: (
+            "midlayer.self_attn.o_proj",
+        ),
+        MODEL_TENSOR.FFN_NORM_EAGLE: (
+            "midlayer.post_attention_layernorm",
+        ),
+        MODEL_TENSOR.FFN_GATE_EAGLE: (
+            "midlayer.mlp.gate_proj",
+        ),
+        MODEL_TENSOR.FFN_DOWN_EAGLE: (
+            "midlayer.mlp.down_proj",
+        ),
+        MODEL_TENSOR.FFN_UP_EAGLE: (
+            "midlayer.mlp.up_proj",
+        ),
+        MODEL_TENSOR.OUTPUT_NORM_EAGLE: (
+            "eagle.norm",
+        ),
     }
 
     block_mappings_cfg: dict[MODEL_TENSOR, tuple[str, ...]] = {
