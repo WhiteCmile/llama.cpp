@@ -459,6 +459,20 @@ struct llama_model {
     struct ggml_tensor * per_layer_model_proj = nullptr;
     struct ggml_tensor * per_layer_proj_norm  = nullptr;
 
+    // eagle
+    struct ggml_tensor * eagle_input_norm  = nullptr;
+    struct ggml_tensor * eagle_hidden_norm = nullptr;
+    struct ggml_tensor * eagle_fc          = nullptr;
+    struct ggml_tensor * eagle_q_proj      = nullptr;
+    struct ggml_tensor * eagle_k_proj      = nullptr;
+    struct ggml_tensor * eagle_v_proj      = nullptr;
+    struct ggml_tensor * eagle_o_proj      = nullptr;
+    struct ggml_tensor * eagle_up_proj     = nullptr;
+    struct ggml_tensor * eagle_gate_proj   = nullptr;
+    struct ggml_tensor * eagle_down_proj   = nullptr;
+    struct ggml_tensor * eagle_ffn_norm    = nullptr;
+    struct ggml_tensor * eagle_output_norm = nullptr;
+
     std::vector<llama_layer> layers;
 
     //Dense linear projections for SentenceTransformers models like embeddinggemma
