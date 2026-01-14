@@ -142,7 +142,7 @@ a.out.*
 experiments/
 
 # binaries
-bin/
+bin
 
 # others
 .clangd
