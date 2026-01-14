@@ -1,3 +1,4 @@
+#include "llama-impl.h"
 #include "models.h"
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_params & params) : llm_graph_context(params) {
@@ -8,6 +9,20 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
 
     ggml_tensor * cur;
     ggml_tensor * inpL;
+
+    bool is_decode = n_tokens == 1;
+    // bool is_decode = false;
+    ggml_tensor * layer_mask = NULL;
+
+    // // We set a layer mask for future use
+    // // ONLY FOR DECODE!!!
+    if (is_decode) {
+        auto n_layer_mask_elem = n_layer;
+        layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer_mask_elem);
+        ggml_set_input(layer_mask);
+        ggml_set_name(layer_mask, "layer_mask");
+        cb(layer_mask, "layer_mask", -1);
+    }
 
     inpL = build_inp_embd(model.tok_embd);
 
@@ -20,6 +35,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
 
     for (int il = 0; il < n_layer; ++il) {
         ggml_tensor * inpSA = inpL;
+        ggml_tensor * layer_input = inpL;
 
         // norm
         cur = build_norm(inpL,
@@ -30,6 +46,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
         // self-attention
         {
             // compute Q and K and RoPE them
+            // For convenience, we do not masked the Q generation phase
             ggml_tensor * Qcur = build_lora_mm(model.layers[il].wq, cur);
             cb(Qcur, "Qcur", il);
 
@@ -65,9 +82,22 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
             cb(Kcur, "Kcur", il);
             cb(Vcur, "Vcur", il);
 
-            cur = build_attn(inp_attn,
-                    model.layers[il].wo, model.layers[il].bo,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il);
+            if (is_decode) {
+                // We mask the unnecessary attention layer
+                cur = build_layer_masked_attn(inp_attn, 
+                        model.layers[il].wo, model.layers[il].bo,
+                        Qcur, Kcur, Vcur, 
+                        nullptr, nullptr, nullptr, 
+                        layer_mask,
+                        1.0f/sqrtf(float(n_embd_head)), il);
+            }
+            else {
+                // We build the attention layer as usual
+                cur = build_attn(inp_attn,
+                        model.layers[il].wo, model.layers[il].bo,
+                        Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il);
+            }
+
         }
         if (il == n_layer - 1 && inp_out_ids) {
             cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
@@ -82,18 +112,40 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
                 LLM_NORM_RMS, il);
         cb(cur, "ffn_norm", il);
 
-        cur = build_ffn(cur,
-                model.layers[il].ffn_up,   NULL, NULL,
-                model.layers[il].ffn_gate, NULL, NULL,
-                model.layers[il].ffn_down, NULL, NULL,
-                NULL,
-                LLM_FFN_SILU, LLM_FFN_PAR, il);
+        if (is_decode) {
+            // We mask the unnecessary FFN layer
+            cur = build_layer_masked_ffn(cur, 
+                    model.layers[il].ffn_up,   NULL, NULL,
+                    model.layers[il].ffn_gate, NULL, NULL,
+                    model.layers[il].ffn_down, NULL, NULL,
+                    NULL,
+                    layer_mask,
+                    LLM_FFN_SILU, LLM_FFN_PAR, il);
+        }
+        else {
+            // We build the FFN layer as usual
+            cur = build_ffn(cur,
+                    model.layers[il].ffn_up,   NULL, NULL,
+                    model.layers[il].ffn_gate, NULL, NULL,
+                    model.layers[il].ffn_down, NULL, NULL,
+                    NULL,
+                    LLM_FFN_SILU, LLM_FFN_PAR, il);
+        }
         cb(cur, "ffn_out", il);
 
         cur = ggml_add(ctx0, cur, ffn_inp);
 
         cur = build_cvec(cur, il);
         cb(cur, "l_out", il);
+
+        if (is_decode) {
+            cur = build_layer_masked_bypassing(
+                cur, layer_input, 
+                layer_mask, il
+            );
+            cb(cur, "l_out_masked", il);
+            ggml_build_forward_expand(gf, cur);
+        }
 
         // input for next layer
         inpL = cur;

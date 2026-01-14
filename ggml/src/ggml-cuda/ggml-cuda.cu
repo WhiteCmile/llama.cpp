@@ -60,6 +60,7 @@
 #include "ggml-cuda/tri.cuh"
 #include "ggml-cuda/cumsum.cuh"
 #include "ggml-cuda/fill.cuh"
+#include "ggml-cuda/bypassing.cuh"
 #include "ggml.h"
 
 #include <algorithm>
@@ -2239,10 +2240,100 @@ static void ggml_cuda_mul_mat(ggml_backend_cuda_context & ctx, const ggml_tensor
     bool use_batched_cublas_bf16 = src0->type == GGML_TYPE_BF16 && bf16_mma_hardware_available(cc);
     bool use_batched_cublas_f32  = src0->type == GGML_TYPE_F32;
 
+    // GGML_LOG_INFO("ggml_cuda_mul_mat: src0 = %s, src1 = %s, dst = %s\n", src0->name, src1->name, dst->name);
     if (!split && use_mul_mat_vec_f) {
         // the custom F16 vector kernel can be used over batched cuBLAS GEMM
         // but this is only faster for GPUs without tensor cores or with a thin src0 matrix (particularly KQV in attention)
         ggml_cuda_mul_mat_vec_f(ctx, src0, src1, nullptr, dst);
+    } else if (!split && use_mul_mat_f) {
+        ggml_cuda_mul_mat_f(ctx, src0, src1, nullptr, dst);
+    } else if (!split && use_mul_mat_vec_q) {
+        ggml_cuda_mul_mat_vec_q(ctx, src0, src1, nullptr, dst);
+    } else if (!split && use_mul_mat_q) {
+        ggml_cuda_mul_mat_q(ctx, src0, src1, nullptr, dst);
+    } else if (!split && (use_batched_cublas_f16 || use_batched_cublas_bf16 || use_batched_cublas_f32)
+        && !ggml_is_transposed(src0) && !ggml_is_transposed(src1) && src1->ne[2]*src1->ne[3] > 1) {
+        // general KQ + KQV multi-batch without FlashAttention
+        ggml_cuda_mul_mat_batched_cublas(ctx, src0, src1, dst);
+    } else if (use_mul_mat_vec_f) {
+        ggml_cuda_op_mul_mat(ctx, src0, src1, dst, ggml_cuda_op_mul_mat_vec_f, nullptr);
+    } else if (use_mul_mat_vec_q) {
+        ggml_cuda_op_mul_mat(ctx, src0, src1, dst, ggml_cuda_op_mul_mat_vec_q, quantize_row_q8_1_cuda);
+    } else if (use_mul_mat_q) {
+        ggml_cuda_op_mul_mat(ctx, src0, src1, dst, ggml_cuda_op_mul_mat_q, quantize_mmq_q8_1_cuda);
+    } else {
+        ggml_cuda_op_mul_mat(ctx, src0, src1, dst, ggml_cuda_op_mul_mat_cublas, nullptr);
+    }
+}
+
+static void ggml_cuda_layer_masked_mul_mat(ggml_backend_cuda_context & ctx, const ggml_tensor * src0, const ggml_tensor * src1, ggml_tensor * dst) {
+    const bool split = ggml_backend_buft_is_cuda_split(src0->buffer->buft);
+
+    // If src0 is a temporary compute buffer it may have some padding that needs to be cleared for mul_mat_vec_q or mul_mat_q.
+    // But if src0 is also a view of another tensor then this cannot be done safely because it may overwrite valid tensor data.
+    // Therefore, in such cases use cuBLAS.
+    const bool bad_padding_clear = ggml_backend_buffer_get_usage(src0->buffer) == GGML_BACKEND_BUFFER_USAGE_COMPUTE
+        && ggml_nbytes(src0) != ggml_backend_buffer_get_alloc_size(src0->buffer, src0) && src0->view_src;
+
+    bool use_mul_mat_vec_f = (src0->type == GGML_TYPE_F32 || src0->type == GGML_TYPE_F16 || src0->type == GGML_TYPE_BF16)
+        && src1->type == GGML_TYPE_F32 && dst->type == GGML_TYPE_F32;
+    bool use_mul_mat_f     = !ggml_is_quantized(src0->type)
+        && src1->type == GGML_TYPE_F32 && dst->type == GGML_TYPE_F32;
+    bool use_mul_mat_vec_q = ggml_is_quantized(src0->type) && !bad_padding_clear
+        && src1->type == GGML_TYPE_F32 && dst->type == GGML_TYPE_F32
+        && src1->ne[1] <= MMVQ_MAX_BATCH_SIZE;
+    bool use_mul_mat_q     = ggml_is_quantized(src0->type) && !bad_padding_clear
+        && src1->type == GGML_TYPE_F32 && dst->type == GGML_TYPE_F32;
+
+    bool any_gpus_with_slow_fp16 = false;
+
+    if (split) {
+        ggml_backend_cuda_split_buffer_type_context * buft_ctx = (ggml_backend_cuda_split_buffer_type_context *) src0->buffer->buft->context;
+        auto & tensor_split = buft_ctx->tensor_split;
+        for (int id = 0; id < ggml_backend_cuda_get_device_count(); ++id) {
+            // skip devices that are not going to do any work:
+            if (tensor_split[id] >= (id + 1 < ggml_backend_cuda_get_device_count() ? tensor_split[id + 1] : 1.0f)) {
+                continue;
+            }
+
+            const int cc            = ggml_cuda_info().devices[id].cc;
+            const int warp_size     = ggml_cuda_info().devices[id].warp_size;
+            use_mul_mat_q           = use_mul_mat_q             && ggml_cuda_should_use_mmq(src0->type, cc, src1->ne[1], /*n_experts=*/0);
+            use_mul_mat_f           = use_mul_mat_f             && ggml_cuda_should_use_mmf(src0->type, cc, warp_size, src0->ne, src0->nb, src1->ne[1], /*mul_mat_id=*/false);
+            use_mul_mat_vec_f       = use_mul_mat_vec_f         && ggml_cuda_should_use_mmvf(src0->type, cc, src0->ne, src0->nb, src1->ne[1]);
+            any_gpus_with_slow_fp16 = any_gpus_with_slow_fp16   || !fast_fp16_hardware_available(cc);
+        }
+    } else {
+        const int cc            = ggml_cuda_info().devices[ctx.device].cc;
+        const int warp_size     = ggml_cuda_info().devices[ctx.device].warp_size;
+        use_mul_mat_q           = use_mul_mat_q             && ggml_cuda_should_use_mmq(src0->type, cc, src1->ne[1], /*n_experts=*/0);
+        use_mul_mat_f           = use_mul_mat_f             && ggml_cuda_should_use_mmf(src0->type, cc, warp_size, src0->ne, src0->nb, src1->ne[1], /*mul_mat_id=*/false);
+        use_mul_mat_vec_f       = use_mul_mat_vec_f         && ggml_cuda_should_use_mmvf(src0->type, cc, src0->ne, src0->nb, src1->ne[1]);
+        any_gpus_with_slow_fp16 = any_gpus_with_slow_fp16   || !fast_fp16_hardware_available(cc);
+    }
+
+    // debug helpers
+    //printf("src0: %8d %8d %8d %8d\n", src0->ne[0], src0->ne[1], src0->ne[2], src0->ne[3]);
+    //printf("      %8d %8d %8d %8d\n", src0->nb[0], src0->nb[1], src0->nb[2], src0->nb[3]);
+    //printf("src1: %8d %8d %8d %8d\n", src1->ne[0], src1->ne[1], src1->ne[2], src1->ne[3]);
+    //printf("      %8d %8d %8d %8d\n", src1->nb[0], src1->nb[1], src1->nb[2], src1->nb[3]);
+    //printf("src0 is contiguous %d, transposed %d, type = %s, name = %s\n", ggml_is_contiguous(src0), ggml_is_transposed(src0), ggml_type_name(src0->type), src0->name);
+    //printf("src1 is contiguous %d, transposed %d, type = %s, name = %s\n", ggml_is_contiguous(src1), ggml_is_transposed(src1), ggml_type_name(src1->type), src1->name);
+
+    //TODO update for generic tensor parallelism
+    const int cc                 = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
+    bool use_batched_cublas_f16  = src0->type == GGML_TYPE_F16 && (src1->type == GGML_TYPE_F16 || !any_gpus_with_slow_fp16);
+    bool use_batched_cublas_bf16 = src0->type == GGML_TYPE_BF16 && bf16_mma_hardware_available(cc);
+    bool use_batched_cublas_f32  = src0->type == GGML_TYPE_F32;
+
+    // For decoding with unquantized LLMs, it always goes into this one
+    if (!split && use_mul_mat_vec_f) {
+        // the custom F16 vector kernel can be used over batched cuBLAS GEMM
+        // but this is only faster for GPUs without tensor cores or with a thin src0 matrix (particularly KQV in attention)
+        // ggml_cuda_mul_mat_vec_f(ctx, src0, src1, nullptr, dst);
+        ggml_cuda_layer_masked_mul_mat_vec_f(
+            ctx, src0, src1, nullptr, dst,
+            dst->src[3], dst->layer_id);
     } else if (!split && use_mul_mat_f) {
         ggml_cuda_mul_mat_f(ctx, src0, src1, nullptr, dst);
     } else if (!split && use_mul_mat_vec_q) {
@@ -2609,6 +2700,9 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
         case GGML_OP_MUL_MAT:
             ggml_cuda_mul_mat(ctx, dst->src[0], dst->src[1], dst);
             break;
+        case GGML_OP_LAYER_MASKED_MUL_MAT:
+            ggml_cuda_layer_masked_mul_mat(ctx, dst->src[0], dst->src[1], dst);
+            break;
         case GGML_OP_MUL_MAT_ID:
             ggml_cuda_mul_mat_id(ctx, dst);
             break;
@@ -2711,6 +2805,9 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
         case GGML_OP_FLASH_ATTN_EXT:
             ggml_cuda_flash_attn_ext(ctx, dst);
             break;
+        // case GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT:
+        //     ggml_cuda_layer_masked_flash_attn_ext(ctx, dst);
+        //     break;
         case GGML_OP_CROSS_ENTROPY_LOSS:
             ggml_cuda_cross_entropy_loss(ctx, dst);
             break;
@@ -2740,6 +2837,9 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
             break;
         case GGML_OP_FILL:
             ggml_cuda_op_fill(ctx, dst);
+            break;
+        case GGML_OP_LAYER_MASKED_BYPASSING:
+            ggml_cuda_op_layer_masked_bypassing(ctx, dst);
             break;
         default:
             return false;
@@ -3266,6 +3366,13 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
         }
     };
 
+    // if (!use_cuda_graph || cuda_graph_update_required) {
+    //     GGML_LOG_INFO("CUDA GRAPH: CAPTURING...\n");
+    // }
+    // else {
+    //     GGML_LOG_INFO("CUDA GRAPH: REUSING  ...\n");
+    // }
+
     while (!graph_evaluated_or_captured) {
         // Only perform the graph execution if CUDA graphs are not enabled, or we are capturing the graph.
         // With the use of CUDA graphs, the execution will be performed by the graph launch.
@@ -3456,8 +3563,10 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                     bool fused_mul_mat_vec = false;
                     int fused_node_count = 0;
 
-                    for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
-                        const ggml_op bias_op = op == GGML_OP_MUL_MAT ? GGML_OP_ADD : GGML_OP_ADD_ID;
+                    // for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
+                    for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_LAYER_MASKED_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
+                        // const ggml_op bias_op = op == GGML_OP_MUL_MAT ? GGML_OP_ADD : GGML_OP_ADD_ID;
+                        const ggml_op bias_op = op == GGML_OP_MUL_MAT_ID ? GGML_OP_ADD_ID : GGML_OP_ADD;
 
                         if (ggml_cuda_can_fuse(cgraph, i, { op, bias_op, op, bias_op, GGML_OP_GLU }, {})) {
                             ggml_tensor * glu         = cgraph->nodes[i + 4];
@@ -3518,7 +3627,15 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                                 fusion_data.gate_bias = gate_bias_tensor;
                                 fusion_data.glu_op    = ggml_get_glu_op(glu);
 
-                                ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
+                                if (op == GGML_OP_LAYER_MASKED_MUL_MAT) {
+                                    ggml_cuda_layer_masked_mul_mat_vec_f(
+                                        *cuda_ctx, src0, src1, ids, glu, 
+                                        cgraph->nodes[i]->src[3], cgraph->nodes[i]->layer_id,
+                                        &fusion_data);
+                                }
+                                else {
+                                    ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
+                                }
                                 fused_mul_mat_vec = true;
                                 fused_node_count = 5;
                                 break;
@@ -3531,6 +3648,7 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                                 fusion_data.gate_bias = gate_bias_tensor;
                                 fusion_data.glu_op    = ggml_get_glu_op(glu);
 
+                                // TODO: add layer mask to quantized kernel
                                 ggml_cuda_mul_mat_vec_q(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
                                 fused_mul_mat_vec = true;
                                 fused_node_count = 5;
@@ -3555,7 +3673,15 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                                 fusion_data.gate   = gate->src[0];
                                 fusion_data.glu_op = ggml_get_glu_op(glu);
 
-                                ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
+                                if (op == GGML_OP_LAYER_MASKED_MUL_MAT) {
+                                    ggml_cuda_layer_masked_mul_mat_vec_f(
+                                        *cuda_ctx, src0, src1, ids, glu, 
+                                        cgraph->nodes[i]->src[3], cgraph->nodes[i]->layer_id,
+                                        &fusion_data);
+                                }
+                                else {
+                                    ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
+                                }
                                 fused_mul_mat_vec = true;
                                 fused_node_count = 3;
                                 break;
@@ -3566,6 +3692,7 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                                 fusion_data.gate   = gate->src[0];
                                 fusion_data.glu_op = ggml_get_glu_op(glu);
 
+                                // TODO: add layer mask to quantized kernel
                                 ggml_cuda_mul_mat_vec_q(*cuda_ctx, src0, src1, ids, glu, &fusion_data);
                                 fused_mul_mat_vec = true;
                                 fused_node_count = 3;
@@ -3582,8 +3709,10 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                     fused_mul_mat_vec = false;
                     fused_node_count = 0;
 
-                    for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
-                        const ggml_op bias_op = op == GGML_OP_MUL_MAT ? GGML_OP_ADD : GGML_OP_ADD_ID;
+                    // for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
+                    for (ggml_op op : { GGML_OP_MUL_MAT, GGML_OP_LAYER_MASKED_MUL_MAT, GGML_OP_MUL_MAT_ID }) {
+                        // const ggml_op bias_op = op == GGML_OP_MUL_MAT ? GGML_OP_ADD : GGML_OP_ADD_ID;
+                        const ggml_op bias_op = op == GGML_OP_MUL_MAT_ID ? GGML_OP_ADD_ID : GGML_OP_ADD;
 
                         if (!ggml_can_fuse(cgraph, i, { op, bias_op })) {
                             continue;
@@ -3624,13 +3753,22 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                         fusion_data.x_bias = bias_tensor;
 
                         if (ggml_cuda_should_fuse_mul_mat_vec_f(mm_node)) {
-                            ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, bias_node, &fusion_data);
+                            if (op == GGML_OP_LAYER_MASKED_MUL_MAT) {
+                                ggml_cuda_layer_masked_mul_mat_vec_f(
+                                    *cuda_ctx, src0, src1, ids, bias_node, 
+                                    cgraph->nodes[i]->src[3], cgraph->nodes[i]->layer_id,
+                                    &fusion_data);
+                            }
+                            else {
+                                ggml_cuda_mul_mat_vec_f(*cuda_ctx, src0, src1, ids, bias_node, &fusion_data);
+                            }
                             fused_mul_mat_vec = true;
                             fused_node_count = 2;
                             break;
                         }
 
                         if (ggml_cuda_should_fuse_mul_mat_vec_q(mm_node)) {
+                            // TODO: add layer mask to quantized kernel
                             ggml_cuda_mul_mat_vec_q(*cuda_ctx, src0, src1, ids, bias_node, &fusion_data);
                             fused_mul_mat_vec = true;
                             fused_node_count = 2;
@@ -3679,6 +3817,39 @@ static void evaluate_and_capture_cuda_graph(ggml_backend_cuda_context * cuda_ctx
                     GGML_LOG_ERROR("%s: op not supported %s (%s)\n", __func__, node->name, ggml_op_name(node->op));
                 }
                 GGML_ASSERT(ok);
+
+                // {
+                //     // 同步 GPU，确保计算完成
+                //     CUDA_CHECK(cudaStreamSynchronize(cuda_ctx->stream()));
+    
+                //     // 读取前几个值
+                //     float output_values[10];
+                //     size_t bytes_to_read = std::min(sizeof(output_values), ggml_nbytes(node));
+                //     ggml_backend_tensor_get(node, output_values, 0, bytes_to_read);
+    
+                //     // 检查 NaN/Inf
+                //     bool has_nan_inf = false;
+                //     int n_values = std::min(10, (int)ggml_nelements(node));
+                //     for (int i = 0; i < n_values; i++) {
+                //         if (std::isnan(output_values[i]) || std::isinf(output_values[i])) {
+                //             has_nan_inf = true;
+                //             break;
+                //         }
+                //     }
+    
+                //     // 打印结果
+                //     {
+                //         GGML_LOG_INFO("Node %s (op=%s): [", node->name, ggml_op_name(node->op));
+                //         for (int i = 0; i < n_values; i++) {
+                //             GGML_LOG_INFO("%.4f ", output_values[i]);
+                //         }
+                //         GGML_LOG_INFO("]");
+                //         if (has_nan_inf) {
+                //             GGML_LOG_INFO(" ⚠️ NaN/Inf detected!");
+                //         }
+                //         GGML_LOG_INFO("\n");
+                //     }
+                // }
 
                 if (!is_concurrent_event_active) {
                     try_launch_concurrent_event(node);
@@ -4388,6 +4559,7 @@ static bool ggml_backend_cuda_device_supports_op(ggml_backend_dev_t dev, const g
             }
             break;
         case GGML_OP_MUL_MAT:
+        case GGML_OP_LAYER_MASKED_MUL_MAT:
         case GGML_OP_MUL_MAT_ID:
             {
                 struct ggml_tensor * a = op->src[0];
@@ -4701,6 +4873,7 @@ static int64_t get_op_batch_size(const ggml_tensor * op) {
         case GGML_OP_GET_ROWS:
             return 0;
         case GGML_OP_MUL_MAT:
+        case GGML_OP_LAYER_MASKED_MUL_MAT:
             return op->ne[1];
         case GGML_OP_MUL_MAT_ID:
         case GGML_OP_ROPE:

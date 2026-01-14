@@ -1082,6 +1082,20 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         }
     }
 
+    // we set the layer mask data here for temporary use
+    // TODO: remove this and integrate it with predictor
+    {
+        auto * layer_mask_tensor = ggml_graph_get_tensor(gf, "layer_mask");
+        if (layer_mask_tensor) {
+            std::vector<int32_t> layer_mask_data(layer_mask_tensor->ne[0], 1);
+            for (auto i = 15; i < 25; i++) {
+                layer_mask_data[i] = 0;
+            }
+
+            ggml_backend_tensor_set(layer_mask_tensor, layer_mask_data.data(), 0, layer_mask_data.size() * sizeof(int32_t));
+        }
+    }
+
     // set the input data for the input tensors
     {
         //const auto t_start_us = ggml_time_us();
@@ -2089,6 +2103,15 @@ llm_graph_cb llama_context::graph_get_cb() const {
             if (strcmp(name, "kqv_merged_cont") == 0) {
                 // all nodes between the KV store and the attention output are run on the CPU
                 ggml_backend_sched_set_tensor_backend(sched.get(), cur, backend_cpu);
+            }
+        }
+
+        if (strstr(name, "layer_mask") != NULL || strstr(name, "l_out_masked") != NULL) {
+            for (const auto & backend : backends) {
+                if (!ggml_backend_is_cpu(backend.get())) {
+                    ggml_backend_sched_set_tensor_backend(sched.get(), cur, backend.get());
+                    break;
+                }
             }
         }
 

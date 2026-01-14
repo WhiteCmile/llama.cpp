@@ -567,6 +567,10 @@ extern "C" {
 
         GGML_OP_GLU,
 
+        GGML_OP_LAYER_MASKED_BYPASSING,
+        GGML_OP_LAYER_MASKED_MUL_MAT, // layer masked matmul
+        GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT, // layer masked flash attention
+
         GGML_OP_COUNT,
     };
 
@@ -677,7 +681,10 @@ extern "C" {
 
         void * extra; // extra things e.g. for ggml-cuda.cu
 
-        char padding[8];
+        int32_t layer_id;
+
+        // char padding[8 + 12];
+        char padding[4];
     };
 
     static const size_t GGML_TENSOR_SIZE = sizeof(struct ggml_tensor);
@@ -1391,6 +1398,13 @@ extern "C" {
             struct ggml_tensor  * b,
             float                 eps);
 
+    GGML_API struct ggml_tensor * ggml_layer_masked_bypassing(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * cur,
+            struct ggml_tensor  * input,
+            struct ggml_tensor  * layer_mask,
+            int                   il);
+
     // A: k columns, n rows => [ne03, ne02, n, k]
     // B: k columns, m rows  (i.e. we transpose it internally) => [ne03 * x, ne02 * y, m, k]
     // result is n columns, m rows => [ne03 * x, ne02 * y, m, n]
@@ -1398,6 +1412,13 @@ extern "C" {
             struct ggml_context * ctx,
             struct ggml_tensor  * a,
             struct ggml_tensor  * b);
+    
+    GGML_API struct ggml_tensor * ggml_layer_masked_mul_mat(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * layer_mask,
+            int                   il);
 
     // change the precision of a matrix multiplication
     // set to GGML_PREC_F32 for higher precision (useful for phi-2)
@@ -2322,6 +2343,18 @@ extern "C" {
             struct ggml_tensor  * k,
             struct ggml_tensor  * v,
             struct ggml_tensor  * mask,
+            float                 scale,
+            float                 max_bias,
+            float                 logit_softcap);
+
+    GGML_API struct ggml_tensor * ggml_layer_masked_flash_attn_ext(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * q,
+            struct ggml_tensor  * k,
+            struct ggml_tensor  * v,
+            struct ggml_tensor  * mask,
+            struct ggml_tensor  * layer_mask,
+            int                   layer_id,
             float                 scale,
             float                 max_bias,
             float                 logit_softcap);

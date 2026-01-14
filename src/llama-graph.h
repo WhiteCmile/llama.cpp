@@ -666,6 +666,11 @@ struct llm_graph_context {
     //
     // common
     //
+    ggml_tensor * build_layer_masked_bypassing(
+              ggml_tensor * cur,
+              ggml_tensor * input,
+              ggml_tensor * layer_mask,
+                      int   il) const;
 
     ggml_tensor * build_cvec(
              ggml_tensor * cur,
@@ -675,6 +680,12 @@ struct llm_graph_context {
     ggml_tensor * build_lora_mm(
               ggml_tensor * w,
               ggml_tensor * cur) const;
+
+    ggml_tensor * build_layer_masked_lora_mm(
+              ggml_tensor * w,
+              ggml_tensor * cur,
+              ggml_tensor * layer_mask,
+                      int   il) const;
 
     // do mat_mul_id, while optionally apply lora
     ggml_tensor * build_lora_mm_id(
@@ -701,6 +712,23 @@ struct llm_graph_context {
              ggml_tensor * down_b,
              ggml_tensor * down_s,
              ggml_tensor * act_scales,
+         llm_ffn_op_type   type_op,
+       llm_ffn_gate_type   type_gate,
+                     int   il) const;
+
+    ggml_tensor * build_layer_masked_ffn(
+             ggml_tensor * cur,
+             ggml_tensor * up,
+             ggml_tensor * up_b,
+             ggml_tensor * up_s,
+             ggml_tensor * gate,
+             ggml_tensor * gate_b,
+             ggml_tensor * gate_s,
+             ggml_tensor * down,
+             ggml_tensor * down_b,
+             ggml_tensor * down_s,
+             ggml_tensor * act_scales,
+             ggml_tensor * layer_mask,
          llm_ffn_op_type   type_op,
        llm_ffn_gate_type   type_gate,
                      int   il) const;
@@ -775,6 +803,18 @@ struct llm_graph_context {
                   float   kq_scale,
                     int   il) const;
 
+    ggml_tensor * build_layer_masked_attn_mha(
+            ggml_tensor * q,       // [n_embd_head_q, n_head_q, n_tokens]
+            ggml_tensor * k,       // [n_embd_head_k, n_head_k, n_tokens]
+            ggml_tensor * v,       // [n_embd_head_v, n_head_v, n_tokens] (v_trans == false)
+            ggml_tensor * kq_b,
+            ggml_tensor * kq_mask,
+            ggml_tensor * sinks,   // [n_head_q]
+            ggml_tensor * v_mla,   // [n_embd_head_v_mla, n_embd_head_v, n_head_v]
+            ggml_tensor * layer_mask,
+                  float   kq_scale,
+                    int   il) const;
+
     llm_graph_input_attn_no_cache * build_attn_inp_no_cache() const;
 
     ggml_tensor * build_attn(
@@ -802,6 +842,20 @@ struct llm_graph_context {
             ggml_tensor * kq_b,
             ggml_tensor * sinks, // [n_head_q]
             ggml_tensor * v_mla, // [n_embd_head_v_mla, n_embd_head_v, n_head_v]
+                  float   kq_scale,
+                    int   il) const;
+
+    ggml_tensor * build_layer_masked_attn(
+            llm_graph_input_attn_kv * inp,
+            ggml_tensor * wo,
+            ggml_tensor * wo_b,
+            ggml_tensor * q_cur, // [n_embd_head_q, n_head_q, n_tokens]
+            ggml_tensor * k_cur, // [n_embd_head_k, n_head_k, n_tokens]
+            ggml_tensor * v_cur, // [n_embd_head_v, n_head_v, n_tokens]
+            ggml_tensor * kq_b,
+            ggml_tensor * sinks, // [n_head_q]
+            ggml_tensor * v_mla, // [n_embd_head_v_mla, n_embd_head_v, n_head_v]
+            ggml_tensor * layer_mask,
                   float   kq_scale,
                     int   il) const;
 
