@@ -137,3 +137,12 @@ poetry.toml
 /.windsurf/
 # emscripten
 a.out.*
+
+# output for experiments
+experiments/
+
+# binaries
+bin/
+
+# others
+.clangd
