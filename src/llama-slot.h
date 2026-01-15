@@ -10,7 +10,7 @@ struct llama_slot {
     std::vector<llama_layer> layers;
 
     bool init(ggml_backend_t backend, size_t max_weight_size);
-    bool ensure_loaded(int layer) const;
+    // bool ensure_loaded(int layer) const;
     void destroy();
     bool copy_weight_async(const void * cpu_data, size_t data_size, ggml_backend_t backend);
     int  get_slot_index_for_layer(int il, int num_slots, std::unordered_set<int> static_gpu_layers) const;

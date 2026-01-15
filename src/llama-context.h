@@ -4,10 +4,15 @@
 #include "llama-cparams.h"
 #include "llama-graph.h"
 #include "llama-adapter.h"
+#include "llama-slot.h"
 
 #include "ggml-cpp.h"
 #include "ggml-opt.h"
-
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -46,6 +51,32 @@ struct llama_context {
     const llama_cparams & get_cparams() const;
 
     ggml_backend_sched_t get_sched() const;
+
+    // ====================== 新建搬运线程 =======================
+    std::thread weight_transfer_thread;
+    std::atomic<bool> transfer_requested{false};
+    std::atomic<bool> stop_thread{false};
+    std::mutex transfer_mutex;
+    std::condition_variable transfer_cv;
+
+    // 搬运参数（需要线程同步保护）
+    struct TransferParams {
+        llama_slot* dynamic_slot_ptr{nullptr};
+        const void* transfer_cpu_data{nullptr};
+        size_t transfer_data_size{0};
+        ggml_backend_t transfer_backend{nullptr};
+        std::function<void(bool)> callback{nullptr}; // 可选的完成回调
+    };
+    
+    std::mutex params_mutex;
+    TransferParams transfer_params;
+    
+    // 公共方法
+    void set_dynamic_slot(llama_slot* ptr);
+    void trigger_weight_transfer(const void* cpu_data, size_t data_size, 
+                                 ggml_backend_t backend,
+                                 std::function<void(bool)> callback = nullptr);
+
 
     uint32_t n_ctx()     const;
     uint32_t n_ctx_seq() const;
@@ -196,6 +227,19 @@ struct llama_context {
             int64_t                          idata_in_loop,
             int64_t                          ndata_in_loop,
             int64_t                          t_loop_start);
+
+
+private:
+//
+// Thread
+//
+    // 线程函数
+    void weight_transfer_worker();
+    
+    // 私有方法
+    void start_transfer_thread();
+    void stop_transfer_thread();
+
 
 private:
     //
@@ -351,6 +395,7 @@ private:
     mutable int64_t t_eval_us   = 0;
 
     mutable int64_t t_compute_start_us = 0;
+    mutable int64_t t_graph_compute_start_us = 0;
     mutable int64_t n_queued_tokens    = 0;
 
     mutable int32_t n_p_eval = 0; // number of tokens in eval calls for the prompt (with batch size > 1)
