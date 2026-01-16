@@ -4,74 +4,105 @@ from safetensors import safe_open
 from safetensors.torch import save_file
 import torch
 
-def remove_lm_head_weights(input_path, output_path):
+def replace_gate_scale_in_safetensors(input_path, output_path):
     """
-    读取safetensors文件，删除lm_head相关权重，保存新文件，保持metadata不变
+    将safetensors文件中所有包含'gate_scale'的权重名称替换为'scale.weight'
     
     Args:
-        input_path (str): 输入的safetensors文件路径
-        output_path (str): 输出的safetensors文件路径
+        input_path (str): 输入safetensors文件路径
+        output_path (str): 输出safetensors文件路径
     """
-    print(f"正在读取文件: {input_path}")
+    print(f"读取safetensors文件: {input_path}")
     
-    # 读取safetensors文件
-    tensors = {}
-    metadata = {}
-    
-    with safe_open(input_path, framework="pt", device="cpu") as f:
+    # 1. 读取原始safetensors文件
+    try:
         # 获取metadata
-        metadata = f.metadata()
-        
-        # 读取所有张量，跳过包含lm_head的键
-        for key in f.keys():
-            if "lm_head" in key.lower():
-                print(f"  跳过lm_head相关权重: {key}")
-                continue
+        with safe_open(input_path, framework="pt") as f:
+            metadata = f.metadata()
+            print(f"获取到metadata: {metadata}")
             
-            # 读取张量
-            tensor = f.get_tensor(key)
-            tensors[key] = tensor
-            print(f"  保留权重: {key} (shape: {tensor.shape})")
+            # 读取所有权重
+            weights = {}
+            for key in f.keys():
+                weights[key] = f.get_tensor(key)
+                print(f"  读取权重: {key} -> shape: {weights[key].shape}")
+        
+        print(f"总共读取到 {len(weights)} 个权重")
+        
+    except Exception as e:
+        print(f"读取文件失败: {e}")
+        raise
     
-        print(f"\n原始权重数量: {len(f.keys())}")
-        print(f"保留权重数量: {len(tensors)}")
-        print(f"删除lm_head相关权重数量: {len(f.keys()) - len(tensors)}")
+    # 2. 重命名权重
+    new_weights = {}
+    renamed_count = 0
     
-    # 保存新的safetensors文件，包含原始metadata
-    print(f"\n正在保存到: {output_path}")
-    save_file(tensors, output_path, metadata=metadata)
+    for old_key, tensor in weights.items():
+        if 'gate_scale' in old_key:
+            # 将'gate_scale'替换为'scale.weight'
+            new_key = old_key.replace('gate_scale', 'scale.weight')
+            new_weights[new_key] = tensor
+            print(f"重命名: '{old_key}' -> '{new_key}'")
+            renamed_count += 1
+        else:
+            new_weights[old_key] = tensor
     
-    print("✅ 保存成功！")
-    print(f"新文件大小: {os.path.getsize(output_path) / 1024 / 1024:.2f} MB")
+    print(f"总共重命名了 {renamed_count} 个权重")
     
-    # 验证保存结果
-    print("\n验证保存结果:")
-    with safe_open(output_path, framework="pt", device="cpu") as f:
-        saved_keys = list(f.keys())
-        print(f"  保存的权重数量: {len(saved_keys)}")
-        lm_head_found = any("lm_head" in key.lower() for key in saved_keys)
-        print(f"  是否包含lm_head权重: {'是' if lm_head_found else '否'}")
-        print(f"  Metadata keys: {list(metadata.keys()) if metadata else '无'}")
+    # 3. 保存到新的safetensors文件
+    print(f"保存到新文件: {output_path}")
+    try:
+        save_file(new_weights, output_path, metadata=metadata)
+        print(f"成功保存文件，新文件大小: {os.path.getsize(output_path)} bytes")
+    except Exception as e:
+        print(f"保存文件失败: {e}")
+        raise
+    
+    # 4. 验证保存结果
+    print("\n验证保存结果...")
+    try:
+        with safe_open(output_path, framework="pt") as f:
+            saved_keys = list(f.keys())
+            print(f"验证成功! 文件中包含 {len(saved_keys)} 个权重")
+            
+            # 检查是否有重命名后的权重
+            renamed_keys = [key for key in saved_keys if 'scale.weight' in key]
+            print(f"包含'scale.weight'的权重数量: {len(renamed_keys)}")
+            
+            if renamed_keys:
+                print("部分重命名后的权重:")
+                for i, key in enumerate(renamed_keys[:5]):
+                    print(f"  {i+1}. {key}")
+    
+    except Exception as e:
+        print(f"验证文件失败: {e}")
+        raise
 
 def main():
-    parser = argparse.ArgumentParser(description='删除safetensors文件中的lm_head相关权重')
-    parser.add_argument('--input', '-i', help='输入的safetensors文件路径')
-    parser.add_argument('--output', '-o', help='输出的safetensors文件路径')
+    parser = argparse.ArgumentParser(description='将safetensors文件中gate_scale替换为scale.weight')
+    parser.add_argument('--input', required=True, help='输入safetensors文件路径')
+    parser.add_argument('--output', required=True, help='输出safetensors文件路径')
     
     args = parser.parse_args()
     
-    # 验证输入文件是否存在
+    # 检查输入文件是否存在
     if not os.path.exists(args.input):
         print(f"错误: 输入文件不存在: {args.input}")
         return
     
     # 确保输出目录存在
-    # output_dir = os.path.dirname(os.path.abspath(args.output))
-    # if not os.path.exists(output_dir):
-    #     os.makedirs(output_dir, exist_ok=True)
-    #     print(f"创建输出目录: {output_dir}")
+    output_dir = os.path.dirname(os.path.abspath(args.output))
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"创建输出目录: {output_dir}")
     
-    remove_lm_head_weights(args.input, args.output)
+    try:
+        replace_gate_scale_in_safetensors(args.input, args.output)
+        print("\n✅ 操作完成!")
+    except Exception as e:
+        print(f"\n❌ 操作失败: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
