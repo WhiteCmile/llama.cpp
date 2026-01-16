@@ -1178,16 +1178,16 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.FFN_UP_EAGLE:              "eagle.up_proj",
     MODEL_TENSOR.OUTPUT_NORM_EAGLE:         "eagle.output_norm",
     # router
-    MODEL_TENSOR.ROUTER_NORM:            "router.norm",
-    MODEL_TENSOR.ROUTER_GATE:            "router.gate",
-    MODEL_TENSOR.ROUTER_UP:            "router.up",
-    MODEL_TENSOR.ROUTER_DOWN:          "router.down",
+    MODEL_TENSOR.ROUTER_NORM:               "router.norm",
+    MODEL_TENSOR.ROUTER_GATE:               "router.gate",
+    MODEL_TENSOR.ROUTER_UP:                 "router.up",
+    MODEL_TENSOR.ROUTER_DOWN:               "router.down",
     # adatper
-    MODEL_TENSOR.ADAPTER_SCALE:         "adapter.{bid}.scale",
-    MODEL_TENSOR.ADAPTER_NORM:          "adapter.{bid}.norm",
-    MODEL_TENSOR.ADAPTER_GATE:         "adapter.{bid}.gate",
-    MODEL_TENSOR.ADAPTER_UP:           "adapter.{bid}.up",
-    MODEL_TENSOR.ADAPTER_DOWN:         "adapter.{bid}.down",
+    MODEL_TENSOR.ADAPTER_SCALE:             "adapter.{bid}.scale",
+    MODEL_TENSOR.ADAPTER_NORM:              "adapter.{bid}.norm",
+    MODEL_TENSOR.ADAPTER_GATE:              "adapter.{bid}.gate",
+    MODEL_TENSOR.ADAPTER_UP:                "adapter.{bid}.up",
+    MODEL_TENSOR.ADAPTER_DOWN:              "adapter.{bid}.down",
 }
 
 MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {

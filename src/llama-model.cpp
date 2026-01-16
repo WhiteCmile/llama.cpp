@@ -1083,7 +1083,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
                     }
                 } break;
-            case LLM_ARCH_QWEN3EAGLE:
+            case LLM_ARCH_QWEN3EAGLE:  // TODO: avoid hard code
                 {
                     tok_embd = create_tensor(tn(LLM_TENSOR_TOKEN_EMBD, "weight"), {n_embd, n_vocab}, 0);
 
@@ -1115,22 +1115,39 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_gate = create_tensor(tn(LLM_TENSOR_FFN_GATE, "weight", i), {n_embd,   n_ff}, 0);
                         layer.ffn_down = create_tensor(tn(LLM_TENSOR_FFN_DOWN, "weight", i), {  n_ff, n_embd}, 0);
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
+
+                        // adapter for layer 2-33
+                        if (i >= 2 && i <= 33) {
+                            layer.adapter_scale = create_tensor(tn(LLM_TENSOR_ADAPTER_SCALE, "weight", i), {1}, 0);
+                            layer.adapter_norm  = create_tensor(tn(LLM_TENSOR_ADAPTER_NORM,  "weight", i), {n_embd}, 0);
+                            layer.adapter_gate  = create_tensor(tn(LLM_TENSOR_ADAPTER_GATE,  "weight", i), {n_embd, 1024}, 0);
+                            layer.adapter_up    = create_tensor(tn(LLM_TENSOR_ADAPTER_UP,    "weight", i), {n_embd, 1024}, 0);
+                            layer.adapter_down  = create_tensor(tn(LLM_TENSOR_ADAPTER_DOWN,  "weight", i), {1024, n_embd}, 0);
+                        }
                     }
 
                     // eagle
-                    // TODO: avoid hard code
-                    eagle_fc =          create_tensor(tn(LLM_TENSOR_EAGLE_FC, "weight", 0),          {3 * n_embd, n_embd}, 0);
-                    eagle_hidden_norm = create_tensor(tn(LLM_TENSOR_EAGLE_HIDDEN_NORM, "weight", 0), {n_embd}, 0);
-                    eagle_input_norm =  create_tensor(tn(LLM_TENSOR_EAGLE_INPUT_NORM, "weight", 0),  {n_embd}, 0);
-                    eagle_down_proj =   create_tensor(tn(LLM_TENSOR_EAGLE_DOWN_PROJ, "weight", 0),   {n_ff, n_embd}, 0);
-                    eagle_gate_proj =   create_tensor(tn(LLM_TENSOR_EAGLE_GATE_PROJ, "weight", 0),   {n_embd, n_ff}, 0);
-                    eagle_up_proj =     create_tensor(tn(LLM_TENSOR_EAGLE_UP_PROJ, "weight", 0),     {n_embd, n_ff}, 0);
-                    eagle_ffn_norm =    create_tensor(tn(LLM_TENSOR_EAGLE_FFN_NORM, "weight", 0),    {n_embd}, 0);
-                    eagle_k_proj =      create_tensor(tn(LLM_TENSOR_EAGLE_K_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
-                    eagle_o_proj =      create_tensor(tn(LLM_TENSOR_EAGLE_O_PROJ, "weight", 0),      {4096, n_embd}, 0);
-                    eagle_q_proj =      create_tensor(tn(LLM_TENSOR_EAGLE_Q_PORJ, "weight", 0),      {2 * n_embd, 4096}, 0);
-                    eagle_v_proj =      create_tensor(tn(LLM_TENSOR_EAGLE_V_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
-                    eagle_output_norm = create_tensor(tn(LLM_TENSOR_EAGLE_OUTPUT_NORM, "weight", 0), {n_embd}, 0);
+                    {
+                        eagle_fc          = create_tensor(tn(LLM_TENSOR_EAGLE_FC, "weight", 0),          {3 * n_embd, n_embd}, 0);
+                        eagle_hidden_norm = create_tensor(tn(LLM_TENSOR_EAGLE_HIDDEN_NORM, "weight", 0), {n_embd}, 0);
+                        eagle_input_norm  = create_tensor(tn(LLM_TENSOR_EAGLE_INPUT_NORM, "weight", 0),  {n_embd}, 0);
+                        eagle_down_proj   = create_tensor(tn(LLM_TENSOR_EAGLE_DOWN_PROJ, "weight", 0),   {n_ff, n_embd}, 0);
+                        eagle_gate_proj   = create_tensor(tn(LLM_TENSOR_EAGLE_GATE_PROJ, "weight", 0),   {n_embd, n_ff}, 0);
+                        eagle_up_proj     = create_tensor(tn(LLM_TENSOR_EAGLE_UP_PROJ, "weight", 0),     {n_embd, n_ff}, 0);
+                        eagle_ffn_norm    = create_tensor(tn(LLM_TENSOR_EAGLE_FFN_NORM, "weight", 0),    {n_embd}, 0);
+                        eagle_k_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_K_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
+                        eagle_o_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_O_PROJ, "weight", 0),      {4096, n_embd}, 0);
+                        eagle_q_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_Q_PORJ, "weight", 0),      {2 * n_embd, 4096}, 0);
+                        eagle_v_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_V_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
+                        eagle_output_norm = create_tensor(tn(LLM_TENSOR_EAGLE_OUTPUT_NORM, "weight", 0), {n_embd}, 0);
+                    }
+
+                    // router
+                    router_norm   = create_tensor(tn(LLM_TENSOR_ROUTER_NORM, "weight", -1), {2 * n_embd}, 0);
+                    router_gate   = create_tensor(tn(LLM_TENSOR_ROUTER_GATE, "weight", -1), {2 * n_embd, 1024}, 0);
+                    router_up     = create_tensor(tn(LLM_TENSOR_ROUTER_UP,   "weight", -1), {2 * n_embd, 1024}, 0);
+                    router_down   = create_tensor(tn(LLM_TENSOR_ROUTER_DOWN, "weight", -1), {1024, n_layer}, 0);
+                    router_down_b = create_tensor(tn(LLM_TENSOR_ROUTER_DOWN, "bias", -1),   {n_layer}, 0);
                 } break;
             case LLM_ARCH_QWEN3MOE:
             case LLM_ARCH_QWEN3VLMOE:
@@ -1920,8 +1937,12 @@ ggml_cgraph * llama_model::build_graph(const llm_graph_params & params) const {
         //         llm = std::make_unique<llm_build_qwen2moe>(*this, params);
         //     } break;
         case LLM_ARCH_QWEN3:
+            {
+                llm = std::make_unique<llm_build_qwen3>(*this, params);
+            } break;
         case LLM_ARCH_QWEN3EAGLE:
             {
+                // llm = std::make_unique<llm_build_qwen3eagle>(*this, params);
                 llm = std::make_unique<llm_build_qwen3>(*this, params);
             } break;
         // case LLM_ARCH_QWEN3MOE:

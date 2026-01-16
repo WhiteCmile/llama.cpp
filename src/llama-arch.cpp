@@ -509,6 +509,15 @@ static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
     { LLM_TENSOR_EAGLE_O_PROJ,                           "eagle.o_proj" },
     { LLM_TENSOR_EAGLE_Q_PORJ,                           "eagle.q_proj" },
     { LLM_TENSOR_EAGLE_V_PROJ,                           "eagle.v_proj" },
+    { LLM_TENSOR_ROUTER_NORM,                            "router.norm" },
+    { LLM_TENSOR_ROUTER_GATE,                            "router.gate" },
+    { LLM_TENSOR_ROUTER_UP,                              "router.up" },
+    { LLM_TENSOR_ROUTER_DOWN,                            "router.down" },
+    { LLM_TENSOR_ADAPTER_SCALE,                          "adapter.%d.scale" },
+    { LLM_TENSOR_ADAPTER_NORM,                           "adapter.%d.norm" },
+    { LLM_TENSOR_ADAPTER_GATE,                           "adapter.%d.gate" },
+    { LLM_TENSOR_ADAPTER_UP,                             "adapter.%d.up" },
+    { LLM_TENSOR_ADAPTER_DOWN,                           "adapter.%d.down" },
 };
 
 static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
@@ -958,6 +967,17 @@ static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
                 LLM_TENSOR_EAGLE_O_PROJ,
                 LLM_TENSOR_EAGLE_Q_PORJ,
                 LLM_TENSOR_EAGLE_V_PROJ,
+                // router
+                LLM_TENSOR_ROUTER_NORM,
+                LLM_TENSOR_ROUTER_GATE,
+                LLM_TENSOR_ROUTER_UP,
+                LLM_TENSOR_ROUTER_DOWN,
+                // adapter
+                LLM_TENSOR_ADAPTER_SCALE,
+                LLM_TENSOR_ADAPTER_NORM,
+                LLM_TENSOR_ADAPTER_GATE,
+                LLM_TENSOR_ADAPTER_UP,
+                LLM_TENSOR_ADAPTER_DOWN,
             };
         case LLM_ARCH_QWEN3MOE:
         case LLM_ARCH_QWEN3VLMOE:
@@ -2511,6 +2531,15 @@ static const std::map<llm_tensor, llm_tensor_info> LLM_TENSOR_INFOS = {
     {LLM_TENSOR_EAGLE_O_PROJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
     {LLM_TENSOR_EAGLE_Q_PORJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
     {LLM_TENSOR_EAGLE_V_PROJ,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ROUTER_NORM,                {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL}},
+    {LLM_TENSOR_ROUTER_GATE,                {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ROUTER_UP,                  {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ROUTER_DOWN,                {LLM_TENSOR_LAYER_OUTPUT, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ADAPTER_SCALE,              {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_ADAPTER_NORM,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL}},
+    {LLM_TENSOR_ADAPTER_GATE,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ADAPTER_UP,                 {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_ADAPTER_DOWN,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
 };
 
 LLM_KV::LLM_KV(llm_arch arch, const char * suffix) : arch(arch), suffix(suffix) {}
