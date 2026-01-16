@@ -772,7 +772,6 @@ class LlamaData {
     std::vector<llama_chat_message> messages; // TODO: switch to common_chat_msg
     std::list<std::string>          msg_strs;
     std::vector<char>               fmtted;
-    llama_slot                      dynamic_slot;
 
 
     int init(Opt & opt) {
@@ -788,26 +787,6 @@ class LlamaData {
 
         sampler = initialize_sampler(opt);
 
-        // ================== 初始化 slot ==================
-        bool enable_dynamic_skipping = true; // 从 Opt 读取开关
-        if (enable_dynamic_skipping) {
-            const size_t MAX_LAYER_WEIGHT_SIZE = 430ULL * 1024 * 1024;
-            size_t max_layer_weight_size = MAX_LAYER_WEIGHT_SIZE;
-
-            // 获取 GPU backend（假设 context 已初始化）
-            ggml_backend_t gpu_backend = ggml_backend_cuda_init(0); // 或从 context 获取
-            if (!gpu_backend) {
-                fprintf(stderr, "Failed to get GPU backend for slot\n");
-                return 1;
-            }
-
-            if (!dynamic_slot.init(gpu_backend, max_layer_weight_size)) {
-                fprintf(stderr, "Failed to initialize dynamic slot\n");
-                ggml_backend_free(gpu_backend);
-                return 1;
-            }
-
-        }
 
         return 0;
     }

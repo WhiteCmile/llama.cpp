@@ -198,6 +198,54 @@ struct llama_layer_nextn {
     struct ggml_tensor * shared_head_norm = nullptr;
 };
 
+struct llama_slot {
+    
+    // normalization
+    struct ggml_tensor * ffn_norm         = nullptr;
+    struct ggml_tensor * ffn_norm_b       = nullptr;
+    struct ggml_tensor * ffn_post_norm    = nullptr;
+    struct ggml_tensor * layer_out_norm   = nullptr;
+    struct ggml_tensor * layer_out_norm_b = nullptr;
+    struct ggml_tensor * ffn_norm_exps    = nullptr;
+    struct ggml_tensor * ffn_norm_enc     = nullptr;
+
+    // ff
+    struct ggml_tensor * ffn_gate     = nullptr; // w1
+    struct ggml_tensor * ffn_down     = nullptr; // w2
+    struct ggml_tensor * ffn_up       = nullptr; // w3
+    struct ggml_tensor * ffn_gate_enc = nullptr;
+    struct ggml_tensor * ffn_down_enc = nullptr;
+    struct ggml_tensor * ffn_up_enc   = nullptr;
+
+    // ff MoE
+    struct ggml_tensor * ffn_gate_inp    = nullptr;
+    struct ggml_tensor * ffn_gate_exps   = nullptr;
+    struct ggml_tensor * ffn_down_exps   = nullptr;
+    struct ggml_tensor * ffn_up_exps     = nullptr;
+    struct ggml_tensor * ffn_gate_inp_b  = nullptr;
+    struct ggml_tensor * ffn_gate_exps_b = nullptr;
+    struct ggml_tensor * ffn_down_exps_b = nullptr;
+    struct ggml_tensor * ffn_up_exps_b   = nullptr;
+
+    // ff shared expert (shexp)
+    struct ggml_tensor * ffn_gate_inp_shexp = nullptr;
+    struct ggml_tensor * ffn_gate_shexp     = nullptr;
+    struct ggml_tensor * ffn_down_shexp     = nullptr;
+    struct ggml_tensor * ffn_up_shexp       = nullptr;
+
+    // ff adjugate experts (chexps)
+    struct ggml_tensor * ffn_gate_chexps     = nullptr;
+    struct ggml_tensor * ffn_down_chexps     = nullptr;
+    struct ggml_tensor * ffn_up_chexps       = nullptr;
+
+    // ff bias
+    struct ggml_tensor * ffn_gate_b = nullptr;
+    struct ggml_tensor * ffn_down_b = nullptr; // b2
+    struct ggml_tensor * ffn_up_b   = nullptr; // b3
+    struct ggml_tensor * ffn_act    = nullptr;
+    struct ggml_tensor * ffn_exp_probs_b = nullptr;
+};
+
 struct llama_layer {
     // normalization
     struct ggml_tensor * attn_norm       = nullptr;
@@ -460,6 +508,8 @@ struct llama_model {
     struct ggml_tensor * per_layer_proj_norm  = nullptr;
 
     std::vector<llama_layer> layers;
+
+    std::vector<llama_slot> slots;
 
     //Dense linear projections for SentenceTransformers models like embeddinggemma
     // For Sentence Transformers models structure see

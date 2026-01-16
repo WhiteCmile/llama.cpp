@@ -2713,7 +2713,10 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             return ml.create_tensor(ctx, tn, ne, flags);
         };
 
+        int n_slot = 1;
+
         layers.resize(n_layer);
+        slots.resize(n_slot);
 
         // TODO: move to a separate function
         const auto tn = LLM_TN(arch);
@@ -3636,6 +3639,17 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_down = create_tensor(tn(LLM_TENSOR_FFN_DOWN, "weight", i), {  n_ff, n_embd}, 0);
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
                     }
+
+                    // ================================ create slot ==================================
+                    for (int i = 0; i < n_slot; ++i) {
+                        auto & slot = slots[i];
+                        slot.ffn_norm = create_tensor(tn(LLM_TENSOR_SLOT_FFN_NORM, "weight", i), {n_embd}, 1);
+                        slot.ffn_gate = create_tensor(tn(LLM_TENSOR_SLOT_FFN_GATE, "weight", i), {n_embd, n_ff}, 1);
+                        slot.ffn_down = create_tensor(tn(LLM_TENSOR_SLOT_FFN_DOWN, "weight", i), {n_ff, n_embd}, 1);
+                        slot.ffn_up   = create_tensor(tn(LLM_TENSOR_SLOT_FFN_UP,   "weight", i), {n_embd, n_ff}, 1);
+                    }
+                    // ================================================================================
+
                 } break;
             case LLM_ARCH_QWEN3MOE:
             case LLM_ARCH_QWEN3VLMOE:
@@ -6854,6 +6868,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                 ggml_backend_buft_name(first_moved_from_buft), ggml_backend_buft_name(first_moved_to_buft));
         }
     }
+
+    // =================== tensor creating done ======================
 
     ml.done_getting_tensors();
 
