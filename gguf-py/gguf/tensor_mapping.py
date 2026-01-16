@@ -161,6 +161,20 @@ class TensorNameMap:
         MODEL_TENSOR.OUTPUT_NORM_EAGLE: (
             "eagle.norm",
         ),
+        
+        # router
+        MODEL_TENSOR.ROUTER_NORM: (
+            "router.norm",
+        ),
+        MODEL_TENSOR.ROUTER_GATE: (
+            "router.gate_proj",
+        ),
+        MODEL_TENSOR.ROUTER_UP: (
+            "router.up_proj",
+        ),
+        MODEL_TENSOR.ROUTER_DOWN: (
+            "router.down_proj",
+        ),
     }
 
     block_mappings_cfg: dict[MODEL_TENSOR, tuple[str, ...]] = {
@@ -1760,6 +1774,24 @@ class TensorNameMap:
 
         MODEL_TENSOR.NEXTN_SHARED_HEAD_NORM: (
             "model.layers.{bid}.shared_head.norm",
+        ),
+        
+        # adapter
+        
+        MODEL_TENSOR.ADAPTER_SCALE: (
+            "model.layers.adapter.{bid}.scale",
+        ),
+        MODEL_TENSOR.ADAPTER_NORM: (
+            "model.layers.adapter.{bid}.norm",
+        ),
+        MODEL_TENSOR.ADAPTER_GATE: (
+            "model.layers.adapter.{bid}.gate_proj",
+        ),
+        MODEL_TENSOR.ADAPTER_UP: (
+            "model.layers.adapter.{bid}.up_proj",
+        ),
+        MODEL_TENSOR.ADAPTER_DOWN: (
+            "model.layers.adapter.{bid}.down_proj",
         ),
     }
 

@@ -754,6 +754,17 @@ class MODEL_TENSOR(IntEnum):
     FFN_UP_EAGLE           = auto()
     OUTPUT_NORM_EAGLE      = auto()
     OUTPUT_EAGLE           = auto()
+    # router
+    ROUTER_NORM            = auto()
+    ROUTER_GATE            = auto()
+    ROUTER_UP              = auto()
+    ROUTER_DOWN            = auto()
+    # adatper
+    ADAPTER_SCALE          = auto()
+    ADAPTER_NORM           = auto()
+    ADAPTER_GATE           = auto()
+    ADAPTER_UP             = auto()
+    ADAPTER_DOWN           = auto()
 
 
 MODEL_ARCH_NAMES: dict[MODEL_ARCH, str] = {
@@ -1166,6 +1177,17 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.FFN_DOWN_EAGLE:            "eagle.down_proj",
     MODEL_TENSOR.FFN_UP_EAGLE:              "eagle.up_proj",
     MODEL_TENSOR.OUTPUT_NORM_EAGLE:         "eagle.output_norm",
+    # router
+    MODEL_TENSOR.ROUTER_NORM:            "router.norm",
+    MODEL_TENSOR.ROUTER_GATE:            "router.gate",
+    MODEL_TENSOR.ROUTER_UP:            "router.up",
+    MODEL_TENSOR.ROUTER_DOWN:          "router.down",
+    # adatper
+    MODEL_TENSOR.ADAPTER_SCALE:         "adapter.{bid}.scale",
+    MODEL_TENSOR.ADAPTER_NORM:          "adapter.{bid}.norm",
+    MODEL_TENSOR.ADAPTER_GATE:         "adapter.{bid}.gate",
+    MODEL_TENSOR.ADAPTER_UP:           "adapter.{bid}.up",
+    MODEL_TENSOR.ADAPTER_DOWN:         "adapter.{bid}.down",
 }
 
 MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
@@ -1703,6 +1725,15 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.FFN_UP_EAGLE,
         MODEL_TENSOR.OUTPUT_NORM_EAGLE,
         MODEL_TENSOR.OUTPUT_EAGLE,
+        MODEL_TENSOR.ROUTER_NORM,
+        MODEL_TENSOR.ROUTER_GATE,
+        MODEL_TENSOR.ROUTER_UP,
+        MODEL_TENSOR.ROUTER_DOWN,
+        MODEL_TENSOR.ADAPTER_SCALE,
+        MODEL_TENSOR.ADAPTER_NORM,
+        MODEL_TENSOR.ADAPTER_GATE,
+        MODEL_TENSOR.ADAPTER_UP,
+        MODEL_TENSOR.ADAPTER_DOWN,
     ],
     MODEL_ARCH.QWEN3MOE: [
         MODEL_TENSOR.TOKEN_EMBD,
