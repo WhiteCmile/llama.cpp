@@ -40,7 +40,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
         ggml_tensor * layer_input = inpL;
 
         bool use_static = static_gpu_layers.count(il);
-        if (use_static) {
+        
             // norm
             cur = build_norm(inpL,
                     model.layers[il].attn_norm, NULL,
@@ -110,6 +110,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             ggml_tensor * ffn_inp = ggml_add(ctx0, cur, inpSA);
             cb(ffn_inp, "ffn_inp", il);
 
+        if (use_static) {
             // feed-forward network
             cur = build_norm(ffn_inp,
                     model.layers[il].ffn_norm, NULL,
@@ -162,58 +163,6 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             // =================== 计算slot与层映射关系 =======================
             int slot_idx = slot.get_slot_index_for_layer(il, 4, static_gpu_layers);
 
-            // norm
-            cur = build_norm(inpL,
-                    slot.layers[slot_idx].attn_norm, NULL,
-                    LLM_NORM_RMS, il);
-            cb(cur, "attn_norm", il);
-
-            // compute Q and K and RoPE them
-            ggml_tensor * Qcur = build_lora_mm(slot.layers[slot_idx].wq, cur);
-            cb(Qcur, "Qcur", il);
-
-            ggml_tensor * Kcur = build_lora_mm(slot.layers[slot_idx].wk, cur);
-            cb(Kcur, "Kcur", il);
-
-            ggml_tensor * Vcur = build_lora_mm(slot.layers[slot_idx].wv, cur);
-            cb(Vcur, "Vcur", il);
-
-            Qcur = ggml_reshape_3d(ctx0, Qcur, n_embd_head, n_head,    n_tokens);
-            Kcur = ggml_reshape_3d(ctx0, Kcur, n_embd_head, n_head_kv, n_tokens);
-            Vcur = ggml_reshape_3d(ctx0, Vcur, n_embd_head, n_head_kv, n_tokens);
-
-            Qcur = build_norm(Qcur, slot.layers[slot_idx].attn_q_norm, NULL, LLM_NORM_RMS, il);
-            cb(Qcur, "Qcur_normed", il);
-
-            Qcur = ggml_rope_ext(
-                    ctx0, Qcur, inp_pos, nullptr,
-                    n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
-                    ext_factor, attn_factor, beta_fast, beta_slow
-                    );
-
-            Kcur = build_norm(Kcur, slot.layers[slot_idx].attn_k_norm, NULL, LLM_NORM_RMS, il);
-            cb(Kcur, "Kcur_normed", il);
-
-            Kcur = ggml_rope_ext(
-                    ctx0, Kcur, inp_pos, nullptr,
-                    n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
-                    ext_factor, attn_factor, beta_fast, beta_slow
-                    );
-
-            cb(Qcur, "Qcur", il);
-            cb(Kcur, "Kcur", il);
-            cb(Vcur, "Vcur", il);
-
-            cur = build_attn(inp_attn,
-                    slot.layers[slot_idx].wo, slot.layers[slot_idx].bo,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il);
-
-            if (il == n_layer - 1 && inp_out_ids) {
-            cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
-            inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
-            }
-            ggml_tensor * ffn_inp = ggml_add(ctx0, cur, inpSA);
-            cb(ffn_inp, "ffn_inp", il);
 
             // feed-forward network
             cur = build_norm(ffn_inp,
