@@ -150,6 +150,8 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
         // input for next layer
         inpL = cur;
     }
+
+    LLAMA_LOG_INFO("Built Qwen3 graph");
     cur = inpL;
 
     cur = build_norm(cur,
