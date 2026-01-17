@@ -1,5 +1,8 @@
 #include "llama-impl.h"
+#include "llama-context.h"
 #include "models.h"
+#include "ggml-cuda/common.cuh"
+#include "ggml-backend.h"  
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, 
     const llm_graph_params & params) : llm_graph_context(params) {
@@ -14,6 +17,8 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
     bool is_decode = n_tokens == 1;
     ggml_tensor * layer_mask = NULL;
 
+    //假设之前预测器已经输出 layer_mask
+
     if (is_decode) {
         auto n_layer_mask_elem = n_layer;
         layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer_mask_elem);
@@ -21,30 +26,8 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
         ggml_set_name(layer_mask, "layer_mask");
         cb(layer_mask, "layer_mask", -1);
     }
+    
 
-    // 添加host callback来触发权重搬运
-    ggml_tensor* trigger = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, 1);
-    ggml_set_name(trigger, "prefetch_trigger");
-    auto host_callback = [this, layer_mask, &params]() {
-        if (!layer_mask) return;
-        int32_t * data = (int32_t*)ggml_get_data(layer_mask);
-        std::unordered_set<int> to_transfer;
-        for (int il = 0; il < n_layer; ++il) {
-            bool use_static = static_gpu_layers.count(il);
-            if (!use_static && data[il] == 1) {
-                int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
-                to_transfer.insert(slot_idx);
-            }
-        }
-        {
-            std::lock_guard<std::mutex> lock(params.ctx->transfer_set_mutex);
-            params.ctx->slots_to_transfer = std::move(to_transfer);
-        }
-        params.ctx->transfer_requested.store(true);
-        params.ctx->transfer_cv.notify_one();
-    };
-    ggml_set_host_callback(trigger, host_callback);
-    ggml_build_forward_expand(gf, trigger);
 
     inpL = build_inp_embd(model.tok_embd);
     ggml_tensor * inp_pos = build_inp_pos();
@@ -59,9 +42,13 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
 
         // LLAMA_LOG_INFO("%s: layer %d: use_static=%s\n", __func__, il, use_static ? "true" : "false");
 
+        // compute the mapping idx
+
+        int slot_idx= 0;
+
         if (!use_static) {
-            int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
-            ctx->layer_for_slot[slot_idx] = il;
+            slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+            params.ctx->layer_for_slot[slot_idx] = il;
         }
 
         // norm
@@ -132,6 +119,9 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             // ====== DEBUG: 静态层 ======
             LLAMA_LOG_INFO("%s: layer %d using static FFN (GPU)\n", __func__, il);
 
+            // ============ check if the weights are ready =============
+            // TODO
+
             cur = build_norm(ffn_inp,
                     model.layers[il].ffn_norm, NULL,
                     LLM_NORM_RMS, il);
@@ -166,10 +156,16 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             }
             inpL = cur;
         } else {
-            // ====== dynamic slot ======
-            int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
 
-            params.ctx->wait_until_slot_ready(slot_idx);
+            // ggml_backend_t backend = ggml_backend_sched_get_backend(params.ctx->sched.get(), 0); 
+            // ggml_backend_cuda_context * cuda_ctx = (ggml_backend_cuda_context *) backend->context;
+
+            // cudaStream_t main_stream = cuda_ctx->stream();
+            cudaStream_t main_stream = 0;
+
+            // ====== dynamic slot ======
+
+            params.ctx->wait_until_slot_ready(slot_idx, main_stream);
 
             // ====== DEBUG: 打印 slot 分配 ======
             LLAMA_LOG_INFO("%s: layer %d assigned to slot %d\n", __func__, il, slot_idx);
@@ -195,6 +191,9 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             cb(cur, "l_out", il);
 
             inpL = cur;
+
+            // ====== mark slot as used and next weight should be transferred ======
+            params.ctx -> release_slot(slot_idx);
         }
     }
 

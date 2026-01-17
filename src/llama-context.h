@@ -203,16 +203,17 @@ struct llama_context {
             int64_t                          t_loop_start);
 
 
-private:
+public:
 //
 // Thread
 //
     // 线程函数
     void weight_transfer_worker();
-    
-    // 私有方法
+
     void start_transfer_thread();
     void stop_transfer_thread();
+    // 等待slot权重到位
+    void wait_until_slot_ready(int slot_idx, cudaStream_t compute_stream);
 
 
 private:
@@ -247,6 +248,8 @@ public:
         uint32_t n_tokens, uint32_t n_seqs, uint32_t n_outputs, const llama_memory_context_i * mctx, bool split_only = false, size_t * sizes = nullptr);
 
     bool set_sampler(llama_seq_id seq_id, llama_sampler * sampler);
+
+    ggml_backend_sched_ptr sched;
 
 private:
     llm_graph_params graph_params(
@@ -330,7 +333,7 @@ private:
 
     std::vector<swap_info> output_swaps;
 
-    ggml_backend_sched_ptr sched;
+
 
     ggml_backend_t backend_cpu = nullptr;
     std::vector<ggml_backend_ptr> backends;
@@ -351,6 +354,7 @@ private:
     std::vector<ggml_backend_buffer_type_t> backend_buft;
     std::vector<size_t>                     backend_buf_exp_size; // expected buffer sizes
 
+public:
     // dynamic loading
     std::thread weight_transfer_thread;
     std::atomic<bool> stop_thread{false};
@@ -362,6 +366,7 @@ private:
     std::vector<int> layer_for_slot;
     std::vector<bool> slot_ready;
     cudaStream_t transfer_stream = nullptr;
+    cudaStream_t compute_stream  = nullptr;
 
     llm_graph_result_ptr gf_res_prev;
     llm_graph_result_ptr gf_res_reserve;
@@ -388,4 +393,22 @@ private:
     mutable int32_t n_eval   = 0; // number of eval calls
 
     mutable int32_t n_reused = 0; // number of times the previous graph was reused
+
+    // 在 llama-context.h 中添加
+    struct PredictionResult {
+        std::atomic<int> needs_transfer;  // 原子标志
+        int layer_indices[64];            // 需要动态计算的层
+        int count;                        // 有效层数
+        std::atomic<int> prediction_id;   // 预测ID，防止重复处理
+    };
+
+    // 在 llama_context 中添加
+    PredictionResult* d_prediction_result = nullptr;  // GPU指针
+    PredictionResult* h_prediction_result = nullptr;  // CPU指针（pinned memory）
+    std::atomic<int> current_prediction_id{0};
+
+    void llama_context::init_shared_memory();
+    void llama_context::start_prediction_monitor() ;
+    void llama_context::release_slot(int slot_idx) ;
+
 };
