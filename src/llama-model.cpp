@@ -6,6 +6,7 @@
 #include "llama-model-loader.h"
 
 #include "llama-kv-cache.h"
+#include "llama-kv-cache-eagle.h"
 #include "llama-kv-cache-iswa.h"
 #include "llama-memory-hybrid.h"
 #include "llama-memory-recurrent.h"
@@ -1723,6 +1724,25 @@ llama_memory_i * llama_model::create_memory(const llama_memory_params & params, 
             } break;
         // Models that need standard caching should rely on recurrent/hybrid
         // checks
+        case LLM_ARCH_QWEN3EAGLE:
+            {
+                GGML_ASSERT(!hparams.is_swa_any());
+                res = new llama_kv_cache_eagle(
+                        *this,
+                        params.type_k,
+                        params.type_v,
+                        !cparams.flash_attn,
+                        cparams.offload_kqv,
+                        cparams.kv_unified,
+                        cparams.n_ctx_seq,
+                        cparams.n_seq_max,
+                        1,
+                        hparams.n_swa,
+                        hparams.swa_type,
+                        nullptr,
+                        nullptr);
+
+            } break;
         default:
             {
                 if (llm_arch_is_recurrent(arch)) {
@@ -1942,8 +1962,7 @@ ggml_cgraph * llama_model::build_graph(const llm_graph_params & params) const {
             } break;
         case LLM_ARCH_QWEN3EAGLE:
             {
-                // llm = std::make_unique<llm_build_qwen3eagle>(*this, params);
-                llm = std::make_unique<llm_build_qwen3>(*this, params);
+                llm = std::make_unique<llm_build_qwen3eagle>(*this, params);
             } break;
         // case LLM_ARCH_QWEN3MOE:
         //     {
