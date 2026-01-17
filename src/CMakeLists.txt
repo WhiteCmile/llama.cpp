@@ -21,6 +21,7 @@ add_library(llama
             llama-impl.cpp
             llama-io.cpp
             llama-kv-cache.cpp
+            llama-kv-cache-eagle.cpp
             llama-kv-cache-iswa.cpp
             llama-memory.cpp
             llama-memory-hybrid.cpp
@@ -115,6 +116,7 @@ add_library(llama
             # models/qwen2moe.cpp
             # models/qwen2vl.cpp
             models/qwen3.cpp
+            models/qwen3_eagle.cpp
             # models/qwen3vl.cpp
             # models/qwen3vl-moe.cpp
             # models/qwen3moe.cpp
