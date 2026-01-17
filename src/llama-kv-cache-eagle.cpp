@@ -30,7 +30,6 @@ llama_kv_cache_eagle::llama_kv_cache_eagle(
     llama_kv_cache(model, type_k, type_v, v_trans, offload, unified, kv_size,
         n_seq_max, n_pad, n_swa, swa_type, filter, reuse) {
 
-    auto & hparams = model.hparams;
     uint32_t n_stream = unified ? 1 : n_seq_max;
 
     // define a comparator for the buft -> ctx map to ensure that the order is well-defined:
@@ -65,8 +64,8 @@ llama_kv_cache_eagle::llama_kv_cache_eagle(
     };
 
     // [TAG_V_CACHE_VARIABLE]
-    const uint32_t n_embd_k_gqa =            hparams.n_embd_k_gqa(0);
-    const uint32_t n_embd_v_gqa = !v_trans ? hparams.n_embd_v_gqa(0) : hparams.n_embd_v_gqa_max();
+    const uint32_t n_embd_k_gqa =            _hparams().n_embd_k_gqa(0);
+    const uint32_t n_embd_v_gqa = !v_trans ? _hparams().n_embd_v_gqa(0) : _hparams().n_embd_v_gqa_max();
 
     const char * dev_name = "CPU";
 
@@ -122,6 +121,60 @@ llama_kv_cache_eagle::llama_kv_cache_eagle(
         ggml_backend_buffer_clear(buf, 0);
         _ctxs_bufs().emplace_back(std::move(ctx), buf);
     }
+}
+
+ggml_tensor * llama_kv_cache_eagle::get_k(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const {
+    // non-eagle
+    if (il >= 0) return llama_kv_cache::get_k(ctx, il, n_kv, sinfo);
+    // eagle
+    auto * k = eagle_layer.k;
+
+    const uint64_t kv_size      = get_size();
+    const uint64_t n_embd_k_gqa = k->ne[0];
+
+    assert(n_embd_k_gqa == _hparams().n_embd_k_gqa(0));
+
+    const uint32_t ns = sinfo.s1 - sinfo.s0 + 1;
+
+    return ggml_view_4d(ctx, k,
+            _hparams().n_embd_head_k, _hparams().n_head_kv(0), n_kv, ns,
+            ggml_row_size(k->type, _hparams().n_embd_head_k),
+            ggml_row_size(k->type, n_embd_k_gqa),
+            ggml_row_size(k->type, n_embd_k_gqa*kv_size),
+            ggml_row_size(k->type, n_embd_k_gqa*kv_size)*sinfo.s0);
+}
+
+ggml_tensor * llama_kv_cache_eagle::get_v(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const {
+    // non-eagle
+    if (il >= 0) return llama_kv_cache::get_v(ctx, il, n_kv, sinfo);
+    // eagle
+    auto * v = eagle_layer.v;
+
+    const uint64_t kv_size      = get_size();
+    const uint64_t n_embd_v_gqa = v->ne[0];
+
+    // [TAG_V_CACHE_VARIABLE]
+    assert(n_embd_v_gqa >= _hparams().n_embd_v_gqa(0));
+
+    const uint32_t ns = sinfo.s1 - sinfo.s0 + 1;
+
+    if (!_v_trans()) {
+        // note: v->nb[1] <= v->nb[2]
+        return ggml_view_4d(ctx, v,
+                _hparams().n_embd_head_v, _hparams().n_head_kv(0), n_kv, ns,
+                ggml_row_size(v->type, _hparams().n_embd_head_v),          // v->nb[1]
+                ggml_row_size(v->type, n_embd_v_gqa),                      // v->nb[2]
+                ggml_row_size(v->type, n_embd_v_gqa*kv_size),              // v->nb[3]
+                ggml_row_size(v->type, n_embd_v_gqa*kv_size)*sinfo.s0);
+    }
+
+    // note: v->nb[1] > v->nb[2]
+    return ggml_view_4d(ctx, v,
+            n_kv, _hparams().n_head_kv(0), _hparams().n_embd_head_v, ns,
+            ggml_row_size(v->type, kv_size*_hparams().n_embd_head_v),  // v->nb[1]
+            ggml_row_size(v->type, kv_size),                           // v->nb[2]
+            ggml_row_size(v->type, kv_size*n_embd_v_gqa),              // v->nb[3]
+            ggml_row_size(v->type, kv_size*n_embd_v_gqa)*sinfo.s0);
 }
 
 ggml_tensor * llama_kv_cache_eagle::cpy_k(ggml_context * ctx, ggml_tensor * k_cur, ggml_tensor * k_idxs, int32_t il, const slot_info & sinfo) const {
