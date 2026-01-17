@@ -1143,8 +1143,14 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
     // prepare a batch for the prompt
     llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
     llama_token new_token_id;
+
+    // ================= new a thread for prefetching =================
+
+
+    // =========================== thread end ===========================
     while (true) {
         check_context_size(llama_data.context, batch);
+        // decode one token
         if (llama_decode(llama_data.context.get(), batch)) {
             printe("failed to decode\n");
             return 1;

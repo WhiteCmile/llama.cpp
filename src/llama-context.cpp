@@ -15,104 +15,89 @@
 #include <stdexcept>
 
 
-// // ===========================搬运函数实现============================
-// // 启动权重搬运线程
-// void llama_context::start_transfer_thread() {
-//     if (weight_transfer_thread.joinable()) {
-//         return; // 线程已经在运行
-//     }
+// 启动权重搬运线程
+void llama_context::start_transfer_thread() {
+    if (weight_transfer_thread.joinable()) {
+        return; // 线程已经在运行
+    }
     
-//     stop_thread.store(false);
-//     transfer_requested.store(false);
+    stop_thread.store(false);
+    transfer_requested.store(false);
     
-//     weight_transfer_thread = std::thread([this]() {
-//         weight_transfer_worker();
-//     });
+    weight_transfer_thread = std::thread([this]() {
+        weight_transfer_worker();
+    });
     
-//     LLAMA_LOG_INFO("权重搬运线程已启动");
-// }
+    LLAMA_LOG_INFO("权重搬运线程已启动");
+}
 
 
-// // 权重搬运线程函数
-// void llama_context::weight_transfer_worker() {
-//     LLAMA_LOG_INFO("权重搬运线程开始运行");
+// 权重搬运线程函数
+void llama_context::weight_transfer_worker() {
+    LLAMA_LOG_INFO("权重搬运线程开始运行");
     
-//     while (true) {
-//         TransferParams local_params;
+    while (true) {
+        std::unordered_set<int> local_set;
         
-//         // 等待搬运请求
-//         {
-//             std::unique_lock<std::mutex> lock(transfer_mutex);
-//             transfer_cv.wait(lock, [this]() {
-//                 return stop_thread.load() || transfer_requested.load();
-//             });
+        // 等待搬运请求
+        {
+            std::unique_lock<std::mutex> lock(transfer_mutex);
+            transfer_cv.wait(lock, [this]() {
+                return stop_thread.load() || transfer_requested.load();
+            });
             
-//             if (stop_thread.load()) {
-//                 break;
-//             }
+            if (stop_thread.load()) {
+                break;
+            }
             
-//             if (transfer_requested.load()) {
-//                 // 复制参数到本地（避免长时间持有锁）
-//                 std::lock_guard<std::mutex> params_lock(params_mutex);
-//                 local_params = transfer_params;
-//             }
-//         }
+            if (transfer_requested.load()) {
+                // 复制参数到本地（避免长时间持有锁）
+                std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
+                local_set = slots_to_transfer;
+                slots_to_transfer.clear();
+            }
+        }
         
-//         // 执行权重搬运
-//         if (transfer_requested.load() && 
-//             local_params.dynamic_slot_ptr && 
-//             local_params.transfer_cpu_data && 
-//             local_params.transfer_data_size > 0) {
+        // 执行权重搬运
+        for (int slot : local_set) {
+            int il = layer_for_slot[slot];
+            if (il == -1) continue;
             
-//             try {
-//                 LLAMA_LOG_INFO("开始异步搬运权重, 大小: %zu 字节", 
-//                                local_params.transfer_data_size);
-                
-//                 // 调用 llama_slot 的异步复制方法
-//                 local_params.dynamic_slot_ptr->copy_weight_async(
-//                     local_params.transfer_cpu_data,
-//                     local_params.transfer_data_size,
-//                     local_params.transfer_backend
-//                 );
-                
-//                 LLAMA_LOG_INFO("权重搬运完成");
-                
-//                 // 执行回调（如果有）
-//                 if (local_params.callback) {
-//                     local_params.callback(true);
-//                 }
-                
-//             } catch (const std::exception& e) {
-//                 LLAMA_LOG_ERROR("权重搬运失败: %s", e.what());
-                
-//                 if (local_params.callback) {
-//                     local_params.callback(false);
-//                 }
-//             }
-//         }
+            auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
+                size_t size = ggml_nbytes(src);
+                cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size, cudaMemcpyHostToDevice, transfer_stream);
+            };
+            
+            copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
+            copy_tensor(model.layers[il].ffn_up, model.slots[slot].ffn_up);
+            copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
+            copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
+            
+            cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
+            slot_ready[slot] = false; // will be set to true in wait
+        }
         
-//         // 重置请求标志
-//         transfer_requested.store(false);
-//     }
+        transfer_requested.store(false);
+    }
     
-//     LLAMA_LOG_INFO("权重搬运线程退出");
-// }
+    LLAMA_LOG_INFO("权重搬运线程退出");
+}
 
-// // 停止权重搬运线程
-// void llama_context::stop_transfer_thread() {
-//     if (!weight_transfer_thread.joinable()) {
-//         return;
-//     }
+// 停止权重搬运线程
+void llama_context::stop_transfer_thread() {
+    if (!weight_transfer_thread.joinable()) {
+        return;
+    }
     
-//     stop_thread.store(true);
-//     transfer_cv.notify_all();
+    stop_thread.store(true);
+    transfer_cv.notify_all();
     
-//     if (weight_transfer_thread.joinable()) {
-//         weight_transfer_thread.join();
-//     }
+    if (weight_transfer_thread.joinable()) {
+        weight_transfer_thread.join();
+    }
     
-//     LLAMA_LOG_INFO("权重搬运线程已停止");
-// }
+    LLAMA_LOG_INFO("权重搬运线程已停止");
+}
 
 // // 设置动态slot指针
 // void llama_context::set_dynamic_slot(llama_slot* ptr) {
@@ -125,34 +110,14 @@
 //     }
 // }
 
-// // 触发权重搬运
-// void llama_context::trigger_weight_transfer(
-//     const void* cpu_data, 
-//     size_t data_size, 
-//     ggml_backend_t backend,
-//     std::function<void(bool)> callback) {
-    
-//     if (!cpu_data || data_size == 0) {
-//         LLAMA_LOG_WARN("无效的权重搬运参数");
-//         if (callback) callback(false);
-//         return;
-//     }
-    
-//     // 设置搬运参数
-//     {
-//         std::lock_guard<std::mutex> lock(params_mutex);
-//         transfer_params.transfer_cpu_data = cpu_data;
-//         transfer_params.transfer_data_size = data_size;
-//         transfer_params.transfer_backend = backend;
-//         transfer_params.callback = callback;
-//     }
-    
-//     // 通知搬运线程
-//     transfer_requested.store(true);
-//     transfer_cv.notify_one();
-    
-//     LLAMA_LOG_DEBUG("权重搬运已触发, 大小: %zu", data_size);
-// }
+// 等待slot权重到位
+void llama_context::wait_until_slot_ready(int slot_idx) {
+    if (slot_idx < 0 || slot_idx >= (int)slot_ready.size()) return;
+    if (!slot_ready[slot_idx]) {
+        cudaEventSynchronize(model.slots[slot_idx].weight_ready_event);
+        slot_ready[slot_idx] = true;
+    }
+}
 
 //
 // llama_context
@@ -166,6 +131,12 @@ llama_context::llama_context(
     // TODO warning when creating llama_context with awkward ctx size that is not a power of 2,
     //     may need to be backend-dependent
     LLAMA_LOG_INFO("%s: constructing llama_context\n", __func__);
+
+    // 初始化动态加载相关
+    slot_ready.assign(model.slots.size(), false);
+    layer_for_slot.assign(model.slots.size(), -1);
+    cudaStreamCreate(&transfer_stream);
+    start_transfer_thread();
 
     t_start_us = model.t_start_us;
     t_load_us  = model.t_load_us;
@@ -652,6 +623,13 @@ llama_context::~llama_context() {
         }
     }
     ggml_opt_free(opt_ctx);
+}
+
+llama_context::~llama_context() {
+    stop_transfer_thread();
+    if (transfer_stream) {
+        cudaStreamDestroy(transfer_stream);
+    }
 }
 
 void llama_context::synchronize() {
@@ -2196,7 +2174,7 @@ llm_graph_params llama_context::graph_params(
                       const llama_ubatch & ubatch,
             const llama_memory_context_i * mctx,
                           llm_graph_type   gtype) const {
-    return {
+    auto params = llm_graph_params{
         /*.arch        =*/ model.arch,
         /*.hparams     =*/ model.hparams,
         /*.cparams     =*/ cparams,
@@ -2212,7 +2190,10 @@ llm_graph_params llama_context::graph_params(
         /*.n_outputs   =*/ n_outputs,
         /*.cb          =*/ graph_get_cb(),
         /*.res         =*/ res,
+        /*.ctx         =*/ nullptr,
     };
+    params.ctx = const_cast<llama_context*>(this);
+    return params;
 }
 
 ggml_status llama_context::graph_compute(

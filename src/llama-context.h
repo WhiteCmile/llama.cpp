@@ -351,6 +351,18 @@ private:
     std::vector<ggml_backend_buffer_type_t> backend_buft;
     std::vector<size_t>                     backend_buf_exp_size; // expected buffer sizes
 
+    // dynamic loading
+    std::thread weight_transfer_thread;
+    std::atomic<bool> stop_thread{false};
+    std::atomic<bool> transfer_requested{false};
+    std::mutex transfer_mutex;
+    std::condition_variable transfer_cv;
+    std::unordered_set<int> slots_to_transfer;
+    std::mutex transfer_set_mutex;
+    std::vector<int> layer_for_slot;
+    std::vector<bool> slot_ready;
+    cudaStream_t transfer_stream = nullptr;
+
     llm_graph_result_ptr gf_res_prev;
     llm_graph_result_ptr gf_res_reserve;
 

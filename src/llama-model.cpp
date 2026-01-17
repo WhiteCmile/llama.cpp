@@ -482,7 +482,13 @@ llama_model::llama_model(const llama_model_params & params) : params(params), pi
     pimpl->has_tensor_overrides = params.tensor_buft_overrides && params.tensor_buft_overrides[0].pattern;
 }
 
-llama_model::~llama_model() = default;
+llama_model::~llama_model() {
+    for (auto & slot : slots) {
+        if (slot.weight_ready_event) {
+            cudaEventDestroy(slot.weight_ready_event);
+        }
+    }
+}
 
 void llama_model::load_stats(llama_model_loader & ml) {
     pimpl->n_elements = ml.n_elements;
@@ -2518,6 +2524,8 @@ bool llama_model::create_slots_idv(llama_model_loader & ml) {
         slot.ffn_up   = create_slot_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd, n_ff});
         LLAMA_LOG_INFO("%s: slot[%d].ffn_norm shape: [%ld]\n", __func__, i, slot.ffn_norm->ne[0]);
         LLAMA_LOG_INFO("%s: slot[%d].ffn_up   shape: [%ld, %ld]\n", __func__, i, slot.ffn_up->ne[0], slot.ffn_up->ne[1]);
+
+        cudaEventCreate(&slot.weight_ready_event);
     }
     // ================================================================================
 

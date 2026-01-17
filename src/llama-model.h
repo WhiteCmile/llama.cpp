@@ -13,6 +13,11 @@
 #include <unordered_map>
 #include <vector>
 #include "unordered_set"
+#include <mutex>              // std::mutex, std::lock_guard, std::unique_lock
+#include <condition_variable> // std::condition_variable
+#include <thread>             // std::thread（如果你启动了搬运线程）
+#include <cuda_runtime.h>     // cudaEvent_t, cudaEventCreate, cudaMemcpyAsync, etc.
+
 
 struct llama_cparams;
 struct llama_ubatch;
@@ -245,6 +250,9 @@ struct llama_slot {
     struct ggml_tensor * ffn_up_b   = nullptr; // b3
     struct ggml_tensor * ffn_act    = nullptr;
     struct ggml_tensor * ffn_exp_probs_b = nullptr;
+
+    // dynamic loading
+    cudaEvent_t weight_ready_event = nullptr;
 };
 
 struct llama_layer {
@@ -513,6 +521,16 @@ struct llama_model {
 
     std::vector<llama_slot> slots;
 
+    // 全局（或封装到 model 中）
+    std::mutex copy_mutex;
+    std::condition_variable copy_cv;
+    bool copy_requested = false;
+    bool copy_done = false;
+    cudaEvent_t copy_complete_event;
+
+    // 初始化（程序启动时）
+    cudaEventCreate(&copy_complete_event);
+
 
     int get_slot_index_for_layer(int il, int num_slots, std::unordered_set<int> static_gpu_layers) const{
         // 只对动态层计算索引
@@ -526,6 +544,39 @@ struct llama_model {
 
         return dynamic_idx % num_slots;  // 轮询分配到 slot
     }
+
+    std::thread prefetch_thread([&model, &static_gpu_layers]() {
+        while (true) {
+            std::unique_lock<std::mutex> lock(copy_mutex);
+            copy_cv.wait(lock, [] { return copy_requested || should_exit; });
+            if (should_exit) break;
+
+            // 获取当前 layer_mask（需从 GPU 拷回？）
+            // 更好的方式：预测器同时写一份到 pinned host memory
+            std::vector<int32_t> host_layer_mask(n_layer);
+            cudaMemcpy(host_layer_mask.data(), layer_mask_gpu_ptr, 
+                    n_layer * sizeof(int32_t), cudaMemcpyDeviceToHost);
+
+            // 预加载动态层到 slot
+            for (int il = 0; il < n_layer; ++il) {
+                if (host_layer_mask[il] && !static_gpu_layers.count(il)) {
+                    int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+                    auto& src = model.layers[il];
+                    auto& dst = model.slots[slot_idx];
+
+                    // 异步拷贝（使用专用 stream）
+                    cudaMemcpyAsync(dst.ffn_up->data,   src.ffn_up->data,   ggml_nbytes(src.ffn_up),   cudaMemcpyHostToDevice, copy_stream);
+                    cudaMemcpyAsync(dst.ffn_gate->data, src.ffn_gate->data, ggml_nbytes(src.ffn_gate), cudaMemcpyHostToDevice, copy_stream);
+                    // ... 其他权重
+                }
+            }
+
+            // 记录事件
+            cudaEventRecord(copy_complete_event, copy_stream);
+            copy_done = true;
+            copy_requested = false;
+        }
+    });
 
     //Dense linear projections for SentenceTransformers models like embeddinggemma
     // For Sentence Transformers models structure see

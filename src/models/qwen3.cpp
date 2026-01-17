@@ -22,6 +22,30 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
         cb(layer_mask, "layer_mask", -1);
     }
 
+    // 添加host callback来触发权重搬运
+    ggml_tensor* trigger = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, 1);
+    ggml_set_name(trigger, "prefetch_trigger");
+    auto host_callback = [this, layer_mask, &params]() {
+        if (!layer_mask) return;
+        int32_t * data = (int32_t*)ggml_get_data(layer_mask);
+        std::unordered_set<int> to_transfer;
+        for (int il = 0; il < n_layer; ++il) {
+            bool use_static = static_gpu_layers.count(il);
+            if (!use_static && data[il] == 1) {
+                int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+                to_transfer.insert(slot_idx);
+            }
+        }
+        {
+            std::lock_guard<std::mutex> lock(params.ctx->transfer_set_mutex);
+            params.ctx->slots_to_transfer = std::move(to_transfer);
+        }
+        params.ctx->transfer_requested.store(true);
+        params.ctx->transfer_cv.notify_one();
+    };
+    ggml_set_host_callback(trigger, host_callback);
+    ggml_build_forward_expand(gf, trigger);
+
     inpL = build_inp_embd(model.tok_embd);
     ggml_tensor * inp_pos = build_inp_pos();
     auto * inp_attn = build_attn_inp_kv();
@@ -34,6 +58,11 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
         bool use_static = static_gpu_layers.count(il);
 
         // LLAMA_LOG_INFO("%s: layer %d: use_static=%s\n", __func__, il, use_static ? "true" : "false");
+
+        if (!use_static) {
+            int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+            ctx->layer_for_slot[slot_idx] = il;
+        }
 
         // norm
         cur = build_norm(inpL,
@@ -140,9 +169,13 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             // ====== dynamic slot ======
             int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
 
+            params.ctx->wait_until_slot_ready(slot_idx);
+
             // ====== DEBUG: 打印 slot 分配 ======
             LLAMA_LOG_INFO("%s: layer %d assigned to slot %d\n", __func__, il, slot_idx);
             GGML_ASSERT(slot_idx >= 0 && slot_idx < (int)model.slots.size());
+
+            params.ctx->layer_for_slot[slot_idx] = il;
 
             cur = build_norm(ffn_inp,
                     model.slots[slot_idx].ffn_norm, NULL,
