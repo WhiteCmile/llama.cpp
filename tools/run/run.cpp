@@ -1350,7 +1350,7 @@ static int chat_loop(LlamaData & llama_data, const Opt & opt) {
 
 static void log_callback(const enum ggml_log_level level, const char * text, void * p) {
     const Opt * opt = static_cast<Opt *>(p);
-    if (opt->verbose || level == GGML_LOG_LEVEL_ERROR) {
+    if (opt->verbose || level == GGML_LOG_LEVEL_ERROR || level == GGML_LOG_LEVEL_INFO) {
         printe("%s", text);
     }
 }
