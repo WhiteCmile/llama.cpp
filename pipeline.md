@@ -57,3 +57,173 @@ cudaEventCreate(&copy_complete_event);
 
 ## 4.后续节点
 Graph 中后续节点 等待搬运完成（通过 CUDA Event）再进行slot计算
+
+
+## 5. 具体实现细节
+
+### 5.1 修改 llama_slot 结构体
+在 `llama-model.h` 中，为 `llama_slot` 添加 CUDA Event 用于同步：
+```cpp
+struct llama_slot {
+    // ... 现有字段 ...
+    
+    // dynamic loading
+    cudaEvent_t weight_ready_event = nullptr;
+};
+```
+
+### 5.2 初始化和销毁 Event
+在 `llama_model::create_slots_idv` 中为每个 slot 创建 Event：
+```cpp
+for (int i = 0; i < n_slots; ++i) {
+    // ... 创建 slot tensors ...
+    cudaEventCreate(&slot.weight_ready_event);
+}
+```
+
+在 `llama_model` 析构函数中销毁 Event：
+```cpp
+for (auto & slot : slots) {
+    if (slot.weight_ready_event) {
+        cudaEventDestroy(slot.weight_ready_event);
+    }
+}
+```
+
+### 5.3 添加搬运线程到 llama_context
+在 `llama-context.h` 中添加成员：
+```cpp
+// dynamic loading
+std::thread weight_transfer_thread;
+std::atomic<bool> stop_thread{false};
+std::atomic<bool> transfer_requested{false};
+std::mutex transfer_mutex;
+std::condition_variable transfer_cv;
+std::unordered_set<int> slots_to_transfer;
+std::mutex transfer_set_mutex;
+std::vector<int> layer_for_slot;
+std::vector<bool> slot_ready;
+cudaStream_t transfer_stream = nullptr;
+```
+
+在构造函数中初始化：
+```cpp
+slot_ready.assign(model.slots.size(), false);
+layer_for_slot.assign(model.slots.size(), -1);
+cudaStreamCreate(&transfer_stream);
+start_transfer_thread();
+```
+
+在析构函数中清理：
+```cpp
+stop_transfer_thread();
+if (transfer_stream) {
+    cudaStreamDestroy(transfer_stream);
+}
+```
+
+### 5.4 搬运线程实现
+```cpp
+void llama_context::weight_transfer_worker() {
+    while (true) {
+        std::unordered_set<int> local_set;
+        {
+            std::unique_lock<std::mutex> lock(transfer_mutex);
+            transfer_cv.wait(lock, [this]() {
+                return stop_thread.load() || transfer_requested.load();
+            });
+            if (stop_thread.load()) break;
+            if (transfer_requested.load()) {
+                std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
+                local_set = slots_to_transfer;
+                slots_to_transfer.clear();
+            }
+        }
+        
+        for (int slot : local_set) {
+            int il = layer_for_slot[slot];
+            if (il == -1) continue;
+            
+            auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
+                size_t size = ggml_nbytes(src);
+                cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size, cudaMemcpyHostToDevice, transfer_stream);
+            };
+            
+            copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
+            copy_tensor(model.layers[il].ffn_up, model.slots[slot].ffn_up);
+            copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
+            copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
+            
+            cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
+            slot_ready[slot] = false; // will be set in wait
+        }
+        
+        transfer_requested.store(false);
+    }
+}
+
+void llama_context::wait_until_slot_ready(int slot_idx) {
+    if (slot_idx < 0 || slot_idx >= (int)slot_ready.size()) return;
+    if (!slot_ready[slot_idx]) {
+        cudaEventSynchronize(model.slots[slot_idx].weight_ready_event);
+        slot_ready[slot_idx] = true;
+    }
+}
+```
+
+### 5.5 修改 llm_graph_params
+在 `llama-graph.h` 中添加：
+```cpp
+struct llm_graph_params {
+    // ... 现有字段 ...
+    llama_context * ctx = nullptr;
+};
+```
+
+在 `llama_context::graph_params` 中设置：
+```cpp
+params.ctx = const_cast<llama_context*>(this);
+```
+
+### 5.6 修改 llm_build_qwen3
+在 `qwen3.cpp` 中：
+```cpp
+// 添加host callback来触发权重搬运
+ggml_tensor* trigger = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, 1);
+ggml_set_name(trigger, "prefetch_trigger");
+auto host_callback = [this, layer_mask, &params]() {
+    if (!layer_mask) return;
+    int32_t * data = (int32_t*)ggml_get_data(layer_mask);
+    std::unordered_set<int> to_transfer;
+    for (int il = 0; il < n_layer; ++il) {
+        bool use_static = static_gpu_layers.count(il);
+        if (!use_static && data[il] == 1) {
+            int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+            to_transfer.insert(slot_idx);
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(params.ctx->transfer_set_mutex);
+        params.ctx->slots_to_transfer = std::move(to_transfer);
+    }
+    params.ctx->transfer_requested.store(true);
+    params.ctx->transfer_cv.notify_one();
+};
+ggml_set_host_callback(trigger, host_callback);
+ggml_build_forward_expand(gf, trigger);
+
+// 在循环中设置 layer_for_slot
+for (int il = 0; il < n_layer; ++il) {
+    bool use_static = static_gpu_layers.count(il);
+    if (!use_static) {
+        int slot_idx = model.get_slot_index_for_layer(il, 1, static_gpu_layers);
+        params.ctx->layer_for_slot[slot_idx] = il;
+    }
+    // ... 其余代码 ...
+    
+    if (!use_static) {
+        params.ctx->wait_until_slot_ready(slot_idx);
+        // ... 使用 slot ...
+    }
+}
+```
