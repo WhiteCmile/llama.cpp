@@ -311,6 +311,20 @@ using buft_list_t = std::vector<std::pair<ggml_backend_dev_t, ggml_backend_buffe
 // find the first buffer type in the list that can use the tensor
 static ggml_backend_buffer_type_t select_weight_buft(const llama_hparams & hparams, ggml_tensor * tensor, ggml_op op, const buft_list_t & buft_list) {
     GGML_ASSERT(!buft_list.empty());
+        
+    // ====== 调试：打印 buft_list ======
+    LLAMA_LOG_DEBUG("%s: buft_list candidates for tensor '%s' (op=%s):\n",
+        __func__, tensor->name, ggml_op_name(op));
+    for (size_t i = 0; i < buft_list.size(); ++i) {
+        ggml_backend_dev_t dev = buft_list[i].first;
+        ggml_backend_buffer_type_t buft = buft_list[i].second;
+        const char * dev_name = dev ? ggml_backend_dev_name(dev) : "null";
+        const char * buft_name = buft ? ggml_backend_buft_name(buft) : "null";
+        LLAMA_LOG_DEBUG("%s:   [%zu] dev='%s', buft='%s'\n", __func__, i, dev_name, buft_name);
+    }
+
+    // =================================
+    
     for (const auto & cur : buft_list) {
         ggml_backend_dev_t cur_dev = cur.first;
         ggml_backend_buffer_type_t cur_buft = cur.second;
@@ -2430,6 +2444,88 @@ void llama_model::load_vocab(llama_model_loader & ml) {
     vocab.load(ml, kv);
 }
 
+bool llama_model::create_slots_idv(llama_model_loader & ml) {
+    const int n_slots = 1;
+    // ================================ create slots ==================================
+    slots.resize(n_slots);
+
+
+    const int64_t n_embd        = hparams.n_embd;
+    const int64_t n_ff          = hparams.n_ff();
+
+    auto create_slot_tensor = [&](const LLM_TN_IMPL & tn, const std::initializer_list<int64_t> & ne) -> ggml_tensor * {
+        ggml_tensor * t_meta = ml.get_tensor_meta(tn.str().c_str());
+        
+        buft_list_t * buft_list;
+        buft_list = pimpl->dev_layer.at(tn.bid).buft_list;
+
+        ggml_backend_dev_t first_gpu = devices[0];
+        ggml_backend_buffer_type_t buft = ggml_backend_dev_buffer_type(first_gpu);\
+
+        // define a comparator for the buft -> ctx map to ensure that the order is well-defined:
+        struct ggml_backend_buft_comparator {
+            bool operator()(const ggml_backend_buffer_type_t & lhs, const ggml_backend_buffer_type_t & rhs) const {
+                return strcmp(ggml_backend_buft_name(lhs), ggml_backend_buft_name(rhs)) < 0;
+            }
+        };
+
+        const size_t nbytes = ggml_nbytes(t_meta);
+        LLAMA_LOG_INFO("%s: tensor '%s' size = %zu bytes (%.2f MiB)\n", __func__, t_meta->name, nbytes, nbytes / (1024.0 * 1024.0));
+        ml.size_data -= nbytes;
+        ml.n_created++;
+        
+
+        std::map<ggml_backend_buffer_type_t, ggml_context_ptr, ggml_backend_buft_comparator> ctx_map;
+
+        auto ctx_for_buft = [&](ggml_backend_buffer_type_t buft) -> ggml_context * {
+            auto it = ctx_map.find(buft);
+            if (it == ctx_map.end()) {
+                ggml_init_params params = {
+                    /*.mem_size   =*/ nbytes,
+                    /*.mem_buffer =*/ NULL,
+                    /*.no_alloc   =*/ true,
+                };
+
+                ggml_context * ctx = ggml_init(params);
+                if (!ctx) {
+                    throw std::runtime_error(format("failed to create ggml context"));
+                }
+
+                ctx_map.emplace(buft, ctx);
+
+                return ctx;
+            }
+            return it->second.get();
+        };
+
+        ggml_context * slot_ctx = ctx_for_buft(buft);
+
+        return ml.create_tensor(slot_ctx, tn, ne, 1);
+
+    };
+
+    // === 打印关键维度 ===
+    LLAMA_LOG_INFO("%s: creating %d slots with n_embd=%ld, n_ff=%ld\n",
+        __func__, n_slots, n_embd, n_ff);
+
+    for (int i = 0; i < n_slots; ++i) {
+        auto & slot = slots[i];
+        const auto tn = LLM_TN(LLM_ARCH_QWEN3);
+
+        slot.ffn_norm = create_slot_tensor(tn(LLM_TENSOR_FFN_NORM, "weight", i), {n_embd});
+        slot.ffn_gate = create_slot_tensor(tn(LLM_TENSOR_FFN_GATE, "weight", i), {n_embd, n_ff});
+        slot.ffn_down = create_slot_tensor(tn(LLM_TENSOR_FFN_DOWN, "weight", i), {n_ff, n_embd});
+        slot.ffn_up   = create_slot_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd, n_ff});
+        LLAMA_LOG_INFO("%s: slot[%d].ffn_norm shape: [%ld]\n", __func__, i, slot.ffn_norm->ne[0]);
+        LLAMA_LOG_INFO("%s: slot[%d].ffn_up   shape: [%ld, %ld]\n", __func__, i, slot.ffn_up->ne[0], slot.ffn_up->ne[1]);
+    }
+    // ================================================================================
+
+
+    return true;
+}
+
+
 bool llama_model::load_tensors(llama_model_loader & ml) {
     const auto & split_mode   = params.split_mode;
     const auto & use_mlock    = params.use_mlock;
@@ -2437,6 +2533,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
 
     const int n_layer      = hparams.n_layer;
     const int n_gpu_layers = this->n_gpu_layers();
+    const int n_slots      = 1;
 
     const bool use_mmap_buffer = true;
 
@@ -2481,8 +2578,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
     if (cpu_dev == nullptr) {
         throw std::runtime_error(format("%s: no CPU backend found", __func__));
     }
-    const int i_gpu_start = std::max(int(hparams.n_layer) + 1 - n_gpu_layers, 0);
-    const int act_gpu_layers = devices.empty() ? 0 : std::min(n_gpu_layers, int(n_layer) + 1);
+    const int i_gpu_start = std::max(int(hparams.n_layer) + 1 - n_gpu_layers + n_slots, 0);
+    const int act_gpu_layers = devices.empty() ? 0 : std::min(n_gpu_layers - n_slots, int(n_layer) + 1);
     auto get_layer_buft_list = [&](int il) -> llama_model::impl::layer_dev {
         const bool is_swa = il < int(hparams.n_layer) && hparams.is_swa(il);
         if (il < i_gpu_start || (il - i_gpu_start) >= act_gpu_layers) {
@@ -2546,6 +2643,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
     const auto TENSOR_DUPLICATED   = llama_model_loader::TENSOR_DUPLICATED;
     const auto TENSOR_NOT_REQUIRED = llama_model_loader::TENSOR_NOT_REQUIRED;
     const auto TENSOR_SKIP         = llama_model_loader::TENSOR_SKIP;
+    const auto TENSOR_SLOT         = llama_model_loader::TENSOR_SLOT;
 
     // create tensors for the weights
     {
@@ -2575,9 +2673,49 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
         ggml_backend_buffer_type_t first_moved_from_buft = nullptr;
         ggml_backend_buffer_type_t first_moved_to_buft = nullptr;
 
-        auto create_tensor = [&](const LLM_TN_IMPL & tn, const std::initializer_list<int64_t> & ne, int flags) -> ggml_tensor * {
-            ggml_tensor * t_meta = ml.get_tensor_meta(tn.str().c_str());
+        //================================ create slot ==================================
 
+        auto create_slots = [&](const int n_slots) {
+
+            const int64_t n_embd = hparams.n_embd;
+            const int64_t n_ff   = hparams.n_ff();
+            ggml_type weight_type = GGML_TYPE_F32;
+
+            if (n_slots > 0) {
+                // set slots backend to gpu
+                ggml_backend_buffer_type_t gpu_buft = devices.empty() ?
+                    ggml_backend_cpu_buffer_type() :
+                    ggml_backend_dev_buffer_type(devices[0]);
+
+                // set up slots ctx
+                ggml_context * slot_ctx = ctx_for_buft(gpu_buft);
+
+                slots.resize(n_slots);
+                for (int i = 0; i < n_slots; ++i) {
+                    auto & slot = slots[i];
+
+                    // create slots identical to ffn layers
+                    slot.ffn_norm = ggml_new_tensor_1d(slot_ctx, weight_type, n_embd);
+                    slot.ffn_up   = ggml_new_tensor_2d(slot_ctx, weight_type, n_embd, n_ff);
+                    slot.ffn_gate = ggml_new_tensor_2d(slot_ctx, weight_type, n_embd, n_ff);
+                    slot.ffn_down = ggml_new_tensor_2d(slot_ctx, weight_type, n_ff, n_embd);
+
+                    // set up ttensor names
+                    ggml_set_name(slot.ffn_norm, ("slot." + std::to_string(i) + ".ffn_norm").c_str());
+                    ggml_set_name(slot.ffn_up,   ("slot." + std::to_string(i) + ".ffn_up").c_str());
+                    ggml_set_name(slot.ffn_gate, ("slot." + std::to_string(i) + ".ffn_gate").c_str());
+                    ggml_set_name(slot.ffn_down, ("slot." + std::to_string(i) + ".ffn_down").c_str());
+
+                }
+            }
+
+            LLAMA_LOG_INFO("%s: %d slots created with metadata only (no data loaded)\n", __func__, n_slots);
+        };
+
+        auto create_tensor = [&](const LLM_TN_IMPL & tn, const std::initializer_list<int64_t> & ne, int flags) -> ggml_tensor * {
+
+            ggml_tensor * t_meta = ml.get_tensor_meta(tn.str().c_str());
+            
             if (!t_meta) {
                 if (flags & TENSOR_NOT_REQUIRED) {
                     return nullptr;
@@ -2713,10 +2851,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             return ml.create_tensor(ctx, tn, ne, flags);
         };
 
-        int n_slot = 1;
-
         layers.resize(n_layer);
-        slots.resize(n_slot);
+
 
         // TODO: move to a separate function
         const auto tn = LLM_TN(arch);
@@ -2730,7 +2866,6 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             case LLM_ARCH_LLAMA_EMBED:
                 {
                     tok_embd = create_tensor(tn(LLM_TENSOR_TOKEN_EMBD, "weight"), {n_embd, n_vocab}, 0);
-
                     // output
                     output_norm = create_tensor(tn(LLM_TENSOR_OUTPUT_NORM, "weight"), {n_embd}, 0);
                     output      = create_tensor(tn(LLM_TENSOR_OUTPUT,      "weight"), {n_embd, n_vocab}, TENSOR_NOT_REQUIRED);
@@ -3640,15 +3775,9 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
                     }
 
-                    // ================================ create slot ==================================
-                    for (int i = 0; i < n_slot; ++i) {
-                        auto & slot = slots[i];
-                        slot.ffn_norm = create_tensor(tn(LLM_TENSOR_SLOT_FFN_NORM, "weight", i), {n_embd}, 1);
-                        slot.ffn_gate = create_tensor(tn(LLM_TENSOR_SLOT_FFN_GATE, "weight", i), {n_embd, n_ff}, 1);
-                        slot.ffn_down = create_tensor(tn(LLM_TENSOR_SLOT_FFN_DOWN, "weight", i), {n_ff, n_embd}, 1);
-                        slot.ffn_up   = create_tensor(tn(LLM_TENSOR_SLOT_FFN_UP,   "weight", i), {n_embd, n_ff}, 1);
-                    }
-                    // ================================================================================
+                    //================================ create slot ==================================
+                    create_slots(1);
+                    // // ================================================================================
 
                 } break;
             case LLM_ARCH_QWEN3MOE:
@@ -6995,6 +7124,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
         for (auto * cur = ggml_get_first_tensor(ctx.get()); cur != NULL; cur = ggml_get_next_tensor(ctx.get(), cur)) {
             tensors_by_name.emplace_back(ggml_get_name(cur), cur);
         }
+        LLAMA_LOG_INFO("populate tensors_by_name done");
     }
 
     if (ml.no_alloc) {

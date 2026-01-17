@@ -12,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "unordered_set"
 
 struct llama_cparams;
 struct llama_ubatch;
@@ -465,6 +466,7 @@ struct llama_layer {
     struct llama_layer_shortconv shortconv;
 
     struct llama_layer_nextn nextn;
+
 };
 
 struct llama_model {
@@ -511,6 +513,20 @@ struct llama_model {
 
     std::vector<llama_slot> slots;
 
+
+    int get_slot_index_for_layer(int il, int num_slots, std::unordered_set<int> static_gpu_layers) const{
+        // 只对动态层计算索引
+        if (static_gpu_layers.count(il)) return -1;  // 静态层不用 slot
+
+        // 统计动态层序号（从 0 开始）
+        int dynamic_idx = 0;
+        for (int i = 0; i < il; ++i) {
+            if (!static_gpu_layers.count(i)) dynamic_idx++;
+        }
+
+        return dynamic_idx % num_slots;  // 轮询分配到 slot
+    }
+
     //Dense linear projections for SentenceTransformers models like embeddinggemma
     // For Sentence Transformers models structure see
     // https://sbert.net/docs/sentence_transformer/usage/custom_models.html#structure-of-sentence-transformer-models
@@ -540,6 +556,7 @@ struct llama_model {
     void load_hparams(llama_model_loader & ml);
     void load_vocab  (llama_model_loader & ml);
     bool load_tensors(llama_model_loader & ml); // returns false if cancelled by progress_callback
+    bool create_slots_idv(llama_model_loader & ml);
 
     std::string arch_name() const;
     std::string type_name() const;

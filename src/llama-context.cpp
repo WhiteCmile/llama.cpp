@@ -15,144 +15,144 @@
 #include <stdexcept>
 
 
-// ===========================搬运函数实现============================
-// 启动权重搬运线程
-void llama_context::start_transfer_thread() {
-    if (weight_transfer_thread.joinable()) {
-        return; // 线程已经在运行
-    }
+// // ===========================搬运函数实现============================
+// // 启动权重搬运线程
+// void llama_context::start_transfer_thread() {
+//     if (weight_transfer_thread.joinable()) {
+//         return; // 线程已经在运行
+//     }
     
-    stop_thread.store(false);
-    transfer_requested.store(false);
+//     stop_thread.store(false);
+//     transfer_requested.store(false);
     
-    weight_transfer_thread = std::thread([this]() {
-        weight_transfer_worker();
-    });
+//     weight_transfer_thread = std::thread([this]() {
+//         weight_transfer_worker();
+//     });
     
-    LLAMA_LOG_INFO("权重搬运线程已启动");
-}
+//     LLAMA_LOG_INFO("权重搬运线程已启动");
+// }
 
 
-// 权重搬运线程函数
-void llama_context::weight_transfer_worker() {
-    LLAMA_LOG_INFO("权重搬运线程开始运行");
+// // 权重搬运线程函数
+// void llama_context::weight_transfer_worker() {
+//     LLAMA_LOG_INFO("权重搬运线程开始运行");
     
-    while (true) {
-        TransferParams local_params;
+//     while (true) {
+//         TransferParams local_params;
         
-        // 等待搬运请求
-        {
-            std::unique_lock<std::mutex> lock(transfer_mutex);
-            transfer_cv.wait(lock, [this]() {
-                return stop_thread.load() || transfer_requested.load();
-            });
+//         // 等待搬运请求
+//         {
+//             std::unique_lock<std::mutex> lock(transfer_mutex);
+//             transfer_cv.wait(lock, [this]() {
+//                 return stop_thread.load() || transfer_requested.load();
+//             });
             
-            if (stop_thread.load()) {
-                break;
-            }
+//             if (stop_thread.load()) {
+//                 break;
+//             }
             
-            if (transfer_requested.load()) {
-                // 复制参数到本地（避免长时间持有锁）
-                std::lock_guard<std::mutex> params_lock(params_mutex);
-                local_params = transfer_params;
-            }
-        }
+//             if (transfer_requested.load()) {
+//                 // 复制参数到本地（避免长时间持有锁）
+//                 std::lock_guard<std::mutex> params_lock(params_mutex);
+//                 local_params = transfer_params;
+//             }
+//         }
         
-        // 执行权重搬运
-        if (transfer_requested.load() && 
-            local_params.dynamic_slot_ptr && 
-            local_params.transfer_cpu_data && 
-            local_params.transfer_data_size > 0) {
+//         // 执行权重搬运
+//         if (transfer_requested.load() && 
+//             local_params.dynamic_slot_ptr && 
+//             local_params.transfer_cpu_data && 
+//             local_params.transfer_data_size > 0) {
             
-            try {
-                LLAMA_LOG_INFO("开始异步搬运权重, 大小: %zu 字节", 
-                               local_params.transfer_data_size);
+//             try {
+//                 LLAMA_LOG_INFO("开始异步搬运权重, 大小: %zu 字节", 
+//                                local_params.transfer_data_size);
                 
-                // 调用 llama_slot 的异步复制方法
-                local_params.dynamic_slot_ptr->copy_weight_async(
-                    local_params.transfer_cpu_data,
-                    local_params.transfer_data_size,
-                    local_params.transfer_backend
-                );
+//                 // 调用 llama_slot 的异步复制方法
+//                 local_params.dynamic_slot_ptr->copy_weight_async(
+//                     local_params.transfer_cpu_data,
+//                     local_params.transfer_data_size,
+//                     local_params.transfer_backend
+//                 );
                 
-                LLAMA_LOG_INFO("权重搬运完成");
+//                 LLAMA_LOG_INFO("权重搬运完成");
                 
-                // 执行回调（如果有）
-                if (local_params.callback) {
-                    local_params.callback(true);
-                }
+//                 // 执行回调（如果有）
+//                 if (local_params.callback) {
+//                     local_params.callback(true);
+//                 }
                 
-            } catch (const std::exception& e) {
-                LLAMA_LOG_ERROR("权重搬运失败: %s", e.what());
+//             } catch (const std::exception& e) {
+//                 LLAMA_LOG_ERROR("权重搬运失败: %s", e.what());
                 
-                if (local_params.callback) {
-                    local_params.callback(false);
-                }
-            }
-        }
+//                 if (local_params.callback) {
+//                     local_params.callback(false);
+//                 }
+//             }
+//         }
         
-        // 重置请求标志
-        transfer_requested.store(false);
-    }
+//         // 重置请求标志
+//         transfer_requested.store(false);
+//     }
     
-    LLAMA_LOG_INFO("权重搬运线程退出");
-}
+//     LLAMA_LOG_INFO("权重搬运线程退出");
+// }
 
-// 停止权重搬运线程
-void llama_context::stop_transfer_thread() {
-    if (!weight_transfer_thread.joinable()) {
-        return;
-    }
+// // 停止权重搬运线程
+// void llama_context::stop_transfer_thread() {
+//     if (!weight_transfer_thread.joinable()) {
+//         return;
+//     }
     
-    stop_thread.store(true);
-    transfer_cv.notify_all();
+//     stop_thread.store(true);
+//     transfer_cv.notify_all();
     
-    if (weight_transfer_thread.joinable()) {
-        weight_transfer_thread.join();
-    }
+//     if (weight_transfer_thread.joinable()) {
+//         weight_transfer_thread.join();
+//     }
     
-    LLAMA_LOG_INFO("权重搬运线程已停止");
-}
+//     LLAMA_LOG_INFO("权重搬运线程已停止");
+// }
 
-// 设置动态slot指针
-void llama_context::set_dynamic_slot(llama_slot* ptr) {
-    std::lock_guard<std::mutex> lock(params_mutex);
-    transfer_params.dynamic_slot_ptr = ptr;
+// // 设置动态slot指针
+// void llama_context::set_dynamic_slot(llama_slot* ptr) {
+//     std::lock_guard<std::mutex> lock(params_mutex);
+//     transfer_params.dynamic_slot_ptr = ptr;
     
-    // 如果线程还没启动，现在启动
-    if (!weight_transfer_thread.joinable()) {
-        start_transfer_thread();
-    }
-}
+//     // 如果线程还没启动，现在启动
+//     if (!weight_transfer_thread.joinable()) {
+//         start_transfer_thread();
+//     }
+// }
 
-// 触发权重搬运
-void llama_context::trigger_weight_transfer(
-    const void* cpu_data, 
-    size_t data_size, 
-    ggml_backend_t backend,
-    std::function<void(bool)> callback) {
+// // 触发权重搬运
+// void llama_context::trigger_weight_transfer(
+//     const void* cpu_data, 
+//     size_t data_size, 
+//     ggml_backend_t backend,
+//     std::function<void(bool)> callback) {
     
-    if (!cpu_data || data_size == 0) {
-        LLAMA_LOG_WARN("无效的权重搬运参数");
-        if (callback) callback(false);
-        return;
-    }
+//     if (!cpu_data || data_size == 0) {
+//         LLAMA_LOG_WARN("无效的权重搬运参数");
+//         if (callback) callback(false);
+//         return;
+//     }
     
-    // 设置搬运参数
-    {
-        std::lock_guard<std::mutex> lock(params_mutex);
-        transfer_params.transfer_cpu_data = cpu_data;
-        transfer_params.transfer_data_size = data_size;
-        transfer_params.transfer_backend = backend;
-        transfer_params.callback = callback;
-    }
+//     // 设置搬运参数
+//     {
+//         std::lock_guard<std::mutex> lock(params_mutex);
+//         transfer_params.transfer_cpu_data = cpu_data;
+//         transfer_params.transfer_data_size = data_size;
+//         transfer_params.transfer_backend = backend;
+//         transfer_params.callback = callback;
+//     }
     
-    // 通知搬运线程
-    transfer_requested.store(true);
-    transfer_cv.notify_one();
+//     // 通知搬运线程
+//     transfer_requested.store(true);
+//     transfer_cv.notify_one();
     
-    LLAMA_LOG_DEBUG("权重搬运已触发, 大小: %zu", data_size);
-}
+//     LLAMA_LOG_DEBUG("权重搬运已触发, 大小: %zu", data_size);
+// }
 
 //
 // llama_context
@@ -403,6 +403,8 @@ llama_context::llama_context(
         }
     }
 
+
+
     // init the memory module
     if (!hparams.vocab_only) {
         llama_memory_params params_mem = {
@@ -413,6 +415,8 @@ llama_context::llama_context(
 
         memory.reset(model.create_memory(params_mem, cparams));
     }
+
+    LLAMA_LOG_INFO("Memory init done");
 
     // init backends
     if (!hparams.vocab_only) {

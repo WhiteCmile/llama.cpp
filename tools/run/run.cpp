@@ -2,7 +2,6 @@
 #include "common.h"
 #include "llama-cpp.h"
 #include "log.h"
-#include "llama-slot.h"
 #include "ggml-cuda.h"
 
 #include "linenoise.cpp/linenoise.h"
@@ -1354,7 +1353,7 @@ static int chat_loop(LlamaData & llama_data, const Opt & opt) {
 
 static void log_callback(const enum ggml_log_level level, const char * text, void * p) {
     const Opt * opt = static_cast<Opt *>(p);
-    if (opt->verbose || level == GGML_LOG_LEVEL_ERROR) {
+    if (opt->verbose || level == GGML_LOG_LEVEL_ERROR || level == GGML_LOG_LEVEL_INFO) {
         printe("%s", text);
     }
 }

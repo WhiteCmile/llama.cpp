@@ -432,7 +432,7 @@ struct llm_build_qwen2vl : public llm_graph_context {
 };
 
 struct llm_build_qwen3 : public llm_graph_context {
-    llm_build_qwen3(const llama_model & model, llama_slot & slot, const llm_graph_params & params);
+    llm_build_qwen3(const llama_model & model, const llm_graph_params & params);
 
     const std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
 };

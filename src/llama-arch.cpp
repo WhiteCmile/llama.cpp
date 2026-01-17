@@ -328,6 +328,10 @@ static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
     { LLM_TENSOR_FFN_GATE,                               "blk.%d.ffn_gate" },
     { LLM_TENSOR_FFN_DOWN,                               "blk.%d.ffn_down" },
     { LLM_TENSOR_FFN_UP,                                 "blk.%d.ffn_up" },
+    { LLM_TENSOR_SLOT_FFN_NORM,                          "blk.%d.ffn_norm" },
+    { LLM_TENSOR_SLOT_FFN_GATE,                          "blk.%d.ffn_gate" },
+    { LLM_TENSOR_SLOT_FFN_DOWN,                          "blk.%d.ffn_down" },
+    { LLM_TENSOR_SLOT_FFN_UP,                            "blk.%d.ffn_up" },
     { LLM_TENSOR_FFN_GATE_EXP,                           "blk.%d.ffn_gate.%d" },
     { LLM_TENSOR_FFN_DOWN_EXP,                           "blk.%d.ffn_down.%d" },
     { LLM_TENSOR_FFN_UP_EXP,                             "blk.%d.ffn_up.%d" },
@@ -914,6 +918,10 @@ static std::set<llm_tensor> llm_get_tensor_names(llm_arch arch) {
                 LLM_TENSOR_FFN_GATE,
                 LLM_TENSOR_FFN_DOWN,
                 LLM_TENSOR_FFN_UP,
+                LLM_TENSOR_SLOT_FFN_NORM,
+                LLM_TENSOR_SLOT_FFN_GATE,
+                LLM_TENSOR_SLOT_FFN_DOWN,
+                LLM_TENSOR_SLOT_FFN_UP,
             };
         case LLM_ARCH_QWEN3MOE:
         case LLM_ARCH_QWEN3VLMOE:

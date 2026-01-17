@@ -4,7 +4,6 @@
 #include "llama-cparams.h"
 #include "llama-graph.h"
 #include "llama-adapter.h"
-#include "llama-slot.h"
 
 #include "ggml-cpp.h"
 #include "ggml-opt.h"
@@ -51,31 +50,6 @@ struct llama_context {
     const llama_cparams & get_cparams() const;
 
     ggml_backend_sched_t get_sched() const;
-
-    // ====================== 新建搬运线程 =======================
-    std::thread weight_transfer_thread;
-    std::atomic<bool> transfer_requested{false};
-    std::atomic<bool> stop_thread{false};
-    std::mutex transfer_mutex;
-    std::condition_variable transfer_cv;
-
-    // 搬运参数（需要线程同步保护）
-    struct TransferParams {
-        llama_slot* dynamic_slot_ptr{nullptr};
-        const void* transfer_cpu_data{nullptr};
-        size_t transfer_data_size{0};
-        ggml_backend_t transfer_backend{nullptr};
-        std::function<void(bool)> callback{nullptr}; // 可选的完成回调
-    };
-    
-    std::mutex params_mutex;
-    TransferParams transfer_params;
-    
-    // 公共方法
-    void set_dynamic_slot(llama_slot* ptr);
-    void trigger_weight_transfer(const void* cpu_data, size_t data_size, 
-                                 ggml_backend_t backend,
-                                 std::function<void(bool)> callback = nullptr);
 
 
     uint32_t n_ctx()     const;

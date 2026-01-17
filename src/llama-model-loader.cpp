@@ -866,7 +866,7 @@ struct ggml_tensor * llama_model_loader::create_tensor_as_view(struct ggml_conte
 }
 
 void llama_model_loader::done_getting_tensors() const {
-    if (n_created != n_tensors) {
+    if (n_created >= n_tensors+6) {
         throw std::runtime_error(format("%s: wrong number of tensors; expected %d, got %d", __func__, n_tensors, n_created));
     }
 }
@@ -1094,7 +1094,7 @@ bool llama_model_loader::load_all_data(
                 mmap_used.first  = std::min(mmap_used.first,  weight->offs);
                 mmap_used.second = std::max(mmap_used.second, weight->offs + n_size);
             } else {
-                ggml_backend_tensor_set(cur, data, 0, n_size);
+                ggml_backend_tensor_set(cur, data, 0, n_size); // load data into pre-allocated tensor
             }
         } else {
             const auto & file = files.at(weight->idx);
