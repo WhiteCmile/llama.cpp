@@ -251,8 +251,11 @@ struct llama_slot {
     struct ggml_tensor * ffn_act    = nullptr;
     struct ggml_tensor * ffn_exp_probs_b = nullptr;
 
-    // dynamic loading
+    // tensor ready event for using data in the slot
     cudaEvent_t weight_ready_event = nullptr;
+
+    // slot free event for next cuda memcpy async
+    cudaEvent_t slot_free_event = nullptr;
 };
 
 struct llama_layer {
@@ -521,15 +524,7 @@ struct llama_model {
 
     std::vector<llama_slot> slots;
 
-    // 全局（或封装到 model 中）
-    std::mutex copy_mutex;
-    std::condition_variable copy_cv;
-    bool copy_requested = false;
-    bool copy_done = false;
-    cudaEvent_t copy_complete_event;
-
-    // 初始化（程序启动时）
-    cudaError_t err = cudaEventCreate(&copy_complete_event);
+  
 
 
     int get_slot_index_for_layer(int il, int num_slots, std::unordered_set<int> static_gpu_layers) const{
@@ -566,6 +561,8 @@ struct llama_model {
     int64_t t_start_us = 0;
 
     explicit llama_model(const struct llama_model_params & params);
+    void init_slot_event();
+
     ~llama_model();
 
     void load_stats  (llama_model_loader & ml);

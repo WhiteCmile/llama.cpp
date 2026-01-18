@@ -2406,6 +2406,10 @@ static int ggml_get_n_tasks(struct ggml_tensor * node, int n_threads) {
                 // We promise not to use CPU to do anything
                 n_tasks = 1;
             } break;
+        case GGML_OP_CUDA_RELEASE_SLOT:
+            {
+                n_tasks = 1;
+            } break;
         case GGML_OP_COUNT:
             {
                 GGML_ABORT("fatal error");

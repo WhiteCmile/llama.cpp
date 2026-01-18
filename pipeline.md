@@ -13,10 +13,6 @@
 
 核心机制：
 
-* graph 中插入一个 Host Callback 节点
-* 该 callback 通知外部线程：“现在可以搬权重了”
-* 外部线程执行 cudaMemcpyAsync（到预分配的 slot）
-* Graph 中后续节点 等待搬运完成（通过 CUDA Event）
 
 ## 1. 全局同步变量
 参考：
@@ -74,12 +70,6 @@ struct llama_slot {
 
 ### 5.2 初始化和销毁 Event
 在 `llama_model::create_slots_idv` 中为每个 slot 创建 Event：
-```cpp
-for (int i = 0; i < n_slots; ++i) {
-    // ... 创建 slot tensors ...
-    cudaEventCreate(&slot.weight_ready_event);
-}
-```
 
 在 `llama_model` 析构函数中销毁 Event：
 ```cpp
@@ -124,50 +114,91 @@ if (transfer_stream) {
 
 ### 5.4 搬运线程实现
 ```cpp
+
 void llama_context::weight_transfer_worker() {
+
+    
     while (true) {
-        std::unordered_set<int> local_set;
+            std::unordered_set<int> to_remove; // 本次成功搬运的 slot
+        
         {
             std::unique_lock<std::mutex> lock(transfer_mutex);
             transfer_cv.wait(lock, [this]() {
                 return stop_thread.load() || transfer_requested.load();
             });
-            if (stop_thread.load()) break;
-            if (transfer_requested.load()) {
-                std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
-                local_set = slots_to_transfer;
-                slots_to_transfer.clear();
+            
+            if (stop_thread.load()) {
+                break;
+            }
+            
+            // 注意：这里不再清空 slots_to_transfer！
+            // 而是在搬运成功后，再从集合中移除
+        }
+
+        // 在 transfer_set_mutex 保护下访问和修改 slots_to_transfer
+        {
+            LLAMA_LOG_INFO("权重搬运线程收到搬运请求，开始搬运权重");
+            std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
+            
+            // 遍历当前所有待搬运的 slot
+            for (int slot : slots_to_transfer) {
+                // 跳过未就绪的 slot（保留在集合中，下次再试）
+                if (slot_ready[slot]) {
+                    continue;
+                }
+
+                int il = layer_for_slot[slot];
+                if (il == -1) {
+                    to_remove.insert(slot); // 无效层？也移除避免死循环
+                    continue;
+                }
+                
+                auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
+                    size_t size = ggml_nbytes(src);
+                    cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size,
+                                    cudaMemcpyHostToDevice, transfer_stream);
+                };
+                
+                copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
+                copy_tensor(model.layers[il].ffn_up,   model.slots[slot].ffn_up);
+                copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
+                copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
+                
+                cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
+                slot_ready[slot] = true; // 标记为已搬运
+                
+                to_remove.insert(slot); // 标记为已处理
+            }
+
+            // 从待搬运集合中移除已处理的 slot
+            for (int slot : to_remove) {
+                slots_to_transfer.erase(slot);
             }
         }
+
+        // 如果本次没有搬运任何 slot（全未就绪），可考虑短暂等待
+        // 但通常由主线程再次触发 transfer_requested，所以可不做处理
         
-        for (int slot : local_set) {
-            int il = layer_for_slot[slot];
-            if (il == -1) continue;
-            
-            auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
-                size_t size = ggml_nbytes(src);
-                cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size, cudaMemcpyHostToDevice, transfer_stream);
-            };
-            
-            copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
-            copy_tensor(model.layers[il].ffn_up, model.slots[slot].ffn_up);
-            copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
-            copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
-            
-            cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
-            slot_ready[slot] = false; // will be set in wait
-        }
-        
+        // 重置 transfer_requested 仅当 slots_to_transfer 为空？
+        // 更安全的做法：只要还有 pending slot，就保持 transfer_requested = true
+        // 但这样可能频繁唤醒。折中：每次搬运后都设为 false，由主线程重新 set
         transfer_requested.store(false);
+    }
+    
+    LLAMA_LOG_INFO("权重搬运线程退出");
+}
+
+// 等待slot权重到位
+void llama_context::wait_until_slot_ready(int slot_idx, cudaStream_t main_stream) {
+    if (slot_idx < 0 || slot_idx >= (int)slot_ready.size()) return;
+    if (!slot_ready[slot_idx]) {
+        cudaStreamWaitEvent(main_stream, model.slots[slot_idx].weight_ready_event, 0);
+        slot_ready[slot_idx] = true;
     }
 }
 
-void llama_context::wait_until_slot_ready(int slot_idx) {
-    if (slot_idx < 0 || slot_idx >= (int)slot_ready.size()) return;
-    if (!slot_ready[slot_idx]) {
-        cudaEventSynchronize(model.slots[slot_idx].weight_ready_event);
-        slot_ready[slot_idx] = true;
-    }
+void llama_context::release_slot(int slot_idx) {
+    slot_ready[slot_idx] = false;
 }
 ```
 

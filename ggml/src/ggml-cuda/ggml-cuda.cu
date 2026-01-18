@@ -1,7 +1,6 @@
 #include "ggml-cuda.h"
 #include "ggml-impl.h"
-#include "ggml-backend-impl.h"
-
+#include "ggml-cuda/set_event.cuh"
 #include "ggml-cuda/common.cuh"
 #include "ggml-cuda/acc.cuh"
 #include "ggml-cuda/add-id.cuh"
@@ -2840,6 +2839,9 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
             break;
         case GGML_OP_LAYER_MASKED_BYPASSING:
             ggml_cuda_op_layer_masked_bypassing(ctx, dst);
+            break;
+        case GGML_OP_CUDA_RELEASE_SLOT:
+            ggml_cuda_op_release_slot(ctx, dst);
             break;
         default:
             return false;

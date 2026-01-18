@@ -1221,6 +1221,7 @@ struct ggml_cuda_stream_context {
 };
 
 struct ggml_backend_cuda_context {
+    void * user_data;
     int device;
     std::string name;
     cudaEvent_t copy_event = nullptr;

@@ -1053,7 +1053,7 @@ static const char * GGML_OP_NAME[GGML_OP_COUNT] = {
 };
 
 // static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
-static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
+static_assert(GGML_OP_COUNT == 99, "GGML_OP_COUNT != 98");
 
 static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "none",
@@ -1163,7 +1163,7 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
 };
 
 // static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
-static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
+static_assert(GGML_OP_COUNT == 99, "GGML_OP_COUNT != 98");
 
 static_assert(GGML_OP_POOL_COUNT == 2, "GGML_OP_POOL_COUNT != 2");
 
@@ -1975,6 +1975,35 @@ static struct ggml_tensor * ggml_add_impl(
 
     return result;
 }
+
+static struct ggml_tensor * ggml_cuda_release_slot_impl(
+    struct ggml_context * ctx,
+    int                   slot_idx) {
+
+    // 创建一个标量 tensor（1 元素，I32 类型）
+    // 注意：不能是 nullptr，必须是一个合法 tensor
+    struct ggml_tensor * result = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 1);
+
+    // 设置自定义 op
+    result->op = GGML_OP_CUDA_RELEASE_SLOT;
+
+    // 存储 slot_idx 到 op_params（op_params 是 char[16]）
+    // 安全地复制 int（4 字节）
+    GGML_ASSERT(sizeof(int) <= sizeof(result->op_params));
+    memcpy(result->op_params, &slot_idx, sizeof(int));
+
+    // 没有 src[0]/src[1]，因为这是副作用操作
+    result->src[0] = NULL;
+    result->src[1] = NULL;
+
+    return result;
+}
+
+struct ggml_tensor * ggml_cuda_release_slot(
+    struct ggml_context * ctx,
+    int slot_idx){
+        return ggml_cuda_release_slot_impl(ctx, slot_idx);
+    }
 
 struct ggml_tensor * ggml_add(
         struct ggml_context * ctx,

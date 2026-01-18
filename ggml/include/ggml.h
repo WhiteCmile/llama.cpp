@@ -570,6 +570,7 @@ extern "C" {
         GGML_OP_LAYER_MASKED_BYPASSING,
         GGML_OP_LAYER_MASKED_MUL_MAT, // layer masked matmul
         GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT, // layer masked flash attention
+        GGML_OP_CUDA_RELEASE_SLOT,
 
         GGML_OP_COUNT,
     };
@@ -873,6 +874,10 @@ extern "C" {
     GGML_API struct ggml_tensor * ggml_dup_inplace(
             struct ggml_context * ctx,
             struct ggml_tensor  * a);
+
+    GGML_API struct ggml_tensor * ggml_cuda_release_slot(
+            struct ggml_context * ctx,
+            int                   slot_idx);
 
     GGML_API struct ggml_tensor * ggml_add(
             struct ggml_context * ctx,

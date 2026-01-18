@@ -41,7 +41,7 @@ struct llama_memory_breakdown_data {
 struct llama_context {
     // init scheduler and compute buffers, reserve worst-case graphs
     llama_context(
-            const llama_model & model,
+                  llama_model & model,
                   llama_context_params params);
 
     ~llama_context();
@@ -273,7 +273,7 @@ private:
     // members
     //
 
-    const llama_model & model;
+    llama_model & model;
 
     llama_cparams       cparams;
     llama_adapter_cvec  cvec;
@@ -409,8 +409,8 @@ public:
     PredictionResult* h_prediction_result = nullptr;  // CPU指针（pinned memory）
     std::atomic<int> current_prediction_id{0};
 
-    void init_shared_memory();
-    void start_prediction_monitor();
+    // void init_shared_memory();
+    // void start_prediction_monitor();
     void release_slot(int slot_idx) ;
 
 };

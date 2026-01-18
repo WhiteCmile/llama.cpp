@@ -478,8 +478,28 @@ struct llama_model::impl {
     bool has_tensor_overrides;
 };
 
+void llama_model::init_slot_event(){
+    int num_slots = 1;
+    for (int i = 0; i < num_slots; ++i) {
+        auto& slot = slots[i];
+
+        // 创建 events
+        cudaEventCreate(&slot.weight_ready_event);
+        cudaEventCreate(&slot.slot_free_event);
+
+        // 初始状态：slot 是 free 的（可被写入）
+        // 注意：此时可能还没有 valid stream，用 0（default stream）record
+        // cudaEventRecord(slot.slot_free_event, 0);
+        // Event 是通过 cudaEventCreateWithFlags(event, cudaEventDisableTiming) 创建的（timing event 不支持 graph）。
+        // Record 操作发生在 capture mode 下的 stream 中。
+        cudaEventCreateWithFlags(&slot.slot_free_event, cudaEventDisableTiming);
+    }
+
+}
+
 llama_model::llama_model(const llama_model_params & params) : params(params), pimpl(std::make_unique<impl>()) {
     pimpl->has_tensor_overrides = params.tensor_buft_overrides && params.tensor_buft_overrides[0].pattern;
+
 }
 
 llama_model::~llama_model() {
@@ -7151,6 +7171,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             pimpl->mappings.emplace_back(std::move(mapping));
         }
     }
+
+    init_slot_event(); // initialize and create slot event
 
     return true;
 }

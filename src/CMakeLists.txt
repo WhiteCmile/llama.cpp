@@ -151,6 +151,7 @@ target_include_directories(llama PUBLIC ../include)
 target_include_directories(llama PRIVATE 
     .
     /usr/local/cuda-12.4/include
+    ${CMAKE_SOURCE_DIR}/ggml/src 
 )
 
 target_include_directories(llama PUBLIC ../include)

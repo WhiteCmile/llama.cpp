@@ -9,6 +9,7 @@
 #include "llama-model.h"
 
 #include "ggml-cuda.h"
+#include "ggml-backend-impl.h"  
 #include <cinttypes>
 #include <cmath>
 #include <cstring>
@@ -35,52 +36,8 @@ void llama_context::start_transfer_thread() {
 
 // 权重搬运线程函数
 void llama_context::weight_transfer_worker() {
-
     
     while (true) {
-    //     std::unordered_set<int> local_set;
-        
-    //     // 等待搬运请求
-    //     {
-    //         std::unique_lock<std::mutex> lock(transfer_mutex);
-    //         transfer_cv.wait(lock, [this]() {
-    //             return stop_thread.load() || transfer_requested.load();
-    //         });
-            
-    //         if (stop_thread.load()) {
-    //             break;
-    //         }
-            
-    //         if (transfer_requested.load()) {
-    //             // 复制参数到本地（避免长时间持有锁）
-    //             std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
-    //             local_set = slots_to_transfer;
-    //             slots_to_transfer.clear();
-    //         }
-    //     }
-        
-    //     // 执行权重搬运
-    //     for (int slot : local_set) {
-    //         int il = layer_for_slot[slot];
-    //         if (il == -1) continue;
-            
-    //         auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
-    //             size_t size = ggml_nbytes(src);
-    //             cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size, cudaMemcpyHostToDevice, transfer_stream);
-    //         };
-            
-    //         copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
-    //         copy_tensor(model.layers[il].ffn_up, model.slots[slot].ffn_up);
-    //         copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
-    //         copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
-            
-    //         cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
-    //         slot_ready[slot] = false; // will be set to true in wait
-    //     }
-        
-    //     transfer_requested.store(false);
-    // }
-            std::unordered_set<int> to_remove; // 本次成功搬运的 slot
         
         {
             std::unique_lock<std::mutex> lock(transfer_mutex);
@@ -91,59 +48,51 @@ void llama_context::weight_transfer_worker() {
             if (stop_thread.load()) {
                 break;
             }
-            
-            // 注意：这里不再清空 slots_to_transfer！
-            // 而是在搬运成功后，再从集合中移除
+
         }
 
         // 在 transfer_set_mutex 保护下访问和修改 slots_to_transfer
         {
             LLAMA_LOG_INFO("权重搬运线程收到搬运请求，开始搬运权重");
             std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
-            
-            // 遍历当前所有待搬运的 slot
-            for (int slot : slots_to_transfer) {
-                // 跳过未就绪的 slot（保留在集合中，下次再试）
-                if (slot_ready[slot]) {
-                    continue;
-                }
 
-                int il = layer_for_slot[slot];
-                if (il == -1) {
-                    to_remove.insert(slot); // 无效层？也移除避免死循环
-                    continue;
-                }
-                
-                auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
-                    size_t size = ggml_nbytes(src);
-                    cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size,
-                                    cudaMemcpyHostToDevice, transfer_stream);
+            auto copy_tensor = [&](ggml_tensor * src, ggml_tensor * dst) {
+                size_t size = ggml_nbytes(src);
+                cudaMemcpyAsync(ggml_get_data(dst), ggml_get_data(src), size,
+                                cudaMemcpyHostToDevice, transfer_stream);
                 };
+
+            const std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
+            
+            // cope with every layer
+            // TODP: add layer_mask
+            for (int i=0; i<35; i++) {  //for every layer, we need to check if it needs transfer
+
+                int slot_idx = model.get_slot_index_for_layer(i, model.slots.size(), static_gpu_layers); // the slot every layer should use
+     
+
+                // when the target slot is ready, start copying. 
+                // It is a blocking wait, but it's the event on transfer stream, so it only waits if the stream is busy.
+                // When the stream is busy, it can't transfer anyway, so just wait.
+                cudaStreamWaitEvent(transfer_stream, model.slots[slot_idx].slot_free_event, 0); 
+
+                copy_tensor(model.layers[i].ffn_norm, model.slots[slot_idx].ffn_norm);
+                copy_tensor(model.layers[i].ffn_up,   model.slots[slot_idx].ffn_up);
+                copy_tensor(model.layers[i].ffn_gate, model.slots[slot_idx].ffn_gate);
+                copy_tensor(model.layers[i].ffn_down, model.slots[slot_idx].ffn_down);
                 
-                copy_tensor(model.layers[il].ffn_norm, model.slots[slot].ffn_norm);
-                copy_tensor(model.layers[il].ffn_up,   model.slots[slot].ffn_up);
-                copy_tensor(model.layers[il].ffn_gate, model.slots[slot].ffn_gate);
-                copy_tensor(model.layers[il].ffn_down, model.slots[slot].ffn_down);
-                
-                cudaEventRecord(model.slots[slot].weight_ready_event, transfer_stream);
-                slot_ready[slot] = true; // 标记为已搬运
-                
-                to_remove.insert(slot); // 标记为已处理
+                cudaEventRecord(model.slots[slot_idx].weight_ready_event, transfer_stream);
+         
             }
 
-            // 从待搬运集合中移除已处理的 slot
-            for (int slot : to_remove) {
-                slots_to_transfer.erase(slot);
-            }
         }
-
-        // 如果本次没有搬运任何 slot（全未就绪），可考虑短暂等待
-        // 但通常由主线程再次触发 transfer_requested，所以可不做处理
         
         // 重置 transfer_requested 仅当 slots_to_transfer 为空？
         // 更安全的做法：只要还有 pending slot，就保持 transfer_requested = true
         // 但这样可能频繁唤醒。折中：每次搬运后都设为 false，由主线程重新 set
         transfer_requested.store(false);
+        // cudaStreamSynchronize(transfer_stream); // 可选：确保本次搬运完成
+    
     }
     
     LLAMA_LOG_INFO("权重搬运线程退出");
@@ -166,13 +115,10 @@ void llama_context::stop_transfer_thread() {
 }
 
 
-// 等待slot权重到位
+// wait until the slot is ready for use
 void llama_context::wait_until_slot_ready(int slot_idx, cudaStream_t main_stream) {
-    if (slot_idx < 0 || slot_idx >= (int)slot_ready.size()) return;
-    if (!slot_ready[slot_idx]) {
-        cudaStreamWaitEvent(main_stream, model.slots[slot_idx].weight_ready_event, 0);
-        slot_ready[slot_idx] = true;
-    }
+    cudaStreamWaitEvent(main_stream, model.slots[slot_idx].weight_ready_event, 0);
+
 }
 
 void llama_context::release_slot(int slot_idx) {
@@ -184,7 +130,7 @@ void llama_context::release_slot(int slot_idx) {
 //
 
 llama_context::llama_context(
-        const llama_model & model,
+              llama_model & model,
               llama_context_params params) :
     model(model),
     balloc(std::make_unique<llama_batch_allocr>(model.hparams.n_pos_per_embd())) {
@@ -192,11 +138,13 @@ llama_context::llama_context(
     //     may need to be backend-dependent
     LLAMA_LOG_INFO("%s: constructing llama_context\n", __func__);
 
-    // 初始化动态加载相关
-    slot_ready.assign(model.slots.size(), false);
+    // tell which layer is in the n slot
     layer_for_slot.assign(model.slots.size(), -1);
+
+    // create transfer stream
     cudaStreamCreate(&transfer_stream);
     // cudaStreamCreate(&compute_stream);
+
     start_transfer_thread();
 
     t_start_us = model.t_start_us;
@@ -1273,8 +1221,6 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
 
         //const auto t_start_us = ggml_time_us();
 
-        gf = model.build_graph(gparams);
-
         //LLAMA_LOG_INFO("graph build time: %.3f ms\n", (ggml_time_us() - t_start_us)/1000.0);
 
         if (!gf) {
@@ -1289,6 +1235,13 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
             return nullptr;
         }
     }
+
+    ggml_backend_t backend = ggml_backend_sched_get_backend(sched.get(), 0); 
+    void * cuda_ctx = backend->context;
+    *(void**)cuda_ctx = &model.slots[0].slot_free_event;// pass the slot free event to the backend context for later use
+
+
+    gf = model.build_graph(gparams);
 
     // we set the layer mask data here for temporary use
     // TODO: remove this and integrate it with predictor
@@ -3276,69 +3229,69 @@ llama_context * llama_init_from_model(
     return nullptr;
 }
 
-// 在 llama_context 构造函数中
-void llama_context::init_shared_memory() {
-    // 分配pinned memory（CPU-GPU共享）
-    size_t size = sizeof(PredictionResult);
-    cudaHostAlloc(&h_prediction_result, size, cudaHostAllocMapped);
+// // 在 llama_context 构造函数中
+// void llama_context::init_shared_memory() {
+//     // 分配pinned memory（CPU-GPU共享）
+//     size_t size = sizeof(PredictionResult);
+//     cudaHostAlloc(&h_prediction_result, size, cudaHostAllocMapped);
     
-    // 获取对应的GPU指针
-    cudaHostGetDevicePointer(&d_prediction_result, h_prediction_result, 0);
+//     // 获取对应的GPU指针
+//     cudaHostGetDevicePointer(&d_prediction_result, h_prediction_result, 0);
     
-    // 初始化
-    h_prediction_result->needs_transfer = 0;
-    h_prediction_result->count = 0;
-    h_prediction_result->prediction_id = 0;
+//     // 初始化
+//     h_prediction_result->needs_transfer = 0;
+//     h_prediction_result->count = 0;
+//     h_prediction_result->prediction_id = 0;
     
-    // 启动监控线程
-    start_prediction_monitor();
-}
+//     // 启动监控线程
+//     start_prediction_monitor();
+// }
 
-void llama_context::start_prediction_monitor() {
-    std::thread([this]() {
-        std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
-        int last_processed_prediction_id = 0;
-        while (!stop_thread.load()) {
-            // 检查是否有新的预测结果
-            int current_id = h_prediction_result->prediction_id.load();
-            int last_id = last_processed_prediction_id;
+// void llama_context::start_prediction_monitor() {
+//     std::thread([this]() {
+//         std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
+//         int last_processed_prediction_id = 0;
+//         while (!stop_thread.load()) {
+//             // 检查是否有新的预测结果
+//             int current_id = h_prediction_result->prediction_id.load();
+//             int last_id = last_processed_prediction_id;
             
-            if (current_id != last_id && h_prediction_result->needs_transfer) {
-                // 处理新的预测
-                std::unordered_set<int> slots_to_transfer;
+//             if (current_id != last_id && h_prediction_result->needs_transfer) {
+//                 // 处理新的预测
+//                 std::unordered_set<int> slots_to_transfer;
                 
-                for (int i = 0; i < h_prediction_result->count; i++) {
-                    int il = h_prediction_result->layer_indices[i];
-                    if (!static_gpu_layers.count(il)) {
-                        int slot_idx = model.get_slot_index_for_layer(
-                            il, model.slots.size(), static_gpu_layers);
-                        slots_to_transfer.insert(slot_idx);
-                    }
-                }
+//                 for (int i = 0; i < h_prediction_result->count; i++) {
+//                     int il = h_prediction_result->layer_indices[i];
+//                     if (!static_gpu_layers.count(il)) {
+//                         int slot_idx = model.get_slot_index_for_layer(
+//                             il, model.slots.size(), static_gpu_layers);
+//                         slots_to_transfer.insert(slot_idx);
+//                     }
+//                 }
                 
-                // 触发搬运
-                {
-                    std::lock_guard<std::mutex> lock(transfer_set_mutex);
-                    for (int slot : slots_to_transfer) {
-                        this->slots_to_transfer.insert(slot);
-                    }
-                }
+//                 // 触发搬运
+//                 {
+//                     std::lock_guard<std::mutex> lock(transfer_set_mutex);
+//                     for (int slot : slots_to_transfer) {
+//                         this->slots_to_transfer.insert(slot);
+//                     }
+//                 }
                 
-                // 通知搬运线程
-                {
-                    std::lock_guard<std::mutex> lock(transfer_mutex);
-                    transfer_requested.store(true);
-                    transfer_cv.notify_one();
-                }
+//                 // 通知搬运线程
+//                 {
+//                     std::lock_guard<std::mutex> lock(transfer_mutex);
+//                     transfer_requested.store(true);
+//                     transfer_cv.notify_one();
+//                 }
                 
-                last_processed_prediction_id = current_id;
-            }
+//                 last_processed_prediction_id = current_id;
+//             }
             
-            // 短暂休眠避免CPU占用过高
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
-        }
-    }).detach();
-}
+//             // 短暂休眠避免CPU占用过高
+//             std::this_thread::sleep_for(std::chrono::microseconds(10));
+//         }
+//     }).detach();
+// }
 
 // deprecated
 llama_context * llama_new_context_with_model(

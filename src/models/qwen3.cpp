@@ -1,8 +1,6 @@
 #include "llama-impl.h"
 #include "llama-context.h"
 #include "models.h"
-// #include "ggml-cuda/common.cuh"
-#include "ggml-backend.h"  
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, 
     const llm_graph_params & params) : llm_graph_context(params) {
@@ -162,13 +160,14 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             // ggml_backend_cuda_context * cuda_ctx = (ggml_backend_cuda_context *) backend->context;
 
             // cudaStream_t main_stream = cuda_ctx->stream();
+
+            // default stream
             cudaStream_t main_stream = 0;
 
             // ====== dynamic slot ======
 
             params.ctx->wait_until_slot_ready(slot_idx, main_stream);
 
-            // ====== DEBUG: 打印 slot 分配 ======
             GGML_ASSERT(slot_idx >= 0 && slot_idx < (int)model.slots.size());
 
             params.ctx->layer_for_slot[slot_idx] = il;
@@ -193,7 +192,10 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             inpL = cur;
 
             // ====== mark slot as used and next weight should be transferred ======
-            params.ctx -> release_slot(slot_idx);
+            // params.ctx -> release_slot(slot_idx); don't directly use cudaeventrecord here
+
+            ggml_tensor* release_node = ggml_cuda_release_slot(ctx0, slot_idx);
+            ggml_build_forward_expand(gf, release_node);  // 显式加入图
         }
     }
 
