@@ -1,7 +1,7 @@
 #include "llama-impl.h"
 #include "llama-context.h"
 #include "models.h"
-#include "ggml-cuda/common.cuh"
+// #include "ggml-cuda/common.cuh"
 #include "ggml-backend.h"  
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, 
@@ -10,6 +10,9 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k);
     GGML_ASSERT(n_embd_head == hparams.n_rot);
+
+    LLAMA_LOG_INFO("building graph");
+
 
     ggml_tensor * cur;
     ggml_tensor * inpL;
@@ -27,8 +30,6 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
         cb(layer_mask, "layer_mask", -1);
     }
     
-
-
     inpL = build_inp_embd(model.tok_embd);
     ggml_tensor * inp_pos = build_inp_pos();
     auto * inp_attn = build_attn_inp_kv();
@@ -168,7 +169,6 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model,
             params.ctx->wait_until_slot_ready(slot_idx, main_stream);
 
             // ====== DEBUG: 打印 slot 分配 ======
-            LLAMA_LOG_INFO("%s: layer %d assigned to slot %d\n", __func__, il, slot_idx);
             GGML_ASSERT(slot_idx >= 0 && slot_idx < (int)model.slots.size());
 
             params.ctx->layer_for_slot[slot_idx] = il;

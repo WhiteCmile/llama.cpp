@@ -12,8 +12,10 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+#include <unordered_set>
 #include <map>
 #include <vector>
+#include <driver_types.h>
 
 struct llama_model;
 class llama_batch_allocr;
@@ -213,7 +215,7 @@ public:
     void start_transfer_thread();
     void stop_transfer_thread();
     // 等待slot权重到位
-    void wait_until_slot_ready(int slot_idx, cudaStream_t compute_stream);
+    void wait_until_slot_ready(int slot_idx, cudaStream_t stream);
 
 
 private:
@@ -407,8 +409,8 @@ public:
     PredictionResult* h_prediction_result = nullptr;  // CPU指针（pinned memory）
     std::atomic<int> current_prediction_id{0};
 
-    void llama_context::init_shared_memory();
-    void llama_context::start_prediction_monitor() ;
-    void llama_context::release_slot(int slot_idx) ;
+    void init_shared_memory();
+    void start_prediction_monitor();
+    void release_slot(int slot_idx) ;
 
 };

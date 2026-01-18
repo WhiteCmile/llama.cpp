@@ -148,6 +148,12 @@ set_target_properties(llama PROPERTIES
 
 target_include_directories(llama PRIVATE .)
 target_include_directories(llama PUBLIC ../include)
+target_include_directories(llama PRIVATE 
+    .
+    /usr/local/cuda-12.4/include
+)
+
+target_include_directories(llama PUBLIC ../include)
 target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
 
 target_link_libraries(llama PUBLIC ggml)

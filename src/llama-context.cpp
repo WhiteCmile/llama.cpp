@@ -35,7 +35,7 @@ void llama_context::start_transfer_thread() {
 
 // 权重搬运线程函数
 void llama_context::weight_transfer_worker() {
-    LLAMA_LOG_INFO("权重搬运线程开始运行");
+
     
     while (true) {
     //     std::unordered_set<int> local_set;
@@ -98,6 +98,7 @@ void llama_context::weight_transfer_worker() {
 
         // 在 transfer_set_mutex 保护下访问和修改 slots_to_transfer
         {
+            LLAMA_LOG_INFO("权重搬运线程收到搬运请求，开始搬运权重");
             std::lock_guard<std::mutex> lock_set(transfer_set_mutex);
             
             // 遍历当前所有待搬运的 slot
@@ -195,7 +196,7 @@ llama_context::llama_context(
     slot_ready.assign(model.slots.size(), false);
     layer_for_slot.assign(model.slots.size(), -1);
     cudaStreamCreate(&transfer_stream);
-    cudaStreamCreate(&compute_stream);
+    // cudaStreamCreate(&compute_stream);
     start_transfer_thread();
 
     t_start_us = model.t_start_us;
@@ -665,7 +666,34 @@ llama_context::llama_context(
     }
 }
 
+// llama_context::~llama_context() {
+//     if (!model.hparams.no_alloc) {
+//         for (size_t i = 0; i < backend_ptrs.size(); ++i) {
+//             ggml_backend_t             backend = backend_ptrs[i];
+//             ggml_backend_buffer_type_t buft    = backend_buft[i];
+
+//             const size_t size_exp = backend_buf_exp_size[i];
+//             const size_t size_act = ggml_backend_sched_get_buffer_size(sched.get(), backend);
+//             if (size_exp == size_act) {
+//                 LLAMA_LOG_DEBUG("%s: %10s compute buffer size is %8.4f MiB, matches expectation of %8.4f MiB\n",
+//                     __func__, ggml_backend_buft_name(buft), size_act / (1024.0*1024.0), size_exp / (1024.0*1024.0));
+//             } else {
+//                 LLAMA_LOG_WARN("%s: %10s compute buffer size of %8.4f MiB, does not match expectation of %8.4f MiB\n",
+//                     __func__, ggml_backend_buft_name(buft), size_act / (1024.0*1024.0), size_exp / (1024.0*1024.0));
+//             }
+//         }
+//     }
+//     ggml_opt_free(opt_ctx);
+// }
+
 llama_context::~llama_context() {
+    stop_transfer_thread();
+    if (transfer_stream) {
+        cudaStreamDestroy(transfer_stream);
+    }
+    if (compute_stream) {
+        cudaStreamDestroy(compute_stream);
+    }
     if (!model.hparams.no_alloc) {
         for (size_t i = 0; i < backend_ptrs.size(); ++i) {
             ggml_backend_t             backend = backend_ptrs[i];
@@ -683,16 +711,6 @@ llama_context::~llama_context() {
         }
     }
     ggml_opt_free(opt_ctx);
-}
-
-llama_context::~llama_context() {
-    stop_transfer_thread();
-    if (transfer_stream) {
-        cudaStreamDestroy(transfer_stream);
-    }
-    if (compute_stream) {
-        cudaStreamDestroy(compute_stream);
-    }
 }
 
 void llama_context::synchronize() {
@@ -1288,7 +1306,6 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
     }
     
 
-
     // 启动权重搬运线程，为需要计算但不在静态GPU上的层准备权重
     {
         std::lock_guard<std::mutex> lock(transfer_set_mutex);
@@ -1299,7 +1316,7 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         
         for (int il = 0; il < 35; ++il) {
             // 检查该层是否需要计算
-            if (il < (int)layer_mask_data.data() && layer_mask_data[il] == 0) {
+            if (layer_mask_data[il] == 0) {
                 continue; // mask为0，跳过该层
             }
             
