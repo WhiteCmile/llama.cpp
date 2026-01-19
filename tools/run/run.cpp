@@ -2,7 +2,6 @@
 #include "common.h"
 #include "llama-cpp.h"
 #include "log.h"
-#include "llama-model.h"
 
 #include "linenoise.cpp/linenoise.h"
 
@@ -40,6 +39,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(_WIN32)
 [[noreturn]] static void sigint_handler(int) {
@@ -1142,12 +1142,13 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
     llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
     llama_token new_token_id;
 
-    auto & model = *llama_data.model; 
-    int n_slots = model.n_slots;
+    int n_slots = 1;
+
     std::vector<int32_t> layer_to_slot_data(35);
+    std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
     int dynamic_idx = 0;
     for (int il = 0; il < 35; ++il) {
-        if (model.static_gpu_layers.count(il)) {
+        if (static_gpu_layers.count(il)) {
             layer_to_slot_data[il] = -1;  // 静态层
         } else {
             layer_to_slot_data[il] = dynamic_idx % n_slots;
