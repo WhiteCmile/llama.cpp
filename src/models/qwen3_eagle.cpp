@@ -209,6 +209,9 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         router_cur = ggml_sigmoid_inplace(ctx0, router_cur);
         router_cur = ggml_round_inplace(ctx0, router_cur);
         cb(router_cur, "router_mask", -1);
+    
+        res->router_mask = router_cur;
+        ggml_build_forward_expand(gf, router_cur);
     }
 
     cur = build_norm(cur,

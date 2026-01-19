@@ -734,6 +734,17 @@ void llm_graph_context::cb(ggml_tensor * cur, const char * name, int il) const {
     }
 }
 
+ggml_tensor * llm_graph_context::build_layer_masked_bypassing(
+          ggml_tensor * cur,
+          ggml_tensor * input,
+          ggml_tensor * layer_mask,
+                  int   il) const { 
+    auto * res = ggml_layer_masked_bypassing(
+        ctx0, cur, input, layer_mask, il
+    );
+    return res;
+}
+
 ggml_tensor * llm_graph_context::build_cvec(
          ggml_tensor * cur,
                  int   il) const {
@@ -757,6 +768,35 @@ ggml_tensor * llm_graph_context::build_lora_mm(
         ggml_tensor * ab_cur = ggml_mul_mat(
                 ctx0, lw->b,
                 ggml_mul_mat(ctx0, lw->a, cur)
+                );
+
+        ab_cur = ggml_scale(ctx0, ab_cur, scale);
+        res = ggml_add(ctx0, res, ab_cur);
+    }
+
+    return res;
+}
+
+ggml_tensor * llm_graph_context::build_layer_masked_lora_mm(
+          ggml_tensor * w,
+          ggml_tensor * cur,
+          ggml_tensor * layer_mask,
+                  int   il) const {
+    ggml_tensor * res = ggml_layer_masked_mul_mat(ctx0, w, cur, layer_mask, il);
+
+    for (const auto & lora : *loras) {
+        llama_adapter_lora_weight * lw = lora.first->get_weight(w);
+        if (lw == nullptr) {
+            continue;
+        }
+
+        const float adapter_scale = lora.second;
+        const float scale = lw->get_scale(lora.first->alpha, adapter_scale);
+
+        ggml_tensor * ab_cur = ggml_layer_masked_mul_mat(
+                ctx0, lw->b,
+                ggml_layer_masked_mul_mat(ctx0, lw->a, cur, layer_mask, il),
+                layer_mask, il
                 );
 
         ab_cur = ggml_scale(ctx0, ab_cur, scale);
@@ -951,6 +991,151 @@ ggml_tensor * llm_graph_context::build_ffn(
 
     if (down) {
         cur = build_lora_mm(down, cur);
+        if (arch == LLM_ARCH_GLM4 || arch == LLM_ARCH_GLM4_MOE) {
+            // GLM4 and GLM4_MOE seem to have numerical issues with half-precision accumulators
+            ggml_mul_mat_set_prec(cur, GGML_PREC_F32);
+        }
+    }
+
+    if (down_b) {
+        cb(cur, "ffn_down", il);
+    }
+
+    if (down_b) {
+        cur = ggml_add(ctx0, cur, down_b);
+    }
+
+    if (down_s) {
+        cur = ggml_mul(ctx0, cur, down_s);
+        cb(cur, "ffn_down_s", il);
+    }
+
+    return cur;
+}
+
+ggml_tensor * llm_graph_context::build_layer_masked_ffn(
+         ggml_tensor * cur,
+         ggml_tensor * up,
+         ggml_tensor * up_b,
+         ggml_tensor * up_s,
+         ggml_tensor * gate,
+         ggml_tensor * gate_b,
+         ggml_tensor * gate_s,
+         ggml_tensor * down,
+         ggml_tensor * down_b,
+         ggml_tensor * down_s,
+         ggml_tensor * act_scales,
+         ggml_tensor * layer_mask,
+     llm_ffn_op_type   type_op,
+   llm_ffn_gate_type   type_gate,
+                 int   il) const {
+    ggml_tensor * tmp = up ? build_layer_masked_lora_mm(up, cur, layer_mask, il) : cur;
+    cb(tmp, "ffn_up", il);
+
+    if (up_b) {
+        tmp = ggml_add(ctx0, tmp, up_b);
+        cb(tmp, "ffn_up_b", il);
+    }
+
+    if (up_s) {
+        tmp = ggml_mul(ctx0, tmp, up_s);
+        cb(tmp, "ffn_up_s", il);
+    }
+
+    if (gate) {
+        switch (type_gate) {
+            case LLM_FFN_SEQ:
+                {
+                    cur = build_layer_masked_lora_mm(gate, tmp, layer_mask, il);
+                    cb(cur, "ffn_gate", il);
+                } break;
+            case LLM_FFN_PAR:
+                {
+                    cur = build_layer_masked_lora_mm(gate, cur, layer_mask, il);
+                    cb(cur, "ffn_gate", il);
+                } break;
+        }
+
+        if (gate_b) {
+            cur = ggml_add(ctx0, cur, gate_b);
+            cb(cur, "ffn_gate_b", il);
+        }
+
+        if (gate_s) {
+            cur = ggml_mul(ctx0, cur, gate_s);
+            cb(cur, "ffn_gate_s", il);
+        }
+
+    } else {
+        cur = tmp;
+    }
+
+    switch (type_op) {
+        case LLM_FFN_SILU:
+            if (gate && type_gate == LLM_FFN_PAR) {
+                cur = ggml_swiglu_split(ctx0, cur, tmp);
+                cb(cur, "ffn_swiglu", il);
+                type_gate = LLM_FFN_SEQ;
+            } else {
+                cur = ggml_silu(ctx0, cur);
+                cb(cur, "ffn_silu", il);
+            } break;
+        case LLM_FFN_GELU:
+            if (gate && type_gate == LLM_FFN_PAR) {
+                cur = ggml_geglu_split(ctx0, cur, tmp);
+                cb(cur, "ffn_geglu", il);
+                type_gate = LLM_FFN_SEQ;
+            } else {
+                cur = ggml_gelu(ctx0, cur);
+                cb(cur, "ffn_gelu", il);
+                if (act_scales != NULL) {
+                    cur = ggml_div(ctx0, cur, act_scales);
+                    cb(cur, "ffn_act", il);
+                }
+            } break;
+        case LLM_FFN_RELU:
+            if (gate && type_gate == LLM_FFN_PAR) {
+                cur = ggml_reglu_split(ctx0, cur, tmp);
+                cb(cur, "ffn_reglu", il);
+                type_gate = LLM_FFN_SEQ;
+            } else {
+                cur = ggml_relu(ctx0, cur);
+                cb(cur, "ffn_relu", il);
+            } break;
+        case LLM_FFN_RELU_SQR:
+            {
+                cur = ggml_relu(ctx0, cur);
+                cb(cur, "ffn_relu", il);
+
+                cur = ggml_sqr(ctx0, cur);
+                cb(cur, "ffn_sqr(relu)", il);
+            } break;
+        case LLM_FFN_SWIGLU:
+            {
+                cur = ggml_swiglu(ctx0, cur);
+                cb(cur, "ffn_swiglu", il);
+            } break;
+        case LLM_FFN_GEGLU:
+            {
+                cur = ggml_geglu(ctx0, cur);
+                cb(cur, "ffn_geglu", il);
+            } break;
+        case LLM_FFN_REGLU:
+            {
+                cur = ggml_reglu(ctx0, cur);
+                cb(cur, "ffn_reglu", il);
+            } break;
+        default:
+            GGML_ABORT("fatal error");
+    }
+
+    if (gate && type_gate == LLM_FFN_PAR) {
+        cur = ggml_mul(ctx0, cur, tmp);
+        cb(cur, "ffn_gate_par", il);
+    }
+
+    if (down) {
+        cur = build_layer_masked_lora_mm(down, cur, layer_mask, il);
         if (arch == LLM_ARCH_GLM4 || arch == LLM_ARCH_GLM4_MOE) {
             // GLM4 and GLM4_MOE seem to have numerical issues with half-precision accumulators
             ggml_mul_mat_set_prec(cur, GGML_PREC_F32);
@@ -1499,6 +1684,7 @@ ggml_tensor * llm_graph_context::build_attn_mha(
 
     ggml_tensor * cur;
 
+    // LLAMA_LOG_INFO("build_attn_mha: Enable FlashAttn %d\n", cparams.flash_attn);
     if (cparams.flash_attn && kq_b == nullptr) {
         GGML_ASSERT(kq_b == nullptr && "Flash attention does not support KQ bias yet");
 
@@ -1586,6 +1772,150 @@ ggml_tensor * llm_graph_context::build_attn_mha(
         }
 
         ggml_tensor * kqv = ggml_mul_mat(ctx0, v, kq);
+        cb(kqv, "kqv", il);
+
+        // for MLA with the absorption optimization, we need to "decompress" from MQA back to MHA
+        if (v_mla) {
+            kqv = ggml_mul_mat(ctx0, v_mla, kqv);
+            cb(kqv, "kqv_mla", il);
+        }
+
+        cur = ggml_permute(ctx0, kqv, 0, 2, 1, 3);
+
+        // recombine streams
+        cur = ggml_cont_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
+
+        if (!cparams.offload_kqv) {
+            // all nodes between the KV store and the attention output are run on the CPU
+            ggml_backend_sched_set_tensor_backend(sched, cur, backend_cpu);
+        }
+    }
+
+    ggml_build_forward_expand(gf, cur);
+
+    return cur;
+}
+
+ggml_tensor * llm_graph_context::build_layer_masked_attn_mha(
+         ggml_tensor * q,
+         ggml_tensor * k,
+         ggml_tensor * v,
+         ggml_tensor * kq_b,
+         ggml_tensor * kq_mask,
+         ggml_tensor * sinks,
+         ggml_tensor * v_mla,
+         ggml_tensor * layer_mask,
+               float   kq_scale,
+                 int   il) const {
+    const bool v_trans = v->nb[1] > v->nb[2];
+
+    // split the batch into streams if needed
+    const auto n_stream = k->ne[3];
+
+    q = ggml_view_4d(ctx0, q, q->ne[0], q->ne[1], q->ne[2]/n_stream, n_stream, q->nb[1], q->nb[2], q->nb[3]/n_stream, 0);
+
+    q = ggml_permute(ctx0, q, 0, 2, 1, 3);
+    k = ggml_permute(ctx0, k, 0, 2, 1, 3);
+    v = ggml_permute(ctx0, v, 0, 2, 1, 3);
+
+    ggml_tensor * cur;
+
+    if (cparams.flash_attn && kq_b == nullptr) {
+        GGML_ASSERT(kq_b == nullptr && "Flash attention does not support KQ bias yet");
+
+        if (v_trans) {
+            v = ggml_transpose(ctx0, v);
+        }
+
+        // this can happen when KV cache is not used (e.g. an embedding model with non-causal attn)
+        if (k->type == GGML_TYPE_F32) {
+            k = ggml_cast(ctx0, k, GGML_TYPE_F16);
+        }
+
+        if (v->type == GGML_TYPE_F32) {
+            v = ggml_cast(ctx0, v, GGML_TYPE_F16);
+        }
+
+        // cur = ggml_layer_masked_flash_attn_ext(ctx0, q, k, v, kq_mask, 
+        //                           layer_mask, il,
+        //                           kq_scale, hparams.f_max_alibi_bias,
+        //                           hparams.attn_soft_cap ? hparams.f_attn_logit_softcapping : 0.0f);
+        cur = ggml_flash_attn_ext(ctx0, q, k, v, kq_mask, 
+                                  kq_scale, hparams.f_max_alibi_bias,
+                                  hparams.attn_soft_cap ? hparams.f_attn_logit_softcapping : 0.0f);
+        cb(cur, LLAMA_TENSOR_NAME_FATTN, il);
+
+        ggml_flash_attn_ext_add_sinks(cur, sinks);
+        ggml_flash_attn_ext_set_prec (cur, GGML_PREC_F32);
+
+        if (v_mla) {
+#if 0
+            // v_mla can be applied as a matrix-vector multiplication with broadcasting across dimension 3 == n_tokens.
+            // However, the code is optimized for dimensions 0 and 1 being large, so this is ineffient.
+            cur = ggml_reshape_4d(ctx0, cur, v_mla->ne[0], 1, n_head, n_tokens);
+            cur = ggml_mul_mat(ctx0, v_mla, cur);
+#else
+            // It's preferable to do the calculation as a matrix-matrix multiplication with n_tokens in dimension 1.
+            // The permutations are noops and only change how the tensor data is interpreted.
+            cur = ggml_permute(ctx0, cur, 0, 2, 1, 3);
+            cur = ggml_mul_mat(ctx0, v_mla, cur);
+            cb(cur, "fattn_mla", il);
+            cur = ggml_permute(ctx0, cur, 0, 2, 1, 3);
+            cur = ggml_cont(ctx0, cur); // Needed because ggml_reshape_2d expects contiguous inputs.
+#endif
+        }
+
+        cur = ggml_reshape_2d(ctx0, cur, cur->ne[0]*cur->ne[1], cur->ne[2]*cur->ne[3]);
+    } else {
+        // ggml_tensor * kq = ggml_mul_mat(ctx0, k, q);
+        // cb(kq, "kq", il);
+        ggml_tensor * kq = ggml_layer_masked_mul_mat(ctx0, k, q, layer_mask, il);
+        cb(kq, "kq", il);
+
+        // note: this op tends to require high floating point range
+        //       while for some models F16 is enough, for others it is not, so we default to F32 here
+        ggml_mul_mat_set_prec(kq, GGML_PREC_F32);
+
+        if (arch == LLM_ARCH_GROK) {
+            // need to do the following:
+            // multiply by attn_output_multiplier
+            // and then :
+            // kq = 30 * tanh(kq / 30)
+            // before the softmax below
+
+            kq = ggml_tanh(ctx0, ggml_scale(ctx0, kq, hparams.f_attn_out_scale / hparams.f_attn_logit_softcapping));
+            cb(kq, "kq_tanh", il);
+            kq = ggml_scale(ctx0, kq, hparams.f_attn_logit_softcapping);
+            cb(kq, "kq_scaled", il);
+        }
+
+        if (hparams.attn_soft_cap) {
+            kq = ggml_scale(ctx0, kq, 1.0f / hparams.f_attn_logit_softcapping);
+            cb(kq, "kq_scaled_1", il);
+            kq = ggml_tanh (ctx0, kq);
+            cb(kq, "kq_tanh", il);
+            kq = ggml_scale(ctx0, kq, hparams.f_attn_logit_softcapping);
+            cb(kq, "kq_scaled_2", il);
+        }
+
+        if (kq_b) {
+            kq = ggml_add(ctx0, kq, kq_b);
+            cb(kq, "kq_plus_kq_b", il);
+        }
+
+        kq = ggml_soft_max_ext(ctx0, kq, kq_mask, kq_scale, hparams.f_max_alibi_bias);
+        ggml_soft_max_add_sinks(kq, sinks);
+        cb(kq, "kq_soft_max", il);
+
+        if (!v_trans) {
+            // note: avoid this branch
+            v = ggml_cont(ctx0, ggml_transpose(ctx0, v));
+            cb(v, "v_cont", il);
+        }
+
+        // ggml_tensor * kqv = ggml_mul_mat(ctx0, v, kq);
+        // cb(kqv, "kqv", il);
+        ggml_tensor * kqv = ggml_layer_masked_mul_mat(ctx0, v, kq, layer_mask, il);
         cb(kqv, "kqv", il);
 
         // for MLA with the absorption optimization, we need to "decompress" from MQA back to MHA
@@ -1760,6 +2090,66 @@ ggml_tensor * llm_graph_context::build_attn(
 
     if (wo) {
         cur = build_lora_mm(wo, cur);
+        if (arch == LLM_ARCH_GLM4 || arch == LLM_ARCH_GLM4_MOE) {
+            // GLM4 and GLM4_MOE seem to have numerical issues with half-precision accumulators
+            ggml_mul_mat_set_prec(cur, GGML_PREC_F32);
+        }
+    }
+
+    if (wo_b) {
+        cur = ggml_add(ctx0, cur, wo_b);
+    }
+
+    return cur;
+}
+
+ggml_tensor * llm_graph_context::build_layer_masked_attn(
+        llm_graph_input_attn_kv * inp,
+        ggml_tensor * wo,
+        ggml_tensor * wo_b,
+        ggml_tensor * q_cur,
+        ggml_tensor * k_cur,
+        ggml_tensor * v_cur,
+        ggml_tensor * kq_b,
+        ggml_tensor * sinks,
+        ggml_tensor * v_mla,
+        ggml_tensor * layer_mask,
+            float     kq_scale,
+            int       il) const {
+    // these nodes are added to the graph together so that they are not reordered
+    // by doing so, the number of splits in the graph is reduced
+    // expand k later to enable rope fusion which directly writes into k-v cache
+    ggml_build_forward_expand(gf, q_cur);
+    ggml_build_forward_expand(gf, v_cur);
+    ggml_build_forward_expand(gf, k_cur);
+
+    const auto * mctx_cur = inp->mctx;
+
+    // store to KV cache
+    {
+        const auto & k_idxs = inp->get_k_idxs();
+        const auto & v_idxs = inp->get_v_idxs();
+
+        ggml_build_forward_expand(gf, mctx_cur->cpy_k(ctx0, k_cur, k_idxs, il));
+        ggml_build_forward_expand(gf, mctx_cur->cpy_v(ctx0, v_cur, v_idxs, il));
+    }
+
+    const auto & kq_mask = inp->get_kq_mask();
+
+    ggml_tensor * q = q_cur;
+    ggml_tensor * k = mctx_cur->get_k(ctx0, il);
+    ggml_tensor * v = mctx_cur->get_v(ctx0, il);
+
+    ggml_tensor * cur = build_layer_masked_attn_mha(
+        q, k, v, kq_b, kq_mask, sinks, v_mla, 
+        layer_mask, 
+        kq_scale, il
+    );
+
+    cb(cur, "kqv_out", il);
+
+    if (wo) {
+        cur = build_layer_masked_lora_mm(wo, cur, layer_mask, il);
         if (arch == LLM_ARCH_GLM4 || arch == LLM_ARCH_GLM4_MOE) {
             // GLM4 and GLM4_MOE seem to have numerical issues with half-precision accumulators
             ggml_mul_mat_set_prec(cur, GGML_PREC_F32);
