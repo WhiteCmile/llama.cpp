@@ -213,6 +213,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
 #define GGML_FILE_MAGIC   0x67676d6c // "ggml"
 #define GGML_FILE_VERSION 2
 
@@ -356,6 +357,10 @@ extern "C" {
         GGML_STATUS_SUCCESS = 0,
         GGML_STATUS_ABORTED = 1,
     };
+
+    // 前向声明（不依赖 cuda_runtime.h）
+    struct CUevent_st;
+    typedef struct CUevent_st* cudaEvent_t; 
 
     // get ggml_status name string
     GGML_API const char * ggml_status_to_string(enum ggml_status status);
@@ -571,6 +576,10 @@ extern "C" {
         GGML_OP_LAYER_MASKED_MUL_MAT, // layer masked matmul
         GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT, // layer masked flash attention
 
+        GGML_OP_CUDA_WAIT_EVENT,
+        GGML_OP_CUDA_RECORD_EVENT,
+        GGML_OP_CUDA_PREFETCH_WEIGHTS,
+
         GGML_OP_COUNT,
     };
 
@@ -686,6 +695,28 @@ extern "C" {
         // char padding[8 + 12];
         char padding[4];
     };
+
+    struct ggml_cuda_layer_tensors {
+        struct ggml_tensor* ffn_norm;
+        struct ggml_tensor* ffn_up;
+        struct ggml_tensor* ffn_gate;
+        struct ggml_tensor* ffn_down;
+        };
+
+    struct ggml_cuda_layer_prefetch_ctx {
+        struct ggml_cuda_layer_tensors layer_tensor;   // CPU tensors
+        struct ggml_cuda_layer_tensors slot_tensor; // GPU tensors
+        cudaEvent_t slot_free_event;
+        cudaEvent_t weight_ready_event;
+        };
+
+    struct ggml_cuda_prefetch_params {
+        struct ggml_cuda_layer_prefetch_ctx* layers_ctx;
+        int n_layers;
+        };
+
+  
+
 
     static const size_t GGML_TENSOR_SIZE = sizeof(struct ggml_tensor);
 
@@ -1440,6 +1471,18 @@ extern "C" {
             struct ggml_context * ctx,
             struct ggml_tensor  * a,
             struct ggml_tensor  * b);
+
+    GGML_API struct ggml_tensor * ggml_prefetch_weights(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * layer_mask,  // 输入：哪些层需要执行
+        int                   n_layers,
+        struct ggml_tensor  * layer_to_slot,
+        struct ggml_cuda_layer_prefetch_ctx * layers_ctx);
+
+    GGML_API struct ggml_tensor * ggml_scale(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            float                 s);
 
     //
     // operations on tensors without backpropagation

@@ -10,8 +10,11 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <unordered_map>
 #include <vector>
+#include <unordered_set>
+#include <cuda_runtime.h>
 
 struct llama_cparams;
 struct llama_ubatch;
@@ -419,6 +422,62 @@ struct llama_layer {
     struct llama_layer_nextn nextn;
 };
 
+// slots for ffn weights
+struct llama_slot {
+    
+    // normalization
+    struct ggml_tensor * ffn_norm         = nullptr;
+    struct ggml_tensor * ffn_norm_b       = nullptr;
+    struct ggml_tensor * ffn_post_norm    = nullptr;
+    struct ggml_tensor * layer_out_norm   = nullptr;
+    struct ggml_tensor * layer_out_norm_b = nullptr;
+    struct ggml_tensor * ffn_norm_exps    = nullptr;
+    struct ggml_tensor * ffn_norm_enc     = nullptr;
+
+    // ff
+    struct ggml_tensor * ffn_gate     = nullptr; // w1
+    struct ggml_tensor * ffn_down     = nullptr; // w2
+    struct ggml_tensor * ffn_up       = nullptr; // w3
+    struct ggml_tensor * ffn_gate_enc = nullptr;
+    struct ggml_tensor * ffn_down_enc = nullptr;
+    struct ggml_tensor * ffn_up_enc   = nullptr;
+
+    // ff MoE
+    struct ggml_tensor * ffn_gate_inp    = nullptr;
+    struct ggml_tensor * ffn_gate_exps   = nullptr;
+    struct ggml_tensor * ffn_down_exps   = nullptr;
+    struct ggml_tensor * ffn_up_exps     = nullptr;
+    struct ggml_tensor * ffn_gate_inp_b  = nullptr;
+    struct ggml_tensor * ffn_gate_exps_b = nullptr;
+    struct ggml_tensor * ffn_down_exps_b = nullptr;
+    struct ggml_tensor * ffn_up_exps_b   = nullptr;
+
+    // ff shared expert (shexp)
+    struct ggml_tensor * ffn_gate_inp_shexp = nullptr;
+    struct ggml_tensor * ffn_gate_shexp     = nullptr;
+    struct ggml_tensor * ffn_down_shexp     = nullptr;
+    struct ggml_tensor * ffn_up_shexp       = nullptr;
+
+    // ff adjugate experts (chexps)
+    struct ggml_tensor * ffn_gate_chexps     = nullptr;
+    struct ggml_tensor * ffn_down_chexps     = nullptr;
+    struct ggml_tensor * ffn_up_chexps       = nullptr;
+
+    // ff bias
+    struct ggml_tensor * ffn_gate_b = nullptr;
+    struct ggml_tensor * ffn_down_b = nullptr; // b2
+    struct ggml_tensor * ffn_up_b   = nullptr; // b3
+    struct ggml_tensor * ffn_act    = nullptr;
+    struct ggml_tensor * ffn_exp_probs_b = nullptr;
+
+    // // tensor ready event for using data in the slot
+    cudaEvent_t weight_ready_event = nullptr;
+
+    // // slot free event for next cuda memcpy async
+    cudaEvent_t slot_free_event = nullptr;
+};
+
+
 struct llama_model {
     llm_type type = LLM_TYPE_UNKNOWN;
     llm_arch arch = LLM_ARCH_UNKNOWN;
@@ -461,6 +520,12 @@ struct llama_model {
 
     std::vector<llama_layer> layers;
 
+    int n_slots = 1; // number of dynamic slots, default 1
+
+    std::vector<llama_slot> slots;
+
+    // static layers on gpu
+    std::unordered_set<int> static_gpu_layers = {0,1,2,3,4,5,7,10,12,20,25,30,31,32,33,34};
     //Dense linear projections for SentenceTransformers models like embeddinggemma
     // For Sentence Transformers models structure see
     // https://sbert.net/docs/sentence_transformer/usage/custom_models.html#structure-of-sentence-transformer-models

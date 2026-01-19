@@ -122,8 +122,18 @@ struct llama_context {
             llama_memory_context_i * mctx,
                        ggml_status & ret);
 
+    llm_graph_result * process_ubatch_with_slot(
+                const llama_ubatch & ubatch,
+                    llm_graph_type   gtype,
+            llama_memory_context_i * mctx,
+                       ggml_status & ret,
+        const int32_t * layer_to_slot_data);
+
     int encode(const llama_batch & batch_inp);
     int decode(const llama_batch & batch_inp);
+
+    int encode_with_slot(const llama_batch & batch_inp, const int32_t * layer_to_slot_data);
+    int decode_with_slot(const llama_batch & batch_inp, const int32_t * layer_to_slot_data);
 
     //
     // state save/load
@@ -230,6 +240,8 @@ public:
 
     bool set_sampler(llama_seq_id seq_id, llama_sampler * sampler);
 
+    const llama_model & model;
+
 private:
     llm_graph_params graph_params(
                         llm_graph_result * res,
@@ -249,8 +261,6 @@ private:
     //
     // members
     //
-
-    const llama_model & model;
 
     llama_cparams       cparams;
     llama_adapter_cvec  cvec;

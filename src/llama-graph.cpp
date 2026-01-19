@@ -1462,6 +1462,34 @@ ggml_tensor * llm_graph_context::build_moe_ffn(
     return moe_out;
 }
 
+// TODO：
+//new impl
+ggml_tensor * llm_graph_context::build_prefetch_weights(
+    ggml_context * ctx, 
+    ggml_tensor * layer_mask, 
+    int n_layer, 
+    ggml_tensor * layer_to_slot,
+    ggml_cuda_layer_prefetch_ctx * layers_ctx) const {
+    
+    ggml_tensor * cur = ggml_prefetch_weights(ctx, layer_mask, n_layer, layer_to_slot, layers_ctx);
+
+    return cur;
+}
+
+ggml_tensor * llm_graph_context::ggml_cuda_wait_event(ggml_context * ctx, cudaEvent_t event) const {
+    ggml_tensor * tensor = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 1);
+    tensor->op = GGML_OP_CUDA_WAIT_EVENT; // We'll define this op below
+    tensor->extra = event; // Store event pointer in extra
+    return tensor;
+}
+
+ggml_tensor * llm_graph_context::ggml_cuda_record_event(ggml_context * ctx, cudaEvent_t event) const {
+    ggml_tensor * tensor = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 1);
+    tensor->op = GGML_OP_CUDA_RECORD_EVENT;
+    tensor->extra = event;
+    return tensor;
+}
+
 // input embeddings with optional lora
 ggml_tensor * llm_graph_context::build_inp_embd(ggml_tensor * tok_embd) const {
     const int64_t n_embd = hparams.n_embd_inp();

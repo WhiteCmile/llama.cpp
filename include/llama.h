@@ -919,7 +919,12 @@ extern "C" {
     // < 0 - error. the memory state is restored to the state before this call
     LLAMA_API int32_t llama_encode(
             struct llama_context * ctx,
-              struct llama_batch   batch);
+            struct llama_batch   batch);
+
+    LLAMA_API int32_t llama_encode_with_slot(
+            struct llama_context * ctx,
+            struct llama_batch   batch,
+            const int32_t * layer_to_slot_data);
 
     // Process a batch of tokens.
     // Requires the context to have a memory.
@@ -933,9 +938,15 @@ extern "C" {
     //    2 - aborted     (processed ubatches will remain in the context's memory)
     //   -1 - invalid input batch
     // < -1 - fatal error (processed ubatches will remain in the context's memory)
+
     LLAMA_API int32_t llama_decode(
             struct llama_context * ctx,
-              struct llama_batch   batch);
+            struct llama_batch   batch);
+
+    LLAMA_API int32_t llama_decode_with_slot(
+            struct llama_context * ctx,
+            struct llama_batch   batch,
+            const int32_t * layer_to_slot_data);
 
     // Set the number of threads used for decoding
     // n_threads is the number of threads used for generation (single token)

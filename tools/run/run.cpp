@@ -2,6 +2,7 @@
 #include "common.h"
 #include "llama-cpp.h"
 #include "log.h"
+#include "llama-model.h"
 
 #include "linenoise.cpp/linenoise.h"
 
@@ -1140,9 +1141,24 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
     // prepare a batch for the prompt
     llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
     llama_token new_token_id;
+
+    auto & model = *llama_data.model; 
+    int n_slots = model.n_slots;
+    std::vector<int32_t> layer_to_slot_data(35);
+    int dynamic_idx = 0;
+    for (int il = 0; il < 35; ++il) {
+        if (model.static_gpu_layers.count(il)) {
+            layer_to_slot_data[il] = -1;  // 静态层
+        } else {
+            layer_to_slot_data[il] = dynamic_idx % n_slots;
+            dynamic_idx++;
+        }
+    }
+    const int32_t* layer_to_slot_ptr = layer_to_slot_data.data();
+    
     while (true) {
         check_context_size(llama_data.context, batch);
-        if (llama_decode(llama_data.context.get(), batch)) {
+        if (llama_decode_with_slot(llama_data.context.get(), batch, layer_to_slot_ptr)) {
             printe("failed to decode\n");
             return 1;
         }

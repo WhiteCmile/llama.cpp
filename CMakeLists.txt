@@ -14,6 +14,8 @@ endif()
 
 message("CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
+set(CUDA_INCLUDE_DIR "/usr/local/cuda-12.4/include")
+
 # Add path to modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 

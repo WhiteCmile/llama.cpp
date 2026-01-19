@@ -2570,6 +2570,46 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             throw std::runtime_error("model has expert layers but no expert layers are used");
         }
 
+        //================================ create slot ==================================
+
+        auto create_slots = [&](const int n_slots) {
+
+            const int64_t n_embd = hparams.n_embd;
+            const int64_t n_ff   = hparams.n_ff();
+            ggml_type weight_type = GGML_TYPE_F32;
+
+            if (n_slots > 0) {
+                // set slots backend to gpu
+                ggml_backend_buffer_type_t gpu_buft = devices.empty() ?
+                    ggml_backend_cpu_buffer_type() :
+                    ggml_backend_dev_buffer_type(devices[0]);
+
+                // set up slots ctx
+                ggml_context * slot_ctx = ctx_for_buft(gpu_buft);
+
+                slots.resize(n_slots);
+                for (int i = 0; i < n_slots; ++i) {
+                    auto & slot = slots[i];
+
+                    // create slots identical to ffn layers
+                    slot.ffn_norm = ggml_new_tensor_1d(slot_ctx, weight_type, n_embd);
+                    slot.ffn_up   = ggml_new_tensor_2d(slot_ctx, weight_type, n_embd, n_ff);
+                    slot.ffn_gate = ggml_new_tensor_2d(slot_ctx, weight_type, n_embd, n_ff);
+                    slot.ffn_down = ggml_new_tensor_2d(slot_ctx, weight_type, n_ff, n_embd);
+
+                    // set up ttensor names
+                    ggml_set_name(slot.ffn_norm, ("slot." + std::to_string(i) + ".ffn_norm").c_str());
+                    ggml_set_name(slot.ffn_up,   ("slot." + std::to_string(i) + ".ffn_up").c_str());
+                    ggml_set_name(slot.ffn_gate, ("slot." + std::to_string(i) + ".ffn_gate").c_str());
+                    ggml_set_name(slot.ffn_down, ("slot." + std::to_string(i) + ".ffn_down").c_str());
+
+                }
+            }
+
+            LLAMA_LOG_INFO("%s: %d slots created with metadata only (no data loaded)\n", __func__, n_slots);
+        };
+
+
         int n_moved_tensors = 0;
         ggml_tensor * first_moved_tensor = nullptr;
         ggml_backend_buffer_type_t first_moved_from_buft = nullptr;
@@ -3636,6 +3676,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_down = create_tensor(tn(LLM_TENSOR_FFN_DOWN, "weight", i), {  n_ff, n_embd}, 0);
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
                     }
+
+                    create_slots(n_slots); //create memory slots
                 } break;
             case LLM_ARCH_QWEN3MOE:
             case LLM_ARCH_QWEN3VLMOE:

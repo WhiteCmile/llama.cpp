@@ -1053,7 +1053,7 @@ static const char * GGML_OP_NAME[GGML_OP_COUNT] = {
 };
 
 // static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
-static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
+static_assert(GGML_OP_COUNT == 101, "GGML_OP_COUNT != 101");
 
 static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "none",
@@ -1163,7 +1163,7 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
 };
 
 // static_assert(GGML_OP_COUNT == 95, "GGML_OP_COUNT != 95");
-static_assert(GGML_OP_COUNT == 98, "GGML_OP_COUNT != 98");
+static_assert(GGML_OP_COUNT == 101, "GGML_OP_COUNT != 101");
 
 static_assert(GGML_OP_POOL_COUNT == 2, "GGML_OP_POOL_COUNT != 2");
 
@@ -3319,6 +3319,46 @@ struct ggml_tensor * ggml_out_prod(
 
     return result;
 }
+
+
+//TODO
+// add prefetch and weight event
+
+static struct ggml_tensor * ggml_prefetch_weights_impl(
+    struct ggml_context * ctx,
+    struct ggml_tensor  * layer_mask,  // 输入：哪些层需要执行
+    int                   n_layers,
+    struct ggml_tensor  * layer_to_slot,
+    struct ggml_cuda_layer_prefetch_ctx * layers_ctx) {
+
+    // 创建 dummy 输出 tensor（无实际数据，仅用于触发操作）
+    struct ggml_tensor * result = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 1);
+
+    // 设置 op 类型
+    result->op = GGML_OP_CUDA_PREFETCH_WEIGHTS;
+
+    // 通过 src 传递输入 tensor
+    result->src[0] = layer_mask;  // src[0]: layer_mask
+    result->src[1] = layer_to_slot;
+
+    struct ggml_cuda_prefetch_params* params = 
+        (struct ggml_cuda_prefetch_params*)malloc(sizeof(struct ggml_cuda_prefetch_params));
+    params->layers_ctx = layers_ctx;
+    params->n_layers = n_layers;
+    result->extra = params;  // ← 手动赋值！
+
+    return result;
+}
+
+struct ggml_tensor * ggml_prefetch_weights(
+    struct ggml_context * ctx,
+    struct ggml_tensor  * layer_mask,  // 输入：哪些层需要执行
+    int                   n_layers,
+    struct ggml_tensor  * layer_to_slot,
+    struct ggml_cuda_layer_prefetch_ctx * layers_ctx) {
+        return ggml_prefetch_weights_impl(ctx, layer_mask, n_layers, layer_to_slot, layers_ctx);
+    }
+
 
 // ggml_scale
 

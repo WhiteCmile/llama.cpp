@@ -663,6 +663,18 @@ struct llm_graph_context {
 
     void cb(ggml_tensor * cur, const char * name, int il) const;
 
+    //preftch and wait event
+    ggml_tensor * build_prefetch_weights(
+            ggml_context * ctx, 
+            ggml_tensor * layer_mask, 
+            int n_layer, 
+            ggml_tensor * layer_to_slot,
+            ggml_cuda_layer_prefetch_ctx * layers_ctx) const;
+
+    ggml_tensor * ggml_cuda_wait_event(ggml_context * ctx, cudaEvent_t event) const;
+    ggml_tensor * ggml_cuda_record_event(ggml_context * ctx, cudaEvent_t event) const;
+
+
     //
     // common
     //

@@ -301,6 +301,8 @@ if (GGML_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
 
+include_directories(/usr/local/cuda-12.4/include)
+
 #
 # install
 #
@@ -326,10 +328,6 @@ set(GGML_PUBLIC_HEADERS
     include/ggml-zendnn.h
     include/gguf.h)
 
-set_target_properties(ggml PROPERTIES PUBLIC_HEADER "${GGML_PUBLIC_HEADERS}")
-#if (GGML_METAL)
-#    set_target_properties(ggml PROPERTIES RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/ggml-metal.metal")
-#endif()
 install(TARGETS ggml LIBRARY PUBLIC_HEADER)
 install(TARGETS ggml-base LIBRARY)
 

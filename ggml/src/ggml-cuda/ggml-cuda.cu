@@ -4,6 +4,7 @@
 
 #include "ggml-cuda/common.cuh"
 #include "ggml-cuda/acc.cuh"
+#include "ggml-cuda/prefetch.cuh"
 #include "ggml-cuda/add-id.cuh"
 #include "ggml-cuda/arange.cuh"
 #include "ggml-cuda/argmax.cuh"
@@ -2841,6 +2842,16 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
         case GGML_OP_LAYER_MASKED_BYPASSING:
             ggml_cuda_op_layer_masked_bypassing(ctx, dst);
             break;
+        case GGML_OP_CUDA_WAIT_EVENT:
+            ggml_cuda_op_wait_event(ctx, dst);
+            break;
+        case GGML_OP_CUDA_RECORD_EVENT:
+            ggml_cuda_op_record_event(ctx, dst);
+            break;
+        case GGML_OP_CUDA_PREFETCH_WEIGHTS:
+            ggml_cuda_op_prefetch_weights(ctx, dst);
+            break;
+
         default:
             return false;
     }
