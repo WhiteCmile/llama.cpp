@@ -28,10 +28,10 @@ if [ "$EAGLE_MODE" = true ]; then
     echo "运行Eagle版本..."
     CUDA_VISIBLE_DEVICES=2 \
     build/bin/llama-simple -m $MODEL_PATH \
-        -n 256 "Once upon a time, there is a big tree"
+        -n 4 "Once upon a time, there is a big tree"
 else
     echo "运行标准版本..."
     CUDA_VISIBLE_DEVICES=2 \
     build/bin/llama-simple -m $MODEL_PATH \
-        -n 256 "Once upon a time, there is a big tree"
+        -n 4 "Once upon a time, there is a big tree"
 fi
