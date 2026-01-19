@@ -108,10 +108,10 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
     }
     cur = inpL;
 
+    ggml_tensor * eagle_cur = nullptr;
+
     // eagle cal
     {
-        ggml_tensor * eagle_cur;
-
         // prepare input
         emb_inp = build_norm(emb_inp,
                     model.eagle_input_norm, NULL,
@@ -188,6 +188,27 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
 
     if (inp_out_ids) {
         cur = ggml_get_rows(ctx0, cur, inp_out_ids);
+        emb_inp = ggml_get_rows(ctx0, emb_inp, inp_out_ids);
+        eagle_cur = ggml_get_rows(ctx0, eagle_cur, inp_out_ids);
+    }
+
+    ggml_tensor * router_cur = nullptr;
+    // router cal
+    {
+        router_cur = ggml_concat(ctx0, emb_inp, eagle_cur, 0);
+        cb(router_cur, "router_input", -1);
+        router_cur = build_norm(router_cur, model.router_norm, nullptr, LLM_NORM_RMS, -1);
+        cb(router_cur, "router_norm", -1);
+        router_cur = build_ffn(
+            router_cur, model.router_up, nullptr, nullptr,
+            model.router_gate, nullptr, nullptr,
+            model.router_down, model.router_down_b, nullptr,
+            nullptr, LLM_FFN_SILU, LLM_FFN_PAR, -1
+        );
+        cb(router_cur, "router_logits", -1);
+        router_cur = ggml_sigmoid_inplace(ctx0, router_cur);
+        router_cur = ggml_round_inplace(ctx0, router_cur);
+        cb(router_cur, "router_mask", -1);
     }
 
     cur = build_norm(cur,
