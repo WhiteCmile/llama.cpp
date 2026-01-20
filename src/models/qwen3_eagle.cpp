@@ -52,9 +52,9 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         ggml_tensor * inpSA = inpL;
 
         // hard-code for n_layer=36
-        if (il == 3) hid_inp_1 = inpL;
-        if (il == 19) hid_inp_2 = inpL;
-        if (il == 34) hid_inp_3 = inpL;
+        if (il == 2) hid_inp_1 = inpL;
+        if (il == 18) hid_inp_2 = inpL;
+        if (il == 33) hid_inp_3 = inpL;
 
         // norm
         cur = build_norm(inpL,
@@ -157,12 +157,22 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
             layer_input = build_norm(layer_input, model.layers[il].adapter_norm, nullptr, LLM_NORM_RMS, il);
             cb(layer_input, "adapter_norm", il);
             layer_input = build_layer_masked_ffn(
-                layer_input, model.layers[il].adapter_up, nullptr, nullptr,
+                layer_input,
+                model.layers[il].adapter_up, nullptr, nullptr,
                 model.layers[il].adapter_gate, nullptr, nullptr,
                 model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
                 nullptr, reverse_mask, LLM_FFN_SILU, LLM_FFN_PAR, il
             );
+            // layer_input = build_ffn(
+            //     layer_input,
+            //     model.layers[il].adapter_up, nullptr, nullptr,
+            //     model.layers[il].adapter_gate, nullptr, nullptr,
+            //     model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
+            //     nullptr, LLM_FFN_SILU, LLM_FFN_PAR, il
+            // );
             cb(layer_input, "l_adapter", il);
+            layer_input = ggml_add(ctx0, layer_input, inpSA);
+            cb(layer_input, "adapter_output", il);
         }
 
         // move input for this layer to input for next layer
@@ -194,11 +204,11 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         cb(hid_inp_1, "eagle_hid_concat", -1);
         hid_inp_1 = build_lora_mm(model.eagle_fc, hid_inp_1);
         cb(hid_inp_1, "eagle_hid_fc", -1);
-        hid_inp_1 = build_norm(hid_inp_1,
+        eagle_cur = build_norm(hid_inp_1,
                         model.eagle_hidden_norm, NULL,
                         LLM_NORM_RMS, -1);
-        cb(hid_inp_1, "eagle_hid_inp", -1);
-        eagle_cur = ggml_concat(ctx0, emb_inp, hid_inp_1, 0);
+        cb(eagle_cur, "eagle_hid_inp", -1);
+        eagle_cur = ggml_concat(ctx0, emb_inp, eagle_cur, 0);
         cb(eagle_cur, "eagle_inp", -1);
 
         // attn
@@ -272,7 +282,8 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         router_cur = build_norm(router_cur, model.router_norm, nullptr, LLM_NORM_RMS, -1);
         cb(router_cur, "router_norm", -1);
         router_cur = build_ffn(
-            router_cur, model.router_up, nullptr, nullptr,
+            router_cur,
+            model.router_up, nullptr, nullptr,
             model.router_gate, nullptr, nullptr,
             model.router_down, model.router_down_b, nullptr,
             nullptr, LLM_FFN_SILU, LLM_FFN_PAR, -1
@@ -280,7 +291,6 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         cb(router_cur, "router_logits", -1);
         router_cur = ggml_sigmoid_inplace(ctx0, router_cur);
         router_cur = ggml_round_inplace(ctx0, router_cur);
-        // router_cur = ggml_cast(ctx0, router_cur, GGML_TYPE_I32);
         cb(router_cur, "router_mask", -1);
 
         res->router_mask = router_cur;
