@@ -137,3 +137,7 @@ poetry.toml
 /.windsurf/
 # emscripten
 a.out.*
+
+# output
+out.txt
+out.err
