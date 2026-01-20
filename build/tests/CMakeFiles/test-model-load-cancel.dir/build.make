@@ -110,7 +110,7 @@ bin/test-model-load-cancel: tests/CMakeFiles/test-model-load-cancel.dir/get-mode
 bin/test-model-load-cancel: tests/CMakeFiles/test-model-load-cancel.dir/build.make
 bin/test-model-load-cancel: common/libcommon.a
 bin/test-model-load-cancel: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-model-load-cancel: bin/libllama.so.0.0.7646
+bin/test-model-load-cancel: bin/libllama.so.0.0.7649
 bin/test-model-load-cancel: bin/libggml.so.0.9.5
 bin/test-model-load-cancel: bin/libggml-cpu.so.0.9.5
 bin/test-model-load-cancel: bin/libggml-cuda.so.0.9.5

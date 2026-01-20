@@ -93,7 +93,7 @@ llama__export__lora_EXTERNAL_OBJECTS =
 bin/llama-export-lora: tools/export-lora/CMakeFiles/llama-export-lora.dir/export-lora.cpp.o
 bin/llama-export-lora: tools/export-lora/CMakeFiles/llama-export-lora.dir/build.make
 bin/llama-export-lora: common/libcommon.a
-bin/llama-export-lora: bin/libllama.so.0.0.7646
+bin/llama-export-lora: bin/libllama.so.0.0.7649
 bin/llama-export-lora: bin/libggml.so.0.9.5
 bin/llama-export-lora: bin/libggml-cpu.so.0.9.5
 bin/llama-export-lora: bin/libggml-cuda.so.0.9.5

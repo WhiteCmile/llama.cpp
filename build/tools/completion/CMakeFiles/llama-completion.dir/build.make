@@ -93,7 +93,7 @@ llama__completion_EXTERNAL_OBJECTS =
 bin/llama-completion: tools/completion/CMakeFiles/llama-completion.dir/completion.cpp.o
 bin/llama-completion: tools/completion/CMakeFiles/llama-completion.dir/build.make
 bin/llama-completion: common/libcommon.a
-bin/llama-completion: bin/libllama.so.0.0.7646
+bin/llama-completion: bin/libllama.so.0.0.7649
 bin/llama-completion: bin/libggml.so.0.9.5
 bin/llama-completion: bin/libggml-cpu.so.0.9.5
 bin/llama-completion: bin/libggml-cuda.so.0.9.5

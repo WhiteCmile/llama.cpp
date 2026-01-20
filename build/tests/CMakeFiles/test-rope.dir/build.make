@@ -110,7 +110,7 @@ bin/test-rope: tests/CMakeFiles/test-rope.dir/get-model.cpp.o
 bin/test-rope: tests/CMakeFiles/test-rope.dir/build.make
 bin/test-rope: common/libcommon.a
 bin/test-rope: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-rope: bin/libllama.so.0.0.7646
+bin/test-rope: bin/libllama.so.0.0.7649
 bin/test-rope: bin/libggml.so.0.9.5
 bin/test-rope: bin/libggml-cpu.so.0.9.5
 bin/test-rope: bin/libggml-cuda.so.0.9.5

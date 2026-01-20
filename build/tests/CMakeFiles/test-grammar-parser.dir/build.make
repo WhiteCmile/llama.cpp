@@ -110,7 +110,7 @@ bin/test-grammar-parser: tests/CMakeFiles/test-grammar-parser.dir/get-model.cpp.
 bin/test-grammar-parser: tests/CMakeFiles/test-grammar-parser.dir/build.make
 bin/test-grammar-parser: common/libcommon.a
 bin/test-grammar-parser: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-grammar-parser: bin/libllama.so.0.0.7646
+bin/test-grammar-parser: bin/libllama.so.0.0.7649
 bin/test-grammar-parser: bin/libggml.so.0.9.5
 bin/test-grammar-parser: bin/libggml-cpu.so.0.9.5
 bin/test-grammar-parser: bin/libggml-cuda.so.0.9.5

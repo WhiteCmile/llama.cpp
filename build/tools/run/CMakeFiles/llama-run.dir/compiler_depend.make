@@ -513,7 +513,6 @@ tools/run/CMakeFiles/llama-run.dir/run.cpp.o: ../tools/run/run.cpp \
   /usr/include/c++/11/limits \
   /usr/include/c++/11/ctime \
   ../common/log.h \
-  ../ggml/include/ggml-cuda.h \
   ../tools/run/linenoise.cpp/linenoise.h \
   /usr/include/c++/11/stdlib.h \
   ../vendor/nlohmann/json.hpp \
@@ -821,8 +820,6 @@ tools/run/CMakeFiles/llama-run.dir/run.cpp.o: ../tools/run/run.cpp \
 /usr/include/c++/11/algorithm:
 
 ../vendor/nlohmann/json.hpp:
-
-../ggml/include/ggml-cuda.h:
 
 ../common/log.h:
 

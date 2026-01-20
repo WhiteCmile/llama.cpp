@@ -93,7 +93,7 @@ llama__lookup_EXTERNAL_OBJECTS =
 bin/llama-lookup: examples/lookup/CMakeFiles/llama-lookup.dir/lookup.cpp.o
 bin/llama-lookup: examples/lookup/CMakeFiles/llama-lookup.dir/build.make
 bin/llama-lookup: common/libcommon.a
-bin/llama-lookup: bin/libllama.so.0.0.7646
+bin/llama-lookup: bin/libllama.so.0.0.7649
 bin/llama-lookup: bin/libggml.so.0.9.5
 bin/llama-lookup: bin/libggml-cpu.so.0.9.5
 bin/llama-lookup: bin/libggml-cuda.so.0.9.5

@@ -93,7 +93,7 @@ llama__logits_EXTERNAL_OBJECTS =
 bin/llama-logits: examples/model-conversion/CMakeFiles/llama-logits.dir/logits.cpp.o
 bin/llama-logits: examples/model-conversion/CMakeFiles/llama-logits.dir/build.make
 bin/llama-logits: common/libcommon.a
-bin/llama-logits: bin/libllama.so.0.0.7646
+bin/llama-logits: bin/libllama.so.0.0.7649
 bin/llama-logits: bin/libggml.so.0.9.5
 bin/llama-logits: bin/libggml-cpu.so.0.9.5
 bin/llama-logits: bin/libggml-cuda.so.0.9.5

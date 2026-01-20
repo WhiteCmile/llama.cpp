@@ -110,7 +110,7 @@ bin/test-quantize-fns: tests/CMakeFiles/test-quantize-fns.dir/get-model.cpp.o
 bin/test-quantize-fns: tests/CMakeFiles/test-quantize-fns.dir/build.make
 bin/test-quantize-fns: common/libcommon.a
 bin/test-quantize-fns: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-quantize-fns: bin/libllama.so.0.0.7646
+bin/test-quantize-fns: bin/libllama.so.0.0.7649
 bin/test-quantize-fns: bin/libggml.so.0.9.5
 bin/test-quantize-fns: bin/libggml-cpu.so.0.9.5
 bin/test-quantize-fns: bin/libggml-cuda.so.0.9.5

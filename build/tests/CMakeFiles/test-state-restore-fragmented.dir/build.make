@@ -110,7 +110,7 @@ bin/test-state-restore-fragmented: tests/CMakeFiles/test-state-restore-fragmente
 bin/test-state-restore-fragmented: tests/CMakeFiles/test-state-restore-fragmented.dir/build.make
 bin/test-state-restore-fragmented: common/libcommon.a
 bin/test-state-restore-fragmented: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-state-restore-fragmented: bin/libllama.so.0.0.7646
+bin/test-state-restore-fragmented: bin/libllama.so.0.0.7649
 bin/test-state-restore-fragmented: bin/libggml.so.0.9.5
 bin/test-state-restore-fragmented: bin/libggml-cpu.so.0.9.5
 bin/test-state-restore-fragmented: bin/libggml-cuda.so.0.9.5

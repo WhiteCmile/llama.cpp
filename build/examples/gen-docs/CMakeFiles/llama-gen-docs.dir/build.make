@@ -93,7 +93,7 @@ llama__gen__docs_EXTERNAL_OBJECTS =
 bin/llama-gen-docs: examples/gen-docs/CMakeFiles/llama-gen-docs.dir/gen-docs.cpp.o
 bin/llama-gen-docs: examples/gen-docs/CMakeFiles/llama-gen-docs.dir/build.make
 bin/llama-gen-docs: common/libcommon.a
-bin/llama-gen-docs: bin/libllama.so.0.0.7646
+bin/llama-gen-docs: bin/libllama.so.0.0.7649
 bin/llama-gen-docs: bin/libggml.so.0.9.5
 bin/llama-gen-docs: bin/libggml-cpu.so.0.9.5
 bin/llama-gen-docs: bin/libggml-cuda.so.0.9.5

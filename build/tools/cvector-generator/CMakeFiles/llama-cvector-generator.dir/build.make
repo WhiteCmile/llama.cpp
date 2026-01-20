@@ -93,7 +93,7 @@ llama__cvector__generator_EXTERNAL_OBJECTS =
 bin/llama-cvector-generator: tools/cvector-generator/CMakeFiles/llama-cvector-generator.dir/cvector-generator.cpp.o
 bin/llama-cvector-generator: tools/cvector-generator/CMakeFiles/llama-cvector-generator.dir/build.make
 bin/llama-cvector-generator: common/libcommon.a
-bin/llama-cvector-generator: bin/libllama.so.0.0.7646
+bin/llama-cvector-generator: bin/libllama.so.0.0.7649
 bin/llama-cvector-generator: bin/libggml.so.0.9.5
 bin/llama-cvector-generator: bin/libggml-cpu.so.0.9.5
 bin/llama-cvector-generator: bin/libggml-cuda.so.0.9.5

@@ -109,7 +109,7 @@ bin/llama-run: tools/run/CMakeFiles/llama-run.dir/run.cpp.o
 bin/llama-run: tools/run/CMakeFiles/llama-run.dir/linenoise.cpp/linenoise.cpp.o
 bin/llama-run: tools/run/CMakeFiles/llama-run.dir/build.make
 bin/llama-run: common/libcommon.a
-bin/llama-run: bin/libllama.so.0.0.7646
+bin/llama-run: bin/libllama.so.0.0.7649
 bin/llama-run: /usr/lib/x86_64-linux-gnu/libcurl.so
 bin/llama-run: bin/libggml.so.0.9.5
 bin/llama-run: bin/libggml-cpu.so.0.9.5

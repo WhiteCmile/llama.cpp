@@ -93,7 +93,7 @@ llama__imatrix_EXTERNAL_OBJECTS =
 bin/llama-imatrix: tools/imatrix/CMakeFiles/llama-imatrix.dir/imatrix.cpp.o
 bin/llama-imatrix: tools/imatrix/CMakeFiles/llama-imatrix.dir/build.make
 bin/llama-imatrix: common/libcommon.a
-bin/llama-imatrix: bin/libllama.so.0.0.7646
+bin/llama-imatrix: bin/libllama.so.0.0.7649
 bin/llama-imatrix: bin/libggml.so.0.9.5
 bin/llama-imatrix: bin/libggml-cpu.so.0.9.5
 bin/llama-imatrix: bin/libggml-cuda.so.0.9.5

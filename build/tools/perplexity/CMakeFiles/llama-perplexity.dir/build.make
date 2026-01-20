@@ -93,7 +93,7 @@ llama__perplexity_EXTERNAL_OBJECTS =
 bin/llama-perplexity: tools/perplexity/CMakeFiles/llama-perplexity.dir/perplexity.cpp.o
 bin/llama-perplexity: tools/perplexity/CMakeFiles/llama-perplexity.dir/build.make
 bin/llama-perplexity: common/libcommon.a
-bin/llama-perplexity: bin/libllama.so.0.0.7646
+bin/llama-perplexity: bin/libllama.so.0.0.7649
 bin/llama-perplexity: bin/libggml.so.0.9.5
 bin/llama-perplexity: bin/libggml-cpu.so.0.9.5
 bin/llama-perplexity: bin/libggml-cuda.so.0.9.5

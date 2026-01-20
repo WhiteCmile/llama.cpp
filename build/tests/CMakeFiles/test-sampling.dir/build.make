@@ -110,7 +110,7 @@ bin/test-sampling: tests/CMakeFiles/test-sampling.dir/get-model.cpp.o
 bin/test-sampling: tests/CMakeFiles/test-sampling.dir/build.make
 bin/test-sampling: common/libcommon.a
 bin/test-sampling: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-sampling: bin/libllama.so.0.0.7646
+bin/test-sampling: bin/libllama.so.0.0.7649
 bin/test-sampling: bin/libggml.so.0.9.5
 bin/test-sampling: bin/libggml-cpu.so.0.9.5
 bin/test-sampling: bin/libggml-cuda.so.0.9.5

@@ -110,7 +110,7 @@ bin/test-chat-template: tests/CMakeFiles/test-chat-template.dir/get-model.cpp.o
 bin/test-chat-template: tests/CMakeFiles/test-chat-template.dir/build.make
 bin/test-chat-template: common/libcommon.a
 bin/test-chat-template: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-chat-template: bin/libllama.so.0.0.7646
+bin/test-chat-template: bin/libllama.so.0.0.7649
 bin/test-chat-template: bin/libggml.so.0.9.5
 bin/test-chat-template: bin/libggml-cpu.so.0.9.5
 bin/test-chat-template: bin/libggml-cuda.so.0.9.5

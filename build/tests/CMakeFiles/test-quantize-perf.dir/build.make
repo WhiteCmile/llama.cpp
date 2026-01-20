@@ -110,7 +110,7 @@ bin/test-quantize-perf: tests/CMakeFiles/test-quantize-perf.dir/get-model.cpp.o
 bin/test-quantize-perf: tests/CMakeFiles/test-quantize-perf.dir/build.make
 bin/test-quantize-perf: common/libcommon.a
 bin/test-quantize-perf: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-quantize-perf: bin/libllama.so.0.0.7646
+bin/test-quantize-perf: bin/libllama.so.0.0.7649
 bin/test-quantize-perf: bin/libggml.so.0.9.5
 bin/test-quantize-perf: bin/libggml-cpu.so.0.9.5
 bin/test-quantize-perf: bin/libggml-cuda.so.0.9.5

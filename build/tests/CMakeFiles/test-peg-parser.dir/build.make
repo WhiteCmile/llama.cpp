@@ -206,7 +206,7 @@ bin/test-peg-parser: tests/CMakeFiles/test-peg-parser.dir/get-model.cpp.o
 bin/test-peg-parser: tests/CMakeFiles/test-peg-parser.dir/build.make
 bin/test-peg-parser: common/libcommon.a
 bin/test-peg-parser: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-peg-parser: bin/libllama.so.0.0.7646
+bin/test-peg-parser: bin/libllama.so.0.0.7649
 bin/test-peg-parser: bin/libggml.so.0.9.5
 bin/test-peg-parser: bin/libggml-cpu.so.0.9.5
 bin/test-peg-parser: bin/libggml-cuda.so.0.9.5

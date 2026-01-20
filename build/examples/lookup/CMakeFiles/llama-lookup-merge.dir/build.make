@@ -93,7 +93,7 @@ llama__lookup__merge_EXTERNAL_OBJECTS =
 bin/llama-lookup-merge: examples/lookup/CMakeFiles/llama-lookup-merge.dir/lookup-merge.cpp.o
 bin/llama-lookup-merge: examples/lookup/CMakeFiles/llama-lookup-merge.dir/build.make
 bin/llama-lookup-merge: common/libcommon.a
-bin/llama-lookup-merge: bin/libllama.so.0.0.7646
+bin/llama-lookup-merge: bin/libllama.so.0.0.7649
 bin/llama-lookup-merge: bin/libggml.so.0.9.5
 bin/llama-lookup-merge: bin/libggml-cpu.so.0.9.5
 bin/llama-lookup-merge: bin/libggml-cuda.so.0.9.5

@@ -110,7 +110,7 @@ bin/test-regex-partial: tests/CMakeFiles/test-regex-partial.dir/get-model.cpp.o
 bin/test-regex-partial: tests/CMakeFiles/test-regex-partial.dir/build.make
 bin/test-regex-partial: common/libcommon.a
 bin/test-regex-partial: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-regex-partial: bin/libllama.so.0.0.7646
+bin/test-regex-partial: bin/libllama.so.0.0.7649
 bin/test-regex-partial: bin/libggml.so.0.9.5
 bin/test-regex-partial: bin/libggml-cpu.so.0.9.5
 bin/test-regex-partial: bin/libggml-cuda.so.0.9.5

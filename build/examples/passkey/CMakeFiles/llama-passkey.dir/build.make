@@ -93,7 +93,7 @@ llama__passkey_EXTERNAL_OBJECTS =
 bin/llama-passkey: examples/passkey/CMakeFiles/llama-passkey.dir/passkey.cpp.o
 bin/llama-passkey: examples/passkey/CMakeFiles/llama-passkey.dir/build.make
 bin/llama-passkey: common/libcommon.a
-bin/llama-passkey: bin/libllama.so.0.0.7646
+bin/llama-passkey: bin/libllama.so.0.0.7649
 bin/llama-passkey: bin/libggml.so.0.9.5
 bin/llama-passkey: bin/libggml-cpu.so.0.9.5
 bin/llama-passkey: bin/libggml-cuda.so.0.9.5

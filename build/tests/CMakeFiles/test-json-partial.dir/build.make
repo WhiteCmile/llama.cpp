@@ -110,7 +110,7 @@ bin/test-json-partial: tests/CMakeFiles/test-json-partial.dir/get-model.cpp.o
 bin/test-json-partial: tests/CMakeFiles/test-json-partial.dir/build.make
 bin/test-json-partial: common/libcommon.a
 bin/test-json-partial: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-json-partial: bin/libllama.so.0.0.7646
+bin/test-json-partial: bin/libllama.so.0.0.7649
 bin/test-json-partial: bin/libggml.so.0.9.5
 bin/test-json-partial: bin/libggml-cpu.so.0.9.5
 bin/test-json-partial: bin/libggml-cuda.so.0.9.5

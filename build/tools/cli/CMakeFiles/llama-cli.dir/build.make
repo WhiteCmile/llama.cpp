@@ -95,8 +95,8 @@ bin/llama-cli: tools/cli/CMakeFiles/llama-cli.dir/build.make
 bin/llama-cli: tools/server/libserver-context.a
 bin/llama-cli: common/libcommon.a
 bin/llama-cli: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/llama-cli: bin/libmtmd.so.0.0.7646
-bin/llama-cli: bin/libllama.so.0.0.7646
+bin/llama-cli: bin/libmtmd.so.0.0.7649
+bin/llama-cli: bin/libllama.so.0.0.7649
 bin/llama-cli: bin/libggml.so.0.9.5
 bin/llama-cli: bin/libggml-cpu.so.0.9.5
 bin/llama-cli: bin/libggml-cuda.so.0.9.5

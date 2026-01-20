@@ -110,7 +110,7 @@ bin/test-opt: tests/CMakeFiles/test-opt.dir/get-model.cpp.o
 bin/test-opt: tests/CMakeFiles/test-opt.dir/build.make
 bin/test-opt: common/libcommon.a
 bin/test-opt: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-opt: bin/libllama.so.0.0.7646
+bin/test-opt: bin/libllama.so.0.0.7649
 bin/test-opt: bin/libggml.so.0.9.5
 bin/test-opt: bin/libggml-cpu.so.0.9.5
 bin/test-opt: bin/libggml-cuda.so.0.9.5

@@ -92,7 +92,7 @@ test__c_EXTERNAL_OBJECTS =
 
 bin/test-c: tests/CMakeFiles/test-c.dir/test-c.c.o
 bin/test-c: tests/CMakeFiles/test-c.dir/build.make
-bin/test-c: bin/libllama.so.0.0.7646
+bin/test-c: bin/libllama.so.0.0.7649
 bin/test-c: bin/libggml.so.0.9.5
 bin/test-c: bin/libggml-cpu.so.0.9.5
 bin/test-c: bin/libggml-cuda.so.0.9.5

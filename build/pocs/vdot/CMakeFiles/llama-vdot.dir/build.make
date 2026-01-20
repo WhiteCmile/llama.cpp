@@ -93,7 +93,7 @@ llama__vdot_EXTERNAL_OBJECTS =
 bin/llama-vdot: pocs/vdot/CMakeFiles/llama-vdot.dir/vdot.cpp.o
 bin/llama-vdot: pocs/vdot/CMakeFiles/llama-vdot.dir/build.make
 bin/llama-vdot: common/libcommon.a
-bin/llama-vdot: bin/libllama.so.0.0.7646
+bin/llama-vdot: bin/libllama.so.0.0.7649
 bin/llama-vdot: bin/libggml.so.0.9.5
 bin/llama-vdot: bin/libggml-cpu.so.0.9.5
 bin/llama-vdot: bin/libggml-cuda.so.0.9.5

@@ -93,7 +93,7 @@ llama__fit__params_EXTERNAL_OBJECTS =
 bin/llama-fit-params: tools/fit-params/CMakeFiles/llama-fit-params.dir/fit-params.cpp.o
 bin/llama-fit-params: tools/fit-params/CMakeFiles/llama-fit-params.dir/build.make
 bin/llama-fit-params: common/libcommon.a
-bin/llama-fit-params: bin/libllama.so.0.0.7646
+bin/llama-fit-params: bin/libllama.so.0.0.7649
 bin/llama-fit-params: bin/libggml.so.0.9.5
 bin/llama-fit-params: bin/libggml-cpu.so.0.9.5
 bin/llama-fit-params: bin/libggml-cuda.so.0.9.5

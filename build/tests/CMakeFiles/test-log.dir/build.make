@@ -110,7 +110,7 @@ bin/test-log: tests/CMakeFiles/test-log.dir/get-model.cpp.o
 bin/test-log: tests/CMakeFiles/test-log.dir/build.make
 bin/test-log: common/libcommon.a
 bin/test-log: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-log: bin/libllama.so.0.0.7646
+bin/test-log: bin/libllama.so.0.0.7649
 bin/test-log: bin/libggml.so.0.9.5
 bin/test-log: bin/libggml-cpu.so.0.9.5
 bin/test-log: bin/libggml-cuda.so.0.9.5

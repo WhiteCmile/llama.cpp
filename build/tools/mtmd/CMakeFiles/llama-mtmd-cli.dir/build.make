@@ -93,9 +93,9 @@ llama__mtmd__cli_EXTERNAL_OBJECTS =
 bin/llama-mtmd-cli: tools/mtmd/CMakeFiles/llama-mtmd-cli.dir/mtmd-cli.cpp.o
 bin/llama-mtmd-cli: tools/mtmd/CMakeFiles/llama-mtmd-cli.dir/build.make
 bin/llama-mtmd-cli: common/libcommon.a
-bin/llama-mtmd-cli: bin/libmtmd.so.0.0.7646
+bin/llama-mtmd-cli: bin/libmtmd.so.0.0.7649
 bin/llama-mtmd-cli: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/llama-mtmd-cli: bin/libllama.so.0.0.7646
+bin/llama-mtmd-cli: bin/libllama.so.0.0.7649
 bin/llama-mtmd-cli: bin/libggml.so.0.9.5
 bin/llama-mtmd-cli: bin/libggml-cpu.so.0.9.5
 bin/llama-mtmd-cli: bin/libggml-cuda.so.0.9.5

@@ -93,7 +93,7 @@ llama__speculative_EXTERNAL_OBJECTS =
 bin/llama-speculative: examples/speculative/CMakeFiles/llama-speculative.dir/speculative.cpp.o
 bin/llama-speculative: examples/speculative/CMakeFiles/llama-speculative.dir/build.make
 bin/llama-speculative: common/libcommon.a
-bin/llama-speculative: bin/libllama.so.0.0.7646
+bin/llama-speculative: bin/libllama.so.0.0.7649
 bin/llama-speculative: bin/libggml.so.0.9.5
 bin/llama-speculative: bin/libggml-cpu.so.0.9.5
 bin/llama-speculative: bin/libggml-cuda.so.0.9.5

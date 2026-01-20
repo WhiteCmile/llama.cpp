@@ -110,7 +110,7 @@ bin/test-backend-ops: tests/CMakeFiles/test-backend-ops.dir/get-model.cpp.o
 bin/test-backend-ops: tests/CMakeFiles/test-backend-ops.dir/build.make
 bin/test-backend-ops: common/libcommon.a
 bin/test-backend-ops: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-backend-ops: bin/libllama.so.0.0.7646
+bin/test-backend-ops: bin/libllama.so.0.0.7649
 bin/test-backend-ops: bin/libggml.so.0.9.5
 bin/test-backend-ops: bin/libggml-cpu.so.0.9.5
 bin/test-backend-ops: bin/libggml-cuda.so.0.9.5

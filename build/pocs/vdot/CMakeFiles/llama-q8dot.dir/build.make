@@ -93,7 +93,7 @@ llama__q8dot_EXTERNAL_OBJECTS =
 bin/llama-q8dot: pocs/vdot/CMakeFiles/llama-q8dot.dir/q8dot.cpp.o
 bin/llama-q8dot: pocs/vdot/CMakeFiles/llama-q8dot.dir/build.make
 bin/llama-q8dot: common/libcommon.a
-bin/llama-q8dot: bin/libllama.so.0.0.7646
+bin/llama-q8dot: bin/libllama.so.0.0.7649
 bin/llama-q8dot: bin/libggml.so.0.9.5
 bin/llama-q8dot: bin/libggml-cpu.so.0.9.5
 bin/llama-q8dot: bin/libggml-cuda.so.0.9.5

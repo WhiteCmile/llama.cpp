@@ -93,7 +93,7 @@ llama__tts_EXTERNAL_OBJECTS =
 bin/llama-tts: tools/tts/CMakeFiles/llama-tts.dir/tts.cpp.o
 bin/llama-tts: tools/tts/CMakeFiles/llama-tts.dir/build.make
 bin/llama-tts: common/libcommon.a
-bin/llama-tts: bin/libllama.so.0.0.7646
+bin/llama-tts: bin/libllama.so.0.0.7649
 bin/llama-tts: bin/libggml.so.0.9.5
 bin/llama-tts: bin/libggml-cpu.so.0.9.5
 bin/llama-tts: bin/libggml-cuda.so.0.9.5

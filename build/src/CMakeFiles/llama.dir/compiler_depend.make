@@ -233,8 +233,6 @@ src/CMakeFiles/llama.dir/llama-adapter.cpp.o: ../src/llama-adapter.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   /usr/include/c++/11/cassert \
   /usr/include/assert.h \
   /usr/include/c++/11/sstream \
@@ -1163,22 +1161,6 @@ src/CMakeFiles/llama.dir/llama-context.cpp.o: ../src/llama-context.cpp \
   /usr/include/c++/11/map \
   /usr/include/c++/11/bits/stl_map.h \
   /usr/include/c++/11/bits/stl_multimap.h \
-  /usr/include/c++/11/thread \
-  /usr/include/c++/11/bits/std_thread.h \
-  /usr/include/c++/11/bits/this_thread_sleep.h \
-  /usr/include/c++/11/chrono \
-  /usr/include/c++/11/ratio \
-  /usr/include/c++/11/limits \
-  /usr/include/c++/11/ctime \
-  /usr/include/c++/11/bits/parse_numbers.h \
-  /usr/include/c++/11/atomic \
-  /usr/include/c++/11/mutex \
-  /usr/include/c++/11/system_error \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/error_constants.h \
-  /usr/include/c++/11/stdexcept \
-  /usr/include/c++/11/bits/std_mutex.h \
-  /usr/include/c++/11/bits/unique_lock.h \
-  /usr/include/c++/11/condition_variable \
   ../src/llama-impl.h \
   ../src/llama-io.h \
   /usr/include/c++/11/cstddef \
@@ -1186,8 +1168,6 @@ src/CMakeFiles/llama.dir/llama-context.cpp.o: ../src/llama-context.cpp \
   ../src/llama-mmap.h \
   ../src/llama-model.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   /usr/include/c++/11/cinttypes \
   /usr/include/inttypes.h \
   /usr/include/c++/11/cmath \
@@ -1202,6 +1182,7 @@ src/CMakeFiles/llama.dir/llama-context.cpp.o: ../src/llama-context.cpp \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
   /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
   /usr/include/c++/11/bits/specfun.h \
+  /usr/include/c++/11/limits \
   /usr/include/c++/11/tr1/gamma.tcc \
   /usr/include/c++/11/tr1/special_function_util.h \
   /usr/include/c++/11/tr1/bessel_function.tcc \
@@ -1218,7 +1199,8 @@ src/CMakeFiles/llama.dir/llama-context.cpp.o: ../src/llama-context.cpp \
   /usr/include/string.h \
   /usr/include/strings.h \
   /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+  /usr/include/c++/11/stdexcept
 
 src/CMakeFiles/llama.dir/llama-cparams.cpp.o: ../src/llama-cparams.cpp \
   /usr/include/stdc-predef.h \
@@ -2611,8 +2593,6 @@ src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o: ../src/llama-kv-cache-iswa.c
   ../src/llama-impl.h \
   ../src/llama-model.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   /usr/include/c++/11/algorithm \
   /usr/include/c++/11/pstl/glue_algorithm_defs.h
 
@@ -2858,25 +2838,7 @@ src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o: ../src/llama-kv-cache.cpp \
   /usr/include/c++/11/cstddef \
   ../src/llama-model.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   ../src/llama-context.h \
-  /usr/include/c++/11/thread \
-  /usr/include/c++/11/bits/std_thread.h \
-  /usr/include/c++/11/bits/this_thread_sleep.h \
-  /usr/include/c++/11/chrono \
-  /usr/include/c++/11/ratio \
-  /usr/include/c++/11/limits \
-  /usr/include/c++/11/ctime \
-  /usr/include/c++/11/bits/parse_numbers.h \
-  /usr/include/c++/11/atomic \
-  /usr/include/c++/11/mutex \
-  /usr/include/c++/11/system_error \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/error_constants.h \
-  /usr/include/c++/11/stdexcept \
-  /usr/include/c++/11/bits/std_mutex.h \
-  /usr/include/c++/11/bits/unique_lock.h \
-  /usr/include/c++/11/condition_variable \
   /usr/include/c++/11/algorithm \
   /usr/include/c++/11/pstl/glue_algorithm_defs.h \
   /usr/include/c++/11/cmath \
@@ -2891,6 +2853,7 @@ src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o: ../src/llama-kv-cache.cpp \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
   /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
   /usr/include/c++/11/bits/specfun.h \
+  /usr/include/c++/11/limits \
   /usr/include/c++/11/tr1/gamma.tcc \
   /usr/include/c++/11/tr1/special_function_util.h \
   /usr/include/c++/11/tr1/bessel_function.tcc \
@@ -2902,7 +2865,8 @@ src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o: ../src/llama-kv-cache.cpp \
   /usr/include/c++/11/tr1/modified_bessel_func.tcc \
   /usr/include/c++/11/tr1/poly_hermite.tcc \
   /usr/include/c++/11/tr1/poly_laguerre.tcc \
-  /usr/include/c++/11/tr1/riemann_zeta.tcc
+  /usr/include/c++/11/tr1/riemann_zeta.tcc \
+  /usr/include/c++/11/stdexcept
 
 src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o: ../src/llama-memory-hybrid.cpp \
   /usr/include/stdc-predef.h \
@@ -3146,25 +3110,7 @@ src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o: ../src/llama-memory-hybrid.c
   ../src/llama-impl.h \
   ../src/llama-model.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-context.h \
-  /usr/include/c++/11/thread \
-  /usr/include/c++/11/bits/std_thread.h \
-  /usr/include/c++/11/bits/this_thread_sleep.h \
-  /usr/include/c++/11/chrono \
-  /usr/include/c++/11/ratio \
-  /usr/include/c++/11/limits \
-  /usr/include/c++/11/ctime \
-  /usr/include/c++/11/bits/parse_numbers.h \
-  /usr/include/c++/11/atomic \
-  /usr/include/c++/11/mutex \
-  /usr/include/c++/11/system_error \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/error_constants.h \
-  /usr/include/c++/11/stdexcept \
-  /usr/include/c++/11/bits/std_mutex.h \
-  /usr/include/c++/11/bits/unique_lock.h \
-  /usr/include/c++/11/condition_variable
+  ../src/llama-context.h
 
 src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o: ../src/llama-memory-recurrent.cpp \
   /usr/include/stdc-predef.h \
@@ -3400,8 +3346,6 @@ src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o: ../src/llama-memory-recur
   /usr/include/c++/11/cstddef \
   ../src/llama-model.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   /usr/include/c++/11/algorithm \
   /usr/include/c++/11/pstl/glue_algorithm_defs.h \
   /usr/include/c++/11/cassert \
@@ -4347,9 +4291,7 @@ src/CMakeFiles/llama.dir/llama-model-saver.cpp.o: ../src/llama-model-saver.cpp \
   /usr/include/c++/11/bits/stl_map.h \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
-  ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h
+  ../src/llama-vocab.h
 
 src/CMakeFiles/llama.dir/llama-model.cpp.o: ../src/llama-model.cpp \
   /usr/include/stdc-predef.h \
@@ -4581,8 +4523,6 @@ src/CMakeFiles/llama.dir/llama-model.cpp.o: ../src/llama-model.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   ../src/llama-impl.h \
   ../src/llama-mmap.h \
   ../src/llama-model-loader.h \
@@ -4601,7 +4541,6 @@ src/CMakeFiles/llama.dir/llama-model.cpp.o: ../src/llama-model.cpp \
   ../src/llama-memory-hybrid.h \
   ../src/llama-memory-recurrent.h \
   ../src/models/models.h \
-  ../src/llama-slot.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
   /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -4917,8 +4856,6 @@ src/CMakeFiles/llama.dir/llama-quant.cpp.o: ../src/llama-quant.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   ../src/llama-model-loader.h \
   ../src/llama-mmap.h \
   /usr/include/c++/11/cstddef \
@@ -5851,31 +5788,14 @@ src/CMakeFiles/llama.dir/llama.cpp.o: ../src/llama.cpp \
   /usr/include/c++/11/map \
   /usr/include/c++/11/bits/stl_map.h \
   /usr/include/c++/11/bits/stl_multimap.h \
-  /usr/include/c++/11/thread \
-  /usr/include/c++/11/bits/std_thread.h \
-  /usr/include/c++/11/bits/this_thread_sleep.h \
-  /usr/include/c++/11/chrono \
-  /usr/include/c++/11/ratio \
-  /usr/include/c++/11/limits \
-  /usr/include/c++/11/ctime \
-  /usr/include/c++/11/bits/parse_numbers.h \
-  /usr/include/c++/11/atomic \
-  /usr/include/c++/11/mutex \
-  /usr/include/c++/11/system_error \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/error_constants.h \
-  /usr/include/c++/11/stdexcept \
-  /usr/include/c++/11/bits/std_mutex.h \
-  /usr/include/c++/11/bits/unique_lock.h \
-  /usr/include/c++/11/condition_variable \
   ../src/llama-mmap.h \
   ../src/llama-vocab.h \
   ../src/llama-model-loader.h \
   /usr/include/c++/11/cstddef \
+  /usr/include/c++/11/stdexcept \
   ../src/llama-model-saver.h \
   ../src/llama-model.h \
   ../src/llama-memory.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
   /usr/include/c++/11/algorithm \
   /usr/include/c++/11/pstl/glue_algorithm_defs.h \
   /usr/include/c++/11/cassert \
@@ -5886,7 +5806,8 @@ src/CMakeFiles/llama.dir/llama.cpp.o: ../src/llama.cpp \
   /usr/include/string.h \
   /usr/include/strings.h \
   /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+  /usr/include/c++/11/ctime
 
 src/CMakeFiles/llama.dir/models/afmoe.cpp.o: ../src/models/afmoe.cpp \
   /usr/include/stdc-predef.h \
@@ -6119,9 +6040,6 @@ src/CMakeFiles/llama.dir/models/afmoe.cpp.o: ../src/models/afmoe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -6380,9 +6298,6 @@ src/CMakeFiles/llama.dir/models/apertus.cpp.o: ../src/models/apertus.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -6641,9 +6556,6 @@ src/CMakeFiles/llama.dir/models/arcee.cpp.o: ../src/models/arcee.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -6902,9 +6814,6 @@ src/CMakeFiles/llama.dir/models/arctic.cpp.o: ../src/models/arctic.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -7163,9 +7072,6 @@ src/CMakeFiles/llama.dir/models/arwkv7.cpp.o: ../src/models/arwkv7.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -7424,9 +7330,6 @@ src/CMakeFiles/llama.dir/models/baichuan.cpp.o: ../src/models/baichuan.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -7685,9 +7588,6 @@ src/CMakeFiles/llama.dir/models/bailingmoe.cpp.o: ../src/models/bailingmoe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -7946,9 +7846,6 @@ src/CMakeFiles/llama.dir/models/bailingmoe2.cpp.o: ../src/models/bailingmoe2.cpp
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -8207,9 +8104,6 @@ src/CMakeFiles/llama.dir/models/bert.cpp.o: ../src/models/bert.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -8468,9 +8362,6 @@ src/CMakeFiles/llama.dir/models/bitnet.cpp.o: ../src/models/bitnet.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -8729,9 +8620,6 @@ src/CMakeFiles/llama.dir/models/bloom.cpp.o: ../src/models/bloom.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -8990,9 +8878,6 @@ src/CMakeFiles/llama.dir/models/chameleon.cpp.o: ../src/models/chameleon.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -9252,9 +9137,6 @@ src/CMakeFiles/llama.dir/models/chatglm.cpp.o: ../src/models/chatglm.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -9513,9 +9395,6 @@ src/CMakeFiles/llama.dir/models/codeshell.cpp.o: ../src/models/codeshell.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -9774,9 +9653,6 @@ src/CMakeFiles/llama.dir/models/cogvlm.cpp.o: ../src/models/cogvlm.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -10035,9 +9911,6 @@ src/CMakeFiles/llama.dir/models/cohere2-iswa.cpp.o: ../src/models/cohere2-iswa.c
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -10296,9 +10169,6 @@ src/CMakeFiles/llama.dir/models/command-r.cpp.o: ../src/models/command-r.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -10557,9 +10427,6 @@ src/CMakeFiles/llama.dir/models/dbrx.cpp.o: ../src/models/dbrx.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -10818,9 +10685,6 @@ src/CMakeFiles/llama.dir/models/deci.cpp.o: ../src/models/deci.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -11079,9 +10943,6 @@ src/CMakeFiles/llama.dir/models/deepseek.cpp.o: ../src/models/deepseek.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -11340,9 +11201,6 @@ src/CMakeFiles/llama.dir/models/deepseek2.cpp.o: ../src/models/deepseek2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -11601,9 +11459,6 @@ src/CMakeFiles/llama.dir/models/dots1.cpp.o: ../src/models/dots1.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -11862,9 +11717,6 @@ src/CMakeFiles/llama.dir/models/dream.cpp.o: ../src/models/dream.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -12123,9 +11975,6 @@ src/CMakeFiles/llama.dir/models/ernie4-5-moe.cpp.o: ../src/models/ernie4-5-moe.c
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -12384,9 +12233,6 @@ src/CMakeFiles/llama.dir/models/ernie4-5.cpp.o: ../src/models/ernie4-5.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -12645,9 +12491,6 @@ src/CMakeFiles/llama.dir/models/exaone.cpp.o: ../src/models/exaone.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -12906,9 +12749,6 @@ src/CMakeFiles/llama.dir/models/exaone4.cpp.o: ../src/models/exaone4.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -13167,9 +13007,6 @@ src/CMakeFiles/llama.dir/models/falcon-h1.cpp.o: ../src/models/falcon-h1.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -13428,9 +13265,6 @@ src/CMakeFiles/llama.dir/models/falcon.cpp.o: ../src/models/falcon.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -13689,9 +13523,6 @@ src/CMakeFiles/llama.dir/models/gemma-embedding.cpp.o: ../src/models/gemma-embed
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -13950,9 +13781,6 @@ src/CMakeFiles/llama.dir/models/gemma.cpp.o: ../src/models/gemma.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -14211,9 +14039,6 @@ src/CMakeFiles/llama.dir/models/gemma2-iswa.cpp.o: ../src/models/gemma2-iswa.cpp
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -14472,9 +14297,6 @@ src/CMakeFiles/llama.dir/models/gemma3.cpp.o: ../src/models/gemma3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -14733,9 +14555,6 @@ src/CMakeFiles/llama.dir/models/gemma3n-iswa.cpp.o: ../src/models/gemma3n-iswa.c
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -14994,9 +14813,6 @@ src/CMakeFiles/llama.dir/models/glm4-moe.cpp.o: ../src/models/glm4-moe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -15255,9 +15071,6 @@ src/CMakeFiles/llama.dir/models/glm4.cpp.o: ../src/models/glm4.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -15516,9 +15329,6 @@ src/CMakeFiles/llama.dir/models/gpt2.cpp.o: ../src/models/gpt2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -15777,9 +15587,6 @@ src/CMakeFiles/llama.dir/models/gptneox.cpp.o: ../src/models/gptneox.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -16038,9 +15845,6 @@ src/CMakeFiles/llama.dir/models/granite-hybrid.cpp.o: ../src/models/granite-hybr
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -16299,9 +16103,6 @@ src/CMakeFiles/llama.dir/models/granite.cpp.o: ../src/models/granite.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -16560,9 +16361,6 @@ src/CMakeFiles/llama.dir/models/graph-context-mamba.cpp.o: ../src/models/graph-c
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -16821,9 +16619,6 @@ src/CMakeFiles/llama.dir/models/grok.cpp.o: ../src/models/grok.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -17082,9 +16877,6 @@ src/CMakeFiles/llama.dir/models/grovemoe.cpp.o: ../src/models/grovemoe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -17343,9 +17135,6 @@ src/CMakeFiles/llama.dir/models/hunyuan-dense.cpp.o: ../src/models/hunyuan-dense
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -17604,9 +17393,6 @@ src/CMakeFiles/llama.dir/models/hunyuan-moe.cpp.o: ../src/models/hunyuan-moe.cpp
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -17865,9 +17651,6 @@ src/CMakeFiles/llama.dir/models/internlm2.cpp.o: ../src/models/internlm2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -18126,9 +17909,6 @@ src/CMakeFiles/llama.dir/models/jais.cpp.o: ../src/models/jais.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -18387,9 +18167,6 @@ src/CMakeFiles/llama.dir/models/jamba.cpp.o: ../src/models/jamba.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -18648,9 +18425,6 @@ src/CMakeFiles/llama.dir/models/lfm2.cpp.o: ../src/models/lfm2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -18919,9 +18693,6 @@ src/CMakeFiles/llama.dir/models/llada-moe.cpp.o: ../src/models/llada-moe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -19180,9 +18951,6 @@ src/CMakeFiles/llama.dir/models/llada.cpp.o: ../src/models/llada.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -19441,9 +19209,6 @@ src/CMakeFiles/llama.dir/models/llama-iswa.cpp.o: ../src/models/llama-iswa.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -19702,9 +19467,6 @@ src/CMakeFiles/llama.dir/models/llama.cpp.o: ../src/models/llama.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -19963,9 +19725,6 @@ src/CMakeFiles/llama.dir/models/maincoder.cpp.o: ../src/models/maincoder.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -20224,9 +19983,6 @@ src/CMakeFiles/llama.dir/models/mamba.cpp.o: ../src/models/mamba.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -20485,9 +20241,6 @@ src/CMakeFiles/llama.dir/models/mimo2-iswa.cpp.o: ../src/models/mimo2-iswa.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -20746,9 +20499,6 @@ src/CMakeFiles/llama.dir/models/minicpm3.cpp.o: ../src/models/minicpm3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -21007,9 +20757,6 @@ src/CMakeFiles/llama.dir/models/minimax-m2.cpp.o: ../src/models/minimax-m2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -21268,9 +21015,6 @@ src/CMakeFiles/llama.dir/models/mistral3.cpp.o: ../src/models/mistral3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -21529,9 +21273,6 @@ src/CMakeFiles/llama.dir/models/modern-bert.cpp.o: ../src/models/modern-bert.cpp
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -21790,9 +21531,6 @@ src/CMakeFiles/llama.dir/models/mpt.cpp.o: ../src/models/mpt.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -22051,9 +21789,6 @@ src/CMakeFiles/llama.dir/models/nemotron-h.cpp.o: ../src/models/nemotron-h.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -22312,9 +22047,6 @@ src/CMakeFiles/llama.dir/models/nemotron.cpp.o: ../src/models/nemotron.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -22573,9 +22305,6 @@ src/CMakeFiles/llama.dir/models/neo-bert.cpp.o: ../src/models/neo-bert.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -22834,9 +22563,6 @@ src/CMakeFiles/llama.dir/models/olmo.cpp.o: ../src/models/olmo.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -23095,9 +22821,6 @@ src/CMakeFiles/llama.dir/models/olmo2.cpp.o: ../src/models/olmo2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -23356,9 +23079,6 @@ src/CMakeFiles/llama.dir/models/olmoe.cpp.o: ../src/models/olmoe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -23617,9 +23337,6 @@ src/CMakeFiles/llama.dir/models/openai-moe-iswa.cpp.o: ../src/models/openai-moe-
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -23878,9 +23595,6 @@ src/CMakeFiles/llama.dir/models/openelm.cpp.o: ../src/models/openelm.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -24139,9 +23853,6 @@ src/CMakeFiles/llama.dir/models/orion.cpp.o: ../src/models/orion.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -24400,9 +24111,6 @@ src/CMakeFiles/llama.dir/models/pangu-embedded.cpp.o: ../src/models/pangu-embedd
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -24661,9 +24369,6 @@ src/CMakeFiles/llama.dir/models/phi2.cpp.o: ../src/models/phi2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -24922,9 +24627,6 @@ src/CMakeFiles/llama.dir/models/phi3.cpp.o: ../src/models/phi3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -25183,9 +24885,6 @@ src/CMakeFiles/llama.dir/models/plamo.cpp.o: ../src/models/plamo.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -25444,9 +25143,6 @@ src/CMakeFiles/llama.dir/models/plamo2.cpp.o: ../src/models/plamo2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -25705,9 +25401,6 @@ src/CMakeFiles/llama.dir/models/plamo3.cpp.o: ../src/models/plamo3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -25966,9 +25659,6 @@ src/CMakeFiles/llama.dir/models/plm.cpp.o: ../src/models/plm.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -26227,9 +25917,6 @@ src/CMakeFiles/llama.dir/models/qwen.cpp.o: ../src/models/qwen.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -26488,9 +26175,6 @@ src/CMakeFiles/llama.dir/models/qwen2.cpp.o: ../src/models/qwen2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -26749,9 +26433,6 @@ src/CMakeFiles/llama.dir/models/qwen2moe.cpp.o: ../src/models/qwen2moe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -27010,9 +26691,6 @@ src/CMakeFiles/llama.dir/models/qwen2vl.cpp.o: ../src/models/qwen2vl.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -27272,9 +26950,6 @@ src/CMakeFiles/llama.dir/models/qwen3.cpp.o: ../src/models/qwen3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -27533,9 +27208,6 @@ src/CMakeFiles/llama.dir/models/qwen3moe.cpp.o: ../src/models/qwen3moe.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -27794,9 +27466,6 @@ src/CMakeFiles/llama.dir/models/qwen3next.cpp.o: ../src/models/qwen3next.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -28055,9 +27724,6 @@ src/CMakeFiles/llama.dir/models/qwen3vl-moe.cpp.o: ../src/models/qwen3vl-moe.cpp
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -28316,9 +27982,6 @@ src/CMakeFiles/llama.dir/models/qwen3vl.cpp.o: ../src/models/qwen3vl.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -28577,9 +28240,6 @@ src/CMakeFiles/llama.dir/models/refact.cpp.o: ../src/models/refact.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -28838,9 +28498,6 @@ src/CMakeFiles/llama.dir/models/rnd1.cpp.o: ../src/models/rnd1.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -29099,9 +28756,6 @@ src/CMakeFiles/llama.dir/models/rwkv6-base.cpp.o: ../src/models/rwkv6-base.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -29360,9 +29014,6 @@ src/CMakeFiles/llama.dir/models/rwkv6.cpp.o: ../src/models/rwkv6.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -29621,9 +29272,6 @@ src/CMakeFiles/llama.dir/models/rwkv6qwen2.cpp.o: ../src/models/rwkv6qwen2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -29882,9 +29530,6 @@ src/CMakeFiles/llama.dir/models/rwkv7-base.cpp.o: ../src/models/rwkv7-base.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -30143,9 +29788,6 @@ src/CMakeFiles/llama.dir/models/rwkv7.cpp.o: ../src/models/rwkv7.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -30404,9 +30046,6 @@ src/CMakeFiles/llama.dir/models/seed-oss.cpp.o: ../src/models/seed-oss.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -30665,9 +30304,6 @@ src/CMakeFiles/llama.dir/models/smallthinker.cpp.o: ../src/models/smallthinker.c
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -30926,9 +30562,6 @@ src/CMakeFiles/llama.dir/models/smollm3.cpp.o: ../src/models/smollm3.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -31187,9 +30820,6 @@ src/CMakeFiles/llama.dir/models/stablelm.cpp.o: ../src/models/stablelm.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -31448,9 +31078,6 @@ src/CMakeFiles/llama.dir/models/starcoder.cpp.o: ../src/models/starcoder.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -31709,9 +31336,6 @@ src/CMakeFiles/llama.dir/models/starcoder2.cpp.o: ../src/models/starcoder2.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -31970,9 +31594,6 @@ src/CMakeFiles/llama.dir/models/t5-dec.cpp.o: ../src/models/t5-dec.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -32231,9 +31852,6 @@ src/CMakeFiles/llama.dir/models/t5-enc.cpp.o: ../src/models/t5-enc.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -32492,9 +32110,6 @@ src/CMakeFiles/llama.dir/models/wavtokenizer-dec.cpp.o: ../src/models/wavtokeniz
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -32753,9 +32368,6 @@ src/CMakeFiles/llama.dir/models/xverse.cpp.o: ../src/models/xverse.cpp \
   /usr/include/c++/11/bits/stl_multimap.h \
   ../src/llama-memory.h \
   ../src/llama-vocab.h \
-  /usr/include/c++/11/unordered_set \
-  /usr/include/c++/11/bits/unordered_set.h \
-  ../src/llama-slot.h \
   ../src/llama-memory-recurrent.h \
   /usr/include/c++/11/cmath \
   /usr/include/math.h \
@@ -33160,8 +32772,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 ../src/models/smollm3.cpp:
 
-../src/models/seed-oss.cpp:
-
 /usr/include/c++/11/bits/basic_ios.tcc:
 
 /usr/include/c++/11/bits/codecvt.h:
@@ -33180,6 +32790,8 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 /usr/include/c++/11/pstl/glue_algorithm_defs.h:
 
+../src/models/seed-oss.cpp:
+
 /usr/include/c++/11/utility:
 
 /usr/include/c++/11/ios:
@@ -33191,10 +32803,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 /usr/include/c++/11/istream:
 
 /usr/include/c++/11/sstream:
-
-../src/models/command-r.cpp:
-
-../src/models/graph-context-mamba.cpp:
 
 ../src/llama-vocab.h:
 
@@ -33296,6 +32904,8 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 /usr/include/c++/11/pstl/glue_numeric_defs.h:
 
+/usr/include/c++/11/bits/ostream.tcc:
+
 /usr/include/c++/11/clocale:
 
 ../src/llama-memory.h:
@@ -33339,8 +32949,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 /usr/include/c++/11/tr1/legendre_function.tcc:
 
 /usr/include/locale.h:
-
-../src/llama-slot.h:
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
@@ -33404,9 +33012,9 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
-/usr/include/c++/11/chrono:
-
 ../src/llama-cparams.cpp:
+
+/usr/include/c++/11/chrono:
 
 /usr/include/c++/11/bits/forward_list.tcc:
 
@@ -33456,6 +33064,8 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
+/usr/include/c++/11/ostream:
+
 /usr/include/c++/11/bits/unique_ptr.h:
 
 /usr/include/c++/11/bits/stl_relops.h:
@@ -33469,10 +33079,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
 ../src/models/olmoe.cpp:
-
-/usr/include/c++/11/bits/unordered_set.h:
-
-/usr/include/c++/11/bits/stl_vector.h:
 
 /usr/include/c++/11/cstddef:
 
@@ -33850,10 +33456,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 ../src/models/bailingmoe2.cpp:
 
-/usr/include/c++/11/ostream:
-
-/usr/include/c++/11/bits/ostream.tcc:
-
 /usr/include/c++/11/bits/istream.tcc:
 
 /usr/include/c++/11/bits/regex_scanner.h:
@@ -33873,28 +33475,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 ../src/llama-chat.h:
 
 ../src/llama-context.cpp:
-
-/usr/include/c++/11/thread:
-
-/usr/include/c++/11/ratio:
-
-/usr/include/c++/11/condition_variable:
-
-../src/llama-model-saver.h:
-
-/usr/include/c++/11/limits:
-
-../src/llama-memory.cpp:
-
-/usr/include/c++/11/ctime:
-
-/usr/include/c++/11/bits/parse_numbers.h:
-
-/usr/include/c++/11/bits/std_mutex.h:
-
-/usr/include/c++/11/tr1/poly_laguerre.tcc:
-
-../src/models/qwen3.cpp:
 
 ../src/llama-io.h:
 
@@ -33924,6 +33504,12 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 ../src/models/gemma2-iswa.cpp:
 
+../src/llama-model-saver.h:
+
+/usr/include/c++/11/limits:
+
+../src/llama-memory.cpp:
+
 /usr/include/c++/11/tr1/special_function_util.h:
 
 ../src/models/falcon-h1.cpp:
@@ -33946,6 +33532,12 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 /usr/include/c++/11/tr1/poly_hermite.tcc:
 
+/usr/include/c++/11/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/11/bits/std_mutex.h:
+
+../src/models/qwen3.cpp:
+
 /usr/include/c++/11/tr1/riemann_zeta.tcc:
 
 ../src/llama-grammar.cpp:
@@ -33953,6 +33545,8 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 ../src/llama-grammar.h:
 
 /usr/include/c++/11/bits/locale_facets_nonio.h:
+
+/usr/include/c++/11/ctime:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h:
 
@@ -33992,12 +33586,6 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 
 ../src/llama-memory-hybrid.h:
 
-/usr/include/asm-generic/int-ll64.h:
-
-/usr/include/c++/11/atomic:
-
-/usr/include/c++/11/bits/regex_error.h:
-
 ../src/models/dbrx.cpp:
 
 ../src/models/llada-moe.cpp:
@@ -34025,6 +33613,14 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 /usr/include/c++/11/cinttypes:
 
 ../src/llama-kv-cache-iswa.h:
+
+/usr/include/c++/11/bits/stl_vector.h:
+
+/usr/include/c++/11/bits/unordered_set.h:
+
+../src/models/command-r.cpp:
+
+../src/models/graph-context-mamba.cpp:
 
 ../src/llama-hparams.cpp:
 
@@ -34135,6 +33731,20 @@ src/CMakeFiles/llama.dir/unicode.cpp.o: ../src/unicode.cpp \
 ../src/models/deepseek2.cpp:
 
 ../src/llama-model-loader.cpp:
+
+/usr/include/c++/11/ratio:
+
+/usr/include/c++/11/condition_variable:
+
+/usr/include/c++/11/thread:
+
+/usr/include/c++/11/bits/parse_numbers.h:
+
+/usr/include/asm-generic/int-ll64.h:
+
+/usr/include/c++/11/bits/regex_error.h:
+
+/usr/include/c++/11/atomic:
 
 ../src/llama-model-saver.cpp:
 

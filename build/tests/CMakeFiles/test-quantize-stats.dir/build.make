@@ -94,7 +94,7 @@ bin/test-quantize-stats: tests/CMakeFiles/test-quantize-stats.dir/test-quantize-
 bin/test-quantize-stats: tests/CMakeFiles/test-quantize-stats.dir/build.make
 bin/test-quantize-stats: common/libcommon.a
 bin/test-quantize-stats: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-quantize-stats: bin/libllama.so.0.0.7646
+bin/test-quantize-stats: bin/libllama.so.0.0.7649
 bin/test-quantize-stats: bin/libggml.so.0.9.5
 bin/test-quantize-stats: bin/libggml-cpu.so.0.9.5
 bin/test-quantize-stats: bin/libggml-cuda.so.0.9.5

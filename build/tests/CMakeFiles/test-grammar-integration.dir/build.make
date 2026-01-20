@@ -110,7 +110,7 @@ bin/test-grammar-integration: tests/CMakeFiles/test-grammar-integration.dir/get-
 bin/test-grammar-integration: tests/CMakeFiles/test-grammar-integration.dir/build.make
 bin/test-grammar-integration: common/libcommon.a
 bin/test-grammar-integration: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-grammar-integration: bin/libllama.so.0.0.7646
+bin/test-grammar-integration: bin/libllama.so.0.0.7649
 bin/test-grammar-integration: bin/libggml.so.0.9.5
 bin/test-grammar-integration: bin/libggml-cpu.so.0.9.5
 bin/test-grammar-integration: bin/libggml-cuda.so.0.9.5
