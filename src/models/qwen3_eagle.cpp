@@ -21,12 +21,12 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
     ggml_tensor * ONE = nullptr;
     // ONLY FOR DECODE
     if (flag) {
-        layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer);
+        layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, n_layer);
         ggml_set_input(layer_mask);
         ggml_set_name(layer_mask, "layer_mask");
         cb(layer_mask, "layer_mask", -1);
 
-        ONE = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, 1);
+        ONE = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, 1);
         ggml_set_input(ONE);
         ggml_set_name(ONE, "ONE");
         cb(ONE, "ONE", -1);
@@ -156,11 +156,11 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         if (flag_layer) {
             layer_input = build_norm(layer_input, model.layers[il].adapter_norm, nullptr, LLM_NORM_RMS, il);
             cb(layer_input, "adapter_norm", il);
-            layer_input = build_ffn(
+            layer_input = build_layer_masked_ffn(
                 layer_input, model.layers[il].adapter_up, nullptr, nullptr,
                 model.layers[il].adapter_gate, nullptr, nullptr,
                 model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
-                nullptr, LLM_FFN_SILU, LLM_FFN_PAR, il
+                nullptr, reverse_mask, LLM_FFN_SILU, LLM_FFN_PAR, il
             );
             cb(layer_input, "l_adapter", il);
         }
