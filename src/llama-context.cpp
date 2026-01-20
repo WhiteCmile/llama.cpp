@@ -1283,6 +1283,11 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         auto * layer_mask_tensor = ggml_graph_get_tensor(gf, "layer_mask");
         if (layer_mask_tensor) {
             // print_tensor(gf_res_prev->router_mask);
+            // float mask[36];
+            // ggml_backend_tensor_get(gf_res_prev->router_mask, mask, 0, 36*sizeof(float));
+            // int count = 0;
+            // for (int i = 0; i < 36; ++i) if (mask[i] == 0.f) ++count;
+            // printf("\n%d\n", count);
             ggml_backend_tensor_copy(gf_res_prev->router_mask, layer_mask_tensor);
         }
 
