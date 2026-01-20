@@ -352,7 +352,7 @@ static __global__ void mul_mat_vec_f(
 template <typename T, typename type_acc, int ncols_dst, int block_size, bool has_fusion = false>
 static __global__ void layer_masked_mul_mat_vec_f(
         const T * __restrict__ x, const float * __restrict__ y, const int32_t * __restrict__ ids, const ggml_cuda_mm_fusion_args_device fusion, float * __restrict__ dst,
-        const int32_t * __restrict__ layer_mask, const int layer_id,
+        const float * __restrict__ layer_mask, const int layer_id,
         const int ncols2, const int nchannels_y, const int stride_row, const int stride_col_y2, const int stride_col_dst,
         const uint3 channel_ratio, const int stride_channel_x, const int stride_channel_y, const int stride_channel_dst,
         const uint3 sample_ratio, const int stride_sample_x, const int stride_sample_y, const int stride_sample_dst) {
@@ -365,7 +365,7 @@ static __global__ void layer_masked_mul_mat_vec_f(
     const int sample_y    = sample_dst;
     const int tid         = threadIdx.x;
 
-    if (layer_mask != nullptr && layer_mask[layer_id] == 0) {
+    if (layer_mask != nullptr && layer_mask[layer_id] == 0.f) {
         return;
     }
 
@@ -731,7 +731,7 @@ static void mul_mat_vec_f_switch_fusion(
 template<typename T, typename type_acc, int ncols_dst, int block_size>
 static void layer_masked_mul_mat_vec_f_switch_fusion(
         const T * x, const float * y, const int32_t * ids, const ggml_cuda_mm_fusion_args_device fusion, float * dst,
-        const int32_t * layer_mask, const int layer_id,
+        const float * layer_mask, const int layer_id,
         const int64_t ncols, const int64_t nrows,
         const int64_t stride_row, const int64_t stride_col_y, const int64_t stride_col_dst,
         const uint3 channel_ratio, const int stride_channel_x, const int stride_channel_y, const int stride_channel_dst,
@@ -859,7 +859,7 @@ void launch_mul_mat_vec_f_cuda(
 template <typename T, typename type_acc, int ncols_dst>
 void launch_layer_masked_mul_mat_vec_f_cuda(
         const T * x, const float * y, const int32_t * ids, const ggml_cuda_mm_fusion_args_device fusion, float * dst,
-        const int32_t * layer_mask, const int layer_id,
+        const float * layer_mask, const int layer_id,
         const int64_t ncols, const int64_t nrows,
         const int64_t stride_row, const int64_t stride_col_y, const int64_t stride_col_dst,
         const int64_t nchannels_x, const int64_t nchannels_y, const int64_t nchannels_dst,
@@ -1038,7 +1038,7 @@ static void mul_mat_vec_f_cuda_switch_ncols_dst(
 template <typename T, typename type_acc>
 static void layer_masked_mul_mat_vec_f_cuda_switch_ncols_dst(
         const T * x, const float * y, const int32_t * ids, const ggml_cuda_mm_fusion_args_device fusion, float * dst,
-        const int32_t * layer_mask, const int layer_id,
+        const float * layer_mask, const int layer_id,
         const int64_t ncols, const int64_t nrows, const int64_t ncols_dst,
         const int64_t stride_row, const int64_t stride_col_y, const int64_t stride_col_dst,
         const int64_t nchannels_x, const int64_t nchannels_y, const int64_t nchannels_dst,
@@ -1148,7 +1148,7 @@ static void mul_mat_vec_f_cuda(
 template<typename T>
 static void layer_masked_mul_mat_vec_f_cuda(
         const T * x, const float * y, const int32_t * ids, const ggml_cuda_mm_fusion_args_device fusion, float * dst,
-        const int32_t * layer_mask, const int layer_id,
+        const float * layer_mask, const int layer_id,
         const int64_t ncols, const int64_t nrows, const int64_t ncols_dst,
         const int64_t stride_row, const int64_t stride_col_y, const int stride_col_dst,
         const int64_t nchannels_x, const int64_t nchannels_y, const int64_t nchannels_dst,
@@ -1300,7 +1300,7 @@ void ggml_cuda_layer_masked_mul_mat_vec_f(ggml_backend_cuda_context & ctx, const
     const float   * src1_d =       (const float   *) src1->data;
     const int32_t *  ids_d = ids ? (const int32_t *)  ids->data : nullptr;
     float         *  dst_d =       (float         *)  dst->data;
-    const int32_t * layer_mask_d = (const int32_t *) layer_mask->data;
+    const float   * layer_mask_d = (const float   *) layer_mask->data;
 
     ggml_cuda_mm_fusion_args_device fusion_local{};
 

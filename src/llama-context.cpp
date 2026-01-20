@@ -1283,17 +1283,13 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         auto * layer_mask_tensor = ggml_graph_get_tensor(gf, "layer_mask");
         if (layer_mask_tensor) {
             // print_tensor(gf_res_prev->router_mask);
-            float src[36];
-            int32_t dst[36];
-            ggml_backend_tensor_get(gf_res_prev->router_mask, src, 0, 36*sizeof(float));
-            for (int i = 0; i < 36; ++i) dst[i] = int32_t(src[i]);
-            ggml_backend_tensor_set(layer_mask_tensor, dst, 0, 36*sizeof(int32_t));
+            ggml_backend_tensor_copy(gf_res_prev->router_mask, layer_mask_tensor);
         }
 
         auto * ONE_tensor = ggml_graph_get_tensor(gf, "ONE");
-        int32_t one = 1;
+        float one = 1.f;
         if (ONE_tensor) {
-            ggml_backend_tensor_set(ONE_tensor, &one, 0, sizeof(int32_t));
+            ggml_backend_tensor_set(ONE_tensor, &one, 0, sizeof(float));
         }
     }
 
