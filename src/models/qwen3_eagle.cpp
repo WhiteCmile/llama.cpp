@@ -9,11 +9,31 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
     ggml_tensor * cur;
     ggml_tensor * inpL;
 
+    bool flag = n_tokens == 1;
     // input for eagle
     ggml_tensor * emb_inp;
     ggml_tensor * hid_inp_1 = nullptr;
     ggml_tensor * hid_inp_2 = nullptr;
     ggml_tensor * hid_inp_3 = nullptr;
+
+    ggml_tensor * layer_mask = nullptr;
+    ggml_tensor * reverse_mask = nullptr;
+    ggml_tensor * ONE = nullptr;
+    // ONLY FOR DECODE
+    if (flag) {
+        layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer);
+        ggml_set_input(layer_mask);
+        ggml_set_name(layer_mask, "layer_mask");
+        cb(layer_mask, "layer_mask", -1);
+
+        ONE = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, 1);
+        ggml_set_input(ONE);
+        ggml_set_name(ONE, "ONE");
+        cb(ONE, "ONE", -1);
+        reverse_mask = ggml_sub(ctx0, layer_mask, ONE);
+        reverse_mask = ggml_neg_inplace(ctx0, reverse_mask);
+        cb(reverse_mask, "reverse_mask", -1);
+    }
 
     inpL = build_inp_embd(model.tok_embd);
     emb_inp = inpL;
@@ -26,6 +46,9 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
     for (int il = 0; il < n_layer; ++il) {
+        bool flag_layer = (il>1 && il<34)?flag:false;
+
+        ggml_tensor * layer_input = inpL;
         ggml_tensor * inpSA = inpL;
 
         // hard-code for n_layer=36
@@ -42,6 +65,7 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         // self-attention
         {
             // compute Q and K and RoPE them
+            // TODO: for convenience, we do not masked the Q generation phase
             ggml_tensor * Qcur = build_lora_mm(model.layers[il].wq, cur);
             cb(Qcur, "Qcur", il);
 
@@ -77,9 +101,21 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
             cb(Kcur, "Kcur", il);
             cb(Vcur, "Vcur", il);
 
-            cur = build_attn(inp_attn,
-                    model.layers[il].wo, model.layers[il].bo,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il);
+            if (flag_layer) {
+                // We mask the unnecessary attention layer
+                cur = build_layer_masked_attn(inp_attn, 
+                        model.layers[il].wo, model.layers[il].bo,
+                        Qcur, Kcur, Vcur, 
+                        nullptr, nullptr, nullptr, 
+                        layer_mask,
+                        1.0f/sqrtf(float(n_embd_head)), il);
+            }
+            else {
+                // We build the attention layer as usual
+                cur = build_attn(inp_attn,
+                        model.layers[il].wo, model.layers[il].bo,
+                        Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il);
+            }
         }
         ggml_tensor * ffn_inp = ggml_add(ctx0, cur, inpSA);
         cb(ffn_inp, "ffn_inp", il);
@@ -90,18 +126,54 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
                 LLM_NORM_RMS, il);
         cb(cur, "ffn_norm", il);
 
-        cur = build_ffn(cur,
-                model.layers[il].ffn_up,   NULL, NULL,
-                model.layers[il].ffn_gate, NULL, NULL,
-                model.layers[il].ffn_down, NULL, NULL,
-                NULL,
-                LLM_FFN_SILU, LLM_FFN_PAR, il);
+        if (flag_layer) {
+            // We mask the unnecessary FFN layer
+            cur = build_layer_masked_ffn(cur, 
+                    model.layers[il].ffn_up,   NULL, NULL,
+                    model.layers[il].ffn_gate, NULL, NULL,
+                    model.layers[il].ffn_down, NULL, NULL,
+                    NULL,
+                    layer_mask,
+                    LLM_FFN_SILU, LLM_FFN_PAR, il);
+        }
+        else {
+            // We build the FFN layer as usual
+            cur = build_ffn(cur,
+                    model.layers[il].ffn_up,   NULL, NULL,
+                    model.layers[il].ffn_gate, NULL, NULL,
+                    model.layers[il].ffn_down, NULL, NULL,
+                    NULL,
+                    LLM_FFN_SILU, LLM_FFN_PAR, il);
+        }
         cb(cur, "ffn_out", il);
 
         cur = ggml_add(ctx0, cur, ffn_inp);
 
         cur = build_cvec(cur, il);
         cb(cur, "l_out", il);
+
+        // Adapter
+        if (flag_layer) {
+            layer_input = build_norm(layer_input, model.layers[il].adapter_norm, nullptr, LLM_NORM_RMS, il);
+            cb(layer_input, "adapter_norm", il);
+            layer_input = build_ffn(
+                layer_input, model.layers[il].adapter_up, nullptr, nullptr,
+                model.layers[il].adapter_gate, nullptr, nullptr,
+                model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
+                nullptr, LLM_FFN_SILU, LLM_FFN_PAR, il
+            );
+            cb(layer_input, "l_adapter", il);
+        }
+
+        // move input for this layer to input for next layer
+        if (flag_layer) {
+            cur = build_layer_masked_bypassing(
+                cur, layer_input, 
+                layer_mask, il
+            );
+            cb(cur, "l_out_masked", il);
+            ggml_build_forward_expand(gf, cur);
+        }
 
         // input for next layer
         inpL = cur;
@@ -208,8 +280,9 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         cb(router_cur, "router_logits", -1);
         router_cur = ggml_sigmoid_inplace(ctx0, router_cur);
         router_cur = ggml_round_inplace(ctx0, router_cur);
+        // router_cur = ggml_cast(ctx0, router_cur, GGML_TYPE_I32);
         cb(router_cur, "router_mask", -1);
-    
+
         res->router_mask = router_cur;
         ggml_build_forward_expand(gf, router_cur);
     }
