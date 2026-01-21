@@ -138,11 +138,6 @@ poetry.toml
 # emscripten
 a.out.*
 
-# output for experiments
-experiments/
-
-# binaries
-bin
-
-# others
-.clangd
+# output
+out.txt
+out.err

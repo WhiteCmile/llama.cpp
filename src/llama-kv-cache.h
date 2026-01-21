@@ -108,7 +108,7 @@ public:
         const layer_filter_cb & filter,
         const  layer_reuse_cb & reuse);
 
-    ~llama_kv_cache() = default;
+    virtual ~llama_kv_cache() = default;
 
     //
     // llama_memory_i
@@ -159,12 +159,12 @@ public:
     uint32_t get_n_kv(const slot_info & sinfo) const;
 
     // get views of the current state of the cache
-    ggml_tensor * get_k(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const;
-    ggml_tensor * get_v(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const;
+    virtual ggml_tensor * get_k(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const;
+    virtual ggml_tensor * get_v(ggml_context * ctx, int32_t il, uint32_t n_kv, const slot_info & sinfo) const;
 
     // store k_cur and v_cur in the cache based on the provided head location
-    ggml_tensor * cpy_k(ggml_context * ctx, ggml_tensor * k_cur, ggml_tensor * k_idxs, int32_t il, const slot_info & sinfo) const;
-    ggml_tensor * cpy_v(ggml_context * ctx, ggml_tensor * v_cur, ggml_tensor * v_idxs, int32_t il, const slot_info & sinfo) const;
+    virtual ggml_tensor * cpy_k(ggml_context * ctx, ggml_tensor * k_cur, ggml_tensor * k_idxs, int32_t il, const slot_info & sinfo) const;
+    virtual ggml_tensor * cpy_v(ggml_context * ctx, ggml_tensor * v_cur, ggml_tensor * v_idxs, int32_t il, const slot_info & sinfo) const;
 
     //
     // preparation API
@@ -199,9 +199,7 @@ public:
     void set_input_kq_mask   (ggml_tensor * dst, const llama_ubatch * ubatch, bool causal_attn) const;
     void set_input_pos_bucket(ggml_tensor * dst, const llama_ubatch * ubatch) const;
 
-private:
-    const llama_model & model;
-    const llama_hparams & hparams;
+protected:
 
     struct kv_layer {
         // layer index in the model
@@ -214,6 +212,14 @@ private:
         std::vector<ggml_tensor *> k_stream;
         std::vector<ggml_tensor *> v_stream;
     };
+
+    const llama_hparams & _hparams() const noexcept { return hparams; }
+    bool _v_trans() const noexcept { return v_trans; }
+    auto & _ctxs_bufs() noexcept { return ctxs_bufs; }
+
+private:
+    const llama_model & model;
+    const llama_hparams & hparams;
 
     bool v_trans = true;  // the value tensor is transposed
 

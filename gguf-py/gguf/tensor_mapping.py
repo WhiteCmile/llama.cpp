@@ -123,6 +123,58 @@ class TensorNameMap:
         MODEL_TENSOR.CONV1D: (
             "backbone.embed", # roberta
         ),
+        
+        # eagle
+        MODEL_TENSOR.INPUT_FC_EAGLE: (
+            "eagle.fc",
+        ),
+        MODEL_TENSOR.INPUT_NORM_EAGLE: (
+            "midlayer.input_layernorm",
+        ),
+        MODEL_TENSOR.HIDDEN_NORM_EAGLE: (
+            "midlayer.hidden_norm",
+        ),
+        MODEL_TENSOR.ATTN_Q_EAGLE: (
+            "midlayer.self_attn.q_proj",
+        ),
+        MODEL_TENSOR.ATTN_K_EAGLE: (
+            "midlayer.self_attn.k_proj",
+        ),
+        MODEL_TENSOR.ATTN_V_EAGLE: (
+            "midlayer.self_attn.v_proj",
+        ),
+        MODEL_TENSOR.ATTN_OUT_EAGLE: (
+            "midlayer.self_attn.o_proj",
+        ),
+        MODEL_TENSOR.FFN_NORM_EAGLE: (
+            "midlayer.post_attention_layernorm",
+        ),
+        MODEL_TENSOR.FFN_GATE_EAGLE: (
+            "midlayer.mlp.gate_proj",
+        ),
+        MODEL_TENSOR.FFN_DOWN_EAGLE: (
+            "midlayer.mlp.down_proj",
+        ),
+        MODEL_TENSOR.FFN_UP_EAGLE: (
+            "midlayer.mlp.up_proj",
+        ),
+        MODEL_TENSOR.OUTPUT_NORM_EAGLE: (
+            "eagle.norm",
+        ),
+        
+        # router
+        MODEL_TENSOR.ROUTER_NORM: (
+            "router.norm",
+        ),
+        MODEL_TENSOR.ROUTER_GATE: (
+            "router.gate_proj",
+        ),
+        MODEL_TENSOR.ROUTER_UP: (
+            "router.up_proj",
+        ),
+        MODEL_TENSOR.ROUTER_DOWN: (
+            "router.down_proj",
+        ),
     }
 
     block_mappings_cfg: dict[MODEL_TENSOR, tuple[str, ...]] = {
@@ -1722,6 +1774,24 @@ class TensorNameMap:
 
         MODEL_TENSOR.NEXTN_SHARED_HEAD_NORM: (
             "model.layers.{bid}.shared_head.norm",
+        ),
+        
+        # adapter
+        
+        MODEL_TENSOR.ADAPTER_SCALE: (
+            "model.layers.adapter.{bid}.scale",
+        ),
+        MODEL_TENSOR.ADAPTER_NORM: (
+            "model.layers.adapter.{bid}.norm",
+        ),
+        MODEL_TENSOR.ADAPTER_GATE: (
+            "model.layers.adapter.{bid}.gate_proj",
+        ),
+        MODEL_TENSOR.ADAPTER_UP: (
+            "model.layers.adapter.{bid}.up_proj",
+        ),
+        MODEL_TENSOR.ADAPTER_DOWN: (
+            "model.layers.adapter.{bid}.down_proj",
         ),
     }
 

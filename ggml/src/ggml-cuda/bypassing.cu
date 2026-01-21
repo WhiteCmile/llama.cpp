@@ -10,7 +10,7 @@ static __global__ void layer_masked_bypassing_kernel(
     T * dst,
     const T * src0,
     const T * src1,
-    const int32_t * layer_mask,
+    const float * layer_mask,
     const int layer_id,
     const int64_t k
 ) {
@@ -20,10 +20,10 @@ static __global__ void layer_masked_bypassing_kernel(
     }
     
     // Read mask once (coalesced access)
-    const bool not_skip = layer_mask[layer_id];
+    // const bool not_skip = layer_mask[layer_id] >= 0.5f;
     
     // Conditional assignment
-    dst[i] = not_skip ? src0[i] : src1[i];
+    dst[i] = (layer_mask[layer_id] >= 0.5f) ? src0[i] : src1[i];
 }
 
 void ggml_cuda_op_layer_masked_bypassing(ggml_backend_cuda_context & ctx, ggml_tensor * dst) {
@@ -34,7 +34,7 @@ void ggml_cuda_op_layer_masked_bypassing(ggml_backend_cuda_context & ctx, ggml_t
     void * dst_d = dst->data;
     const void * src0_d = src0->data;
     const void * src1_d = src1->data;
-    const int32_t * layer_mask = (const int32_t *)mask_tensor->data;
+    const float * layer_mask = (const float *)mask_tensor->data;
     const int layer_id = dst->layer_id;
 
     // {

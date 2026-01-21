@@ -410,6 +410,13 @@ struct llama_layer {
     struct ggml_tensor * ffn_act_beta    = nullptr;
     struct ggml_tensor * ffn_act_eps     = nullptr;
 
+    // adapter
+    struct ggml_tensor * adapter_scale = nullptr;
+    struct ggml_tensor * adapter_norm  = nullptr;
+    struct ggml_tensor * adapter_gate  = nullptr;
+    struct ggml_tensor * adapter_up    = nullptr;
+    struct ggml_tensor * adapter_down  = nullptr;
+
     struct llama_layer_posnet posnet;
 
     struct llama_layer_convnext convnext;
@@ -458,6 +465,27 @@ struct llama_model {
     struct ggml_tensor * altup_unembd_proj    = nullptr;
     struct ggml_tensor * per_layer_model_proj = nullptr;
     struct ggml_tensor * per_layer_proj_norm  = nullptr;
+
+    // eagle
+    struct ggml_tensor * eagle_input_norm  = nullptr;
+    struct ggml_tensor * eagle_hidden_norm = nullptr;
+    struct ggml_tensor * eagle_fc          = nullptr;
+    struct ggml_tensor * eagle_q_proj      = nullptr;
+    struct ggml_tensor * eagle_k_proj      = nullptr;
+    struct ggml_tensor * eagle_v_proj      = nullptr;
+    struct ggml_tensor * eagle_o_proj      = nullptr;
+    struct ggml_tensor * eagle_up_proj     = nullptr;
+    struct ggml_tensor * eagle_gate_proj   = nullptr;
+    struct ggml_tensor * eagle_down_proj   = nullptr;
+    struct ggml_tensor * eagle_ffn_norm    = nullptr;
+    struct ggml_tensor * eagle_output_norm = nullptr;
+
+    // router
+    struct ggml_tensor * router_norm   = nullptr;
+    struct ggml_tensor * router_gate   = nullptr;
+    struct ggml_tensor * router_up     = nullptr;
+    struct ggml_tensor * router_down   = nullptr;
+    struct ggml_tensor * router_down_b = nullptr;
 
     std::vector<llama_layer> layers;
 

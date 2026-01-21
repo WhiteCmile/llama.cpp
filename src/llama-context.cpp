@@ -14,6 +14,201 @@
 #include <limits>
 #include <stdexcept>
 
+// helper function to print tensor
+#include <iostream>
+#include <vector>
+#include <iomanip>
+#include <cstdint>
+
+// 打印tensor
+void print_tensor(const struct ggml_tensor * tensor) {
+    if (!tensor) {
+        std::cout << "Tensor is null" << std::endl;
+        return;
+    }
+
+    // 打印基本信息
+    std::cout << "Tensor name: " << (tensor->name[0] ? tensor->name : "unnamed") << std::endl;
+    std::cout << "Type: ";
+    switch (tensor->type) {
+        case GGML_TYPE_F32: std::cout << "F32"; break;
+        case GGML_TYPE_F16: std::cout << "F16"; break;
+        case GGML_TYPE_I32: std::cout << "I32"; break;
+        default: std::cout << "Unsupported(" << (int)tensor->type << ")"; break;
+    }
+    std::cout << std::endl;
+
+    // 确定维度数（只支持1D和2D）
+    int dims = 0;
+    if (tensor->ne[1] > 1) dims = 2;
+    else dims = 1;
+
+    std::cout << "Shape: [";
+    if (dims == 1) {
+        std::cout << tensor->ne[0];
+    } else {
+        std::cout << tensor->ne[0] << ", " << tensor->ne[1];
+    }
+    std::cout << "]" << std::endl;
+
+    int64_t total_elements = tensor->ne[0] * (dims == 1 ? 1 : tensor->ne[1]);
+    std::cout << "Total elements: " << total_elements << std::endl;
+
+    const int64_t MAX_ELEMENTS_FULL_PRINT = 50;
+    
+    if (total_elements <= MAX_ELEMENTS_FULL_PRINT) {
+        // 完整打印所有元素
+        std::cout << "\nFull tensor data:" << std::endl;
+        
+        if (dims == 1) {
+            // 1D tensor
+            if (tensor->type == GGML_TYPE_I32) {
+                // Handle I32 type specifically
+                int32_t * values = new int32_t[tensor->ne[0]];
+                ggml_backend_tensor_get(tensor, values, 0, tensor->ne[0] * sizeof(int32_t));
+                
+                for (int64_t i = 0; i < tensor->ne[0]; ++i) {
+                    std::cout << values[i];  // Print as integer
+                    if (i < tensor->ne[0] - 1) std::cout << ", ";
+                }
+                std::cout << std::endl;
+                delete[] values;
+            } else {
+                float * values = new float[tensor->ne[0]];
+                ggml_backend_tensor_get(tensor, values, 0, tensor->ne[0] * sizeof(float));
+
+                for (int64_t i = 0; i < tensor->ne[0]; ++i) {
+                    float val;
+                    if (tensor->type == GGML_TYPE_F32) {
+                        val = values[i];
+                    } else if (tensor->type == GGML_TYPE_F16) {
+                        val = ggml_fp16_to_fp32(((uint16_t *)values)[i]);
+                    } else {
+                        val = 0.0f;
+                    }
+                    std::cout << std::fixed << std::setprecision(6) << val;
+                    if (i < tensor->ne[0] - 1) std::cout << ", ";
+                }
+                std::cout << std::endl;
+                delete[] values;
+            }
+        } else if (dims == 2) {
+            // 2D tensor
+            if (tensor->type == GGML_TYPE_I32) {
+                // Handle I32 type for 2D tensor
+                size_t row_size = tensor->ne[0] * sizeof(int32_t);
+                size_t total_size = row_size * tensor->ne[1];
+                int32_t * buffer = new int32_t[total_size / sizeof(int32_t)];
+                ggml_backend_tensor_get(tensor, buffer, 0, total_size);
+                
+                for (int64_t i1 = 0; i1 < tensor->ne[1]; ++i1) {
+                    std::cout << "[";
+                    for (int64_t i0 = 0; i0 < tensor->ne[0]; ++i0) {
+                        int32_t val = buffer[i1 * tensor->ne[0] + i0];
+                        std::cout << val;  // Print as integer
+                        if (i0 < tensor->ne[0] - 1) std::cout << ", ";
+                    }
+                    std::cout << "]";
+                    if (i1 < tensor->ne[1] - 1) std::cout << std::endl;
+                }
+                std::cout << std::endl;
+                delete[] buffer;
+            } else {
+                size_t row_size = tensor->ne[0] * (tensor->type == GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t));
+                size_t total_size = row_size * tensor->ne[1];
+                void * buffer = new char[total_size];
+                ggml_backend_tensor_get(tensor, buffer, 0, total_size);
+                
+                for (int64_t i1 = 0; i1 < tensor->ne[1]; ++i1) {
+                    std::cout << "[";
+                    for (int64_t i0 = 0; i0 < tensor->ne[0]; ++i0) {
+                        float val;
+                        if (tensor->type == GGML_TYPE_F32) {
+                            val = ((float *)buffer)[i1 * tensor->ne[0] + i0];
+                        } else if (tensor->type == GGML_TYPE_F16) {
+                            val = ggml_fp16_to_fp32(((uint16_t *)buffer)[i1 * tensor->ne[0] + i0]);
+                        } else {
+                            val = 0.0f;
+                        }
+                        std::cout << std::fixed << std::setprecision(4) << val;
+                        if (i0 < tensor->ne[0] - 1) std::cout << ", ";
+                    }
+                    std::cout << "]";
+                    if (i1 < tensor->ne[1] - 1) std::cout << std::endl;
+                }
+                std::cout << std::endl;
+                delete[] static_cast<char *>(buffer);
+            }
+        }
+    } else {
+        // 只打印角落元素
+        std::cout << "\nCorner elements:" << std::endl;
+        
+        if (dims == 1) {
+            // 1D tensor: first and last elements
+            if (tensor->type == GGML_TYPE_I32) {
+                int32_t values[2];
+                size_t offsets[2] = {0, (tensor->ne[0] - 1) * sizeof(int32_t)};
+                
+                for (int i = 0; i < 2; ++i) {
+                    ggml_backend_tensor_get(tensor, &values[i], offsets[i], sizeof(int32_t));
+                    std::cout << "  [" << (i == 0 ? 0 : tensor->ne[0] - 1) << "] = " << values[i] << std::endl;
+                }
+            } else {
+                float values[2];
+                size_t offsets[2] = {0, (tensor->ne[0] - 1) * (tensor->type == GGML_TYPE_F32 ? sizeof(float) : sizeof(uint16_t))};
+                
+                for (int i = 0; i < 2; ++i) {
+                    if (tensor->type == GGML_TYPE_F32) {
+                        ggml_backend_tensor_get(tensor, &values[i], offsets[i], sizeof(float));
+                    } else if (tensor->type == GGML_TYPE_F16) {
+                        uint16_t h;
+                        ggml_backend_tensor_get(tensor, &h, offsets[i], sizeof(uint16_t));
+                        values[i] = ggml_fp16_to_fp32(h);
+                    }
+                    std::cout << "  [" << (i == 0 ? 0 : tensor->ne[0] - 1) << "] = " 
+                              << std::fixed << std::setprecision(6) << values[i] << std::endl;
+                }
+            }
+        } else if (dims == 2) {
+            // 2D tensor: 4 corners
+            int corners[4][2] = {
+                {0, 0}, {0, (int)tensor->ne[1] - 1},
+                {(int)tensor->ne[0] - 1, 0}, {(int)tensor->ne[0] - 1, (int)tensor->ne[1] - 1}
+            };
+            
+            for (int i = 0; i < 4; ++i) {
+                int i0 = corners[i][0];
+                int i1 = corners[i][1];
+                
+                if (tensor->type == GGML_TYPE_I32) {
+                    int32_t val;
+                    size_t offset = i1 * tensor->nb[1] + i0 * tensor->nb[0];
+                    ggml_backend_tensor_get(tensor, &val, offset, sizeof(int32_t));
+                    std::cout << "  [" << i0 << ", " << i1 << "] = " << val << std::endl;
+                } else {
+                    float val;
+                    size_t offset = i1 * tensor->nb[1] + i0 * tensor->nb[0];
+                    if (tensor->type == GGML_TYPE_F32) {
+                        ggml_backend_tensor_get(tensor, &val, offset, sizeof(float));
+                    } else if (tensor->type == GGML_TYPE_F16) {
+                        uint16_t h;
+                        ggml_backend_tensor_get(tensor, &h, offset, sizeof(uint16_t));
+                        val = ggml_fp16_to_fp32(h);
+                    } else {
+                        val = 0.0f;
+                    }
+                    
+                    std::cout << "  [" << i0 << ", " << i1 << "] = " 
+                              << std::fixed << std::setprecision(6) << val << std::endl;
+                }
+            }
+        }
+    }
+    
+    std::cout << std::endl;
+}
+
 //
 // llama_context
 //
@@ -380,7 +575,8 @@ llama_context::llama_context(
                     ggml_backend_sched_get_tensor_backend(sched.get(), n));
 
                 // TODO: instead of the tensor names, use a map to keep track of which (FA) tensors belong to which layer
-                GGML_ASSERT(strncmp(n->name, LLAMA_TENSOR_NAME_FATTN "-", prefix_len) == 0);
+                // GGML_ASSERT(strncmp(n->name, LLAMA_TENSOR_NAME_FATTN "-", prefix_len) == 0);
+                if (strncmp(n->name, LLAMA_TENSOR_NAME_FATTN "-", prefix_len) != 0) continue;  // skip it because write adaptation for eagle layer is complex
                 const int il = std::stoi(n->name + prefix_len);
                 ggml_backend_dev_t device_kv = model.dev_layer(il);
                 if (device_fa != device_kv) {
@@ -1082,17 +1278,23 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         }
     }
 
-    // we set the layer mask data here for temporary use
-    // TODO: remove this and integrate it with predictor
+    // layer_mask
     {
         auto * layer_mask_tensor = ggml_graph_get_tensor(gf, "layer_mask");
         if (layer_mask_tensor) {
-            std::vector<int32_t> layer_mask_data(layer_mask_tensor->ne[0], 1);
-            for (auto i = 15; i < 22; i++) {
-                layer_mask_data[i] = 0;
-            }
+            // print_tensor(gf_res_prev->router_mask);
+            // float mask[36];
+            // ggml_backend_tensor_get(gf_res_prev->router_mask, mask, 0, 36*sizeof(float));
+            // int count = 0;
+            // for (int i = 0; i < 36; ++i) if (mask[i] == 0.f) ++count;
+            // printf("\n%d\n", count);
+            ggml_backend_tensor_copy(gf_res_prev->router_mask, layer_mask_tensor);
+        }
 
-            ggml_backend_tensor_set(layer_mask_tensor, layer_mask_data.data(), 0, layer_mask_data.size() * sizeof(int32_t));
+        auto * ONE_tensor = ggml_graph_get_tensor(gf, "ONE");
+        float one = 1.f;
+        if (ONE_tensor) {
+            ggml_backend_tensor_set(ONE_tensor, &one, 0, sizeof(float));
         }
     }
 

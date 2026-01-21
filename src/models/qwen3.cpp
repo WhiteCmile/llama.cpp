@@ -1,4 +1,4 @@
-#include "llama-impl.h"
+// #include "llama-impl.h"
 #include "models.h"
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_params & params) : llm_graph_context(params) {
@@ -10,12 +10,9 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
     ggml_tensor * cur;
     ggml_tensor * inpL;
 
-    bool is_decode = n_tokens == 1;
-    // bool is_decode = false;
-    ggml_tensor * layer_mask = NULL;
-
-    // // We set a layer mask for future use
-    // // ONLY FOR DECODE!!!
+    bool is_decode = false;
+    ggml_tensor * layer_mask = nullptr;
+    // ONLY FOR DECODE
     if (is_decode) {
         auto n_layer_mask_elem = n_layer;
         layer_mask = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer_mask_elem);
@@ -34,8 +31,8 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
     for (int il = 0; il < n_layer; ++il) {
-        ggml_tensor * inpSA = inpL;
         ggml_tensor * layer_input = inpL;
+        ggml_tensor * inpSA = inpL;
 
         // norm
         cur = build_norm(inpL,
@@ -46,7 +43,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
         // self-attention
         {
             // compute Q and K and RoPE them
-            // For convenience, we do not masked the Q generation phase
+            // TODO: for convenience, we do not masked the Q generation phase
             ggml_tensor * Qcur = build_lora_mm(model.layers[il].wq, cur);
             cb(Qcur, "Qcur", il);
 
@@ -138,6 +135,7 @@ llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_para
         cur = build_cvec(cur, il);
         cb(cur, "l_out", il);
 
+        // move input for this layer to input for next layer
         if (is_decode) {
             cur = build_layer_masked_bypassing(
                 cur, layer_input, 
