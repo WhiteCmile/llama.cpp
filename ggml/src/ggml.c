@@ -5382,7 +5382,9 @@ struct ggml_tensor * ggml_layer_masked_flash_attn_ext(
     result->src[1] = k;
     result->src[2] = v;
     result->src[3] = mask;
-    result->src[4] = layer_mask;
+    // We use src[8] to store the layer_mask
+    // To avoid accidental access to layer_mask by other operators
+    result->src[8] = layer_mask;
     result->layer_id = layer_id;
 
     return result;
@@ -5391,7 +5393,7 @@ struct ggml_tensor * ggml_layer_masked_flash_attn_ext(
 void ggml_flash_attn_ext_set_prec(
         struct ggml_tensor * a,
         enum ggml_prec       prec) {
-    GGML_ASSERT(a->op == GGML_OP_FLASH_ATTN_EXT);
+    GGML_ASSERT(a->op == GGML_OP_FLASH_ATTN_EXT || a->op == GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT);
 
     const int32_t prec_i32 = (int32_t) prec;
 

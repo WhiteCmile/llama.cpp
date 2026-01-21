@@ -1836,13 +1836,13 @@ ggml_tensor * llm_graph_context::build_layer_masked_attn_mha(
             v = ggml_cast(ctx0, v, GGML_TYPE_F16);
         }
 
-        // cur = ggml_layer_masked_flash_attn_ext(ctx0, q, k, v, kq_mask, 
-        //                           layer_mask, il,
-        //                           kq_scale, hparams.f_max_alibi_bias,
-        //                           hparams.attn_soft_cap ? hparams.f_attn_logit_softcapping : 0.0f);
-        cur = ggml_flash_attn_ext(ctx0, q, k, v, kq_mask, 
+        cur = ggml_layer_masked_flash_attn_ext(ctx0, q, k, v, kq_mask, 
+                                  layer_mask, il,
                                   kq_scale, hparams.f_max_alibi_bias,
                                   hparams.attn_soft_cap ? hparams.f_attn_logit_softcapping : 0.0f);
+        // cur = ggml_flash_attn_ext(ctx0, q, k, v, kq_mask, 
+        //                           kq_scale, hparams.f_max_alibi_bias,
+        //                           hparams.attn_soft_cap ? hparams.f_attn_logit_softcapping : 0.0f);
         cb(cur, LLAMA_TENSOR_NAME_FATTN, il);
 
         ggml_flash_attn_ext_add_sinks(cur, sinks);

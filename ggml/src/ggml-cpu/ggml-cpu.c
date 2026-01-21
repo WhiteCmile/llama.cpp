@@ -2873,6 +2873,7 @@ struct ggml_cplan ggml_graph_plan(
                         cur += sizeof(int32_t)*node->src[0]->ne[0]*n_tasks;
                     } break;
                 case GGML_OP_FLASH_ATTN_EXT:
+                case GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT:
                     {
                         const int64_t ne10 = node->src[1]->ne[0]; // DK
                         const int64_t ne20 = node->src[2]->ne[0]; // DV
