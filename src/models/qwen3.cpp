@@ -1,4 +1,4 @@
-// #include "llama-impl.h"
+#include "llama-impl.h"
 #include "models.h"
 
 llm_build_qwen3::llm_build_qwen3(const llama_model & model, const llm_graph_params & params) : llm_graph_context(params) {
