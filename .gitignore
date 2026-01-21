@@ -134,10 +134,15 @@ poetry.toml
 
 # IDE
 /*.code-workspace
+.clangd
 /.windsurf/
+
 # emscripten
 a.out.*
 
 # output
 out.txt
+output.txt
 out.err
+experiments/
+bin
