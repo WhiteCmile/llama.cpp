@@ -43,8 +43,8 @@
 # Build Artifacts
 
 /tags
-# /.build/
-# /build*  local:don't ignore
+/.build/
+/build*  local:don't ignore
 /release
 /debug
 /libllama.so
