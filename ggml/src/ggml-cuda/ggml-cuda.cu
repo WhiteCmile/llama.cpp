@@ -3072,12 +3072,12 @@ static bool is_cuda_graph_update_required(ggml_backend_cuda_context * cuda_ctx, 
         cuda_graph_update_required = true;
     }
 
-    GGML_LOG_INFO("%s: graph size: (cached size: %zu, current size: %d nodes + %d leafs = %d)\n", 
-        __func__,
-        cuda_ctx->cuda_graph->ggml_graph_properties.size(),
-        cgraph->n_nodes,
-        cgraph->n_leafs,
-        cgraph->n_nodes + cgraph->n_leafs);
+    // GGML_LOG_INFO("%s: graph size: (cached size: %zu, current size: %d nodes + %d leafs = %d)\n", 
+    //     __func__,
+    //     cuda_ctx->cuda_graph->ggml_graph_properties.size(),
+    //     cgraph->n_nodes,
+    //     cgraph->n_leafs,
+    //     cgraph->n_nodes + cgraph->n_leafs);
 
 
     // Check if the graph size has changed
@@ -3951,11 +3951,11 @@ static enum ggml_status ggml_backend_cuda_graph_compute(ggml_backend_t backend, 
 #ifdef USE_CUDA_GRAPH
     use_cuda_graph = ggml_cuda_set_cuda_graph_enabled(cuda_ctx);
 
-    if(use_cuda_graph){
-        GGML_LOG_INFO("use_cuda_graph \n");
-    } else{
-        GGML_LOG_INFO("can't use_cuda_graph \n");
-    }
+    // if(use_cuda_graph){
+    //     GGML_LOG_INFO("use_cuda_graph \n");
+    // } else{
+    //     GGML_LOG_INFO("can't use_cuda_graph \n");
+    // }
 
     if (use_cuda_graph) {
         cuda_graph_update_required = is_cuda_graph_update_required(cuda_ctx, cgraph);

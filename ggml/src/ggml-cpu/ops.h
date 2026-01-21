@@ -27,6 +27,11 @@ static const size_t CACHE_LINE_SIZE_F32 = CACHE_LINE_SIZE/sizeof(float);
 extern "C" {
 #endif
 
+
+void ggml_compute_forward_layer_masked_mul_mat(const struct ggml_compute_params * params, struct ggml_tensor * node);
+
+void ggml_compute_forward_layer_masked_bypassing(const struct ggml_compute_params * params, struct ggml_tensor * node);
+
 void ggml_compute_forward_dup(const struct ggml_compute_params * params, struct ggml_tensor * dst);
 void ggml_compute_forward_add(const struct ggml_compute_params * params, struct ggml_tensor * dst);
 void ggml_compute_forward_add_id(const struct ggml_compute_params * params, struct ggml_tensor * dst);

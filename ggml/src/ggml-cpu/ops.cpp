@@ -10327,6 +10327,7 @@ void ggml_compute_forward_cross_entropy_loss_back(
     }
 }
 
+
 static void ggml_compute_forward_opt_step_adamw_f32(
         const ggml_compute_params * params,
         ggml_tensor * dst) {
@@ -10393,6 +10394,94 @@ static void ggml_compute_forward_opt_step_adamw_f32(
         }
     }
 }
+void ggml_compute_forward_layer_masked_bypassing(
+        const struct ggml_compute_params * params,
+        struct ggml_tensor * node) {
+
+    const struct ggml_tensor * src0 = node->src[0]; // 当前层计算结果 (cur)
+    const struct ggml_tensor * src1 = node->src[1]; // 原始输入 (input)
+    const struct ggml_tensor * mask = node->src[2]; // layer_mask
+    struct ggml_tensor * dst = node;
+
+    // 获取当前是哪一层，以及当前线程的信息
+    const int il = node->layer_id;
+    const int ith = params->ith; // 当前线程索引
+    const int nth = params->nth; // 总线程数
+
+    // 假设 mask 是一个 i32 数组，存储在 tensor 的 data 里
+    const int32_t * mask_ptr = (const int32_t *) mask->data;
+    
+    // 如果 mask[il] == 0，表示跳过当前层，选择 src1 (原始输入)
+    // 否则选择 src0 (当前层计算出的结果)
+    const struct ggml_tensor * src = (mask_ptr[il] == 0) ? src1 : src0;
+
+    // 多线程并行拷贝数据
+    const size_t n_bytes = ggml_nbytes(dst);
+    const size_t chunk_size = (n_bytes + nth - 1) / nth;
+    const size_t offset = ith * chunk_size;
+    
+    if (offset < n_bytes) {
+        size_t size_to_copy = MIN(chunk_size, n_bytes - offset);
+        memcpy((char *)dst->data + offset, (const char *)src->data + offset, size_to_copy);
+    }
+}
+
+void ggml_compute_forward_layer_masked_mul_mat(
+            const struct ggml_compute_params * params,
+        struct ggml_tensor * dst) {
+      
+            // GGML_LOG_INFO("--- [MUL_MAT] Computing --- \n");
+            // src0: weight, src1: x, src2: layer_mask
+            const struct ggml_tensor * mask = dst->src[3];
+            // GGML_LOG_INFO("--- [MUL_MAT] mask get --- \n"); 
+            const int il = dst->layer_id;
+            // GGML_LOG_INFO("--- [MUL_MAT] layer id get --- \n"); 
+            const int32_t * layer_mask = (const int32_t *) mask->data;
+            // GGML_LOG_INFO("--- [MUL_MAT] layer mask get --- \n"); 
+
+            // if (params->ith == 0) {
+            //     GGML_LOG_INFO("--- [MUL_MAT] Layer %d: SKIP (Mask Value: %d) --- \n", il, layer_mask[il]);
+
+            //     // 3. 打印整个 layer_mask 数组的状态
+            //     printf("--- [DEBUG] Full LayerMask: [");
+            //     for (int i = 0; i < 35; ++i) {
+            //         // 用颜色或特殊符号高亮当前层会更有助于调试
+            //         if (i == il) {
+            //             printf(">%d<", layer_mask[i]); // 当前正在处理的层用 >< 包裹
+            //         } else {
+            //             printf("%d", layer_mask[i]);
+            //         }
+            //         if (i < 35 - 1) printf(", ");
+            //     }
+            //     printf("]\n");
+                
+            //     // 确保立即输出到终端，防止崩溃导致日志丢失
+            //     fflush(stdout);
+            // }
+
+            // 检查是否需要跳过计算
+            if (layer_mask[il] == 0) {
+
+                const size_t n_bytes = ggml_nbytes(dst);
+                
+                // 多线程清零
+                const int ith = params->ith;
+                const int nth = params->nth;
+                const size_t chunk_size = (n_bytes + nth - 1) / nth;
+                const size_t offset = ith * chunk_size;
+                
+                if (offset < n_bytes) {
+                    size_t size_to_zero = MIN(chunk_size, n_bytes - offset);
+                    memset((char *)dst->data + offset, 0, size_to_zero);
+                }
+                return; 
+            }
+
+            // GGML_LOG_INFO("--- [MUL_MAT] Computing --- \n");
+            ggml_compute_forward_mul_mat(params, dst);
+
+
+        }
 
 void ggml_compute_forward_opt_step_adamw(
         const ggml_compute_params * params,

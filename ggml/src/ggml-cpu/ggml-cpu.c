@@ -1803,6 +1803,11 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             {
                 ggml_compute_forward_mul_mat(params, tensor);
             } break;
+        case GGML_OP_LAYER_MASKED_MUL_MAT:
+            {
+                // GGML_LOG_INFO("--- [OP] GGML_OP_LAYER_MASKED_MUL_MAT --- \n");
+                ggml_compute_forward_layer_masked_mul_mat(params, tensor);
+            } break;
         case GGML_OP_MUL_MAT_ID:
             {
                 ggml_compute_forward_mul_mat_id(params, tensor);
@@ -2056,6 +2061,12 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
         case GGML_OP_OPT_STEP_SGD:
             {
                 ggml_compute_forward_opt_step_sgd(params, tensor);
+            }
+            break;
+        case GGML_OP_LAYER_MASKED_BYPASSING:
+            {
+                GGML_LOG_INFO("--- [OP] GGML_OP_LAYER_MASKED_BYPASSING --- \n");
+                ggml_compute_forward_layer_masked_bypassing(params, tensor);
             }
             break;
         case GGML_OP_NONE:
@@ -2406,6 +2417,7 @@ static int ggml_get_n_tasks(struct ggml_tensor * node, int n_threads) {
                 // We promise not to use CPU to do anything
                 n_tasks = 1;
             } break;
+
         case GGML_OP_COUNT:
             {
                 GGML_ABORT("fatal error");
@@ -2899,6 +2911,10 @@ struct ggml_cplan ggml_graph_plan(
                 case GGML_OP_CROSS_ENTROPY_LOSS:
                     {
                         cur = ggml_type_size(node->type)*(n_tasks + node->src[0]->ne[0]*n_tasks);
+                    } break;
+                case GGML_OP_LAYER_MASKED_BYPASSING:
+                    {
+                        cur = 0;
                     } break;
                 case GGML_OP_COUNT:
                     {
