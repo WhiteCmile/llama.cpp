@@ -93,7 +93,7 @@ llama__eval__callback_EXTERNAL_OBJECTS =
 bin/llama-eval-callback: examples/eval-callback/CMakeFiles/llama-eval-callback.dir/eval-callback.cpp.o
 bin/llama-eval-callback: examples/eval-callback/CMakeFiles/llama-eval-callback.dir/build.make
 bin/llama-eval-callback: common/libcommon.a
-bin/llama-eval-callback: bin/libllama.so.0.0.7649
+bin/llama-eval-callback: bin/libllama.so.0.0.7650
 bin/llama-eval-callback: bin/libggml.so.0.9.5
 bin/llama-eval-callback: bin/libggml-cpu.so.0.9.5
 bin/llama-eval-callback: bin/libggml-cuda.so.0.9.5

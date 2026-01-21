@@ -93,7 +93,7 @@ llama__tokenize_EXTERNAL_OBJECTS =
 bin/llama-tokenize: tools/tokenize/CMakeFiles/llama-tokenize.dir/tokenize.cpp.o
 bin/llama-tokenize: tools/tokenize/CMakeFiles/llama-tokenize.dir/build.make
 bin/llama-tokenize: common/libcommon.a
-bin/llama-tokenize: bin/libllama.so.0.0.7649
+bin/llama-tokenize: bin/libllama.so.0.0.7650
 bin/llama-tokenize: bin/libggml.so.0.9.5
 bin/llama-tokenize: bin/libggml-cpu.so.0.9.5
 bin/llama-tokenize: bin/libggml-cuda.so.0.9.5

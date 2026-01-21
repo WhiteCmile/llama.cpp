@@ -110,7 +110,7 @@ bin/test-backend-sampler: tests/CMakeFiles/test-backend-sampler.dir/get-model.cp
 bin/test-backend-sampler: tests/CMakeFiles/test-backend-sampler.dir/build.make
 bin/test-backend-sampler: common/libcommon.a
 bin/test-backend-sampler: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-backend-sampler: bin/libllama.so.0.0.7649
+bin/test-backend-sampler: bin/libllama.so.0.0.7650
 bin/test-backend-sampler: bin/libggml.so.0.9.5
 bin/test-backend-sampler: bin/libggml-cpu.so.0.9.5
 bin/test-backend-sampler: bin/libggml-cuda.so.0.9.5

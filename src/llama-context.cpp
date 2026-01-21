@@ -1088,7 +1088,7 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         auto * layer_mask_tensor = ggml_graph_get_tensor(gf, "layer_mask");
         if (layer_mask_tensor) {
             std::vector<int32_t> layer_mask_data(layer_mask_tensor->ne[0], 1);
-            for (auto i = 15; i < 25; i++) {
+            for (auto i = 15; i < 22; i++) {
                 layer_mask_data[i] = 0;
             }
 
@@ -2927,7 +2927,7 @@ llama_context_params llama_context_default_params() {
         /*.rope_scaling_type           =*/ LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED,
         /*.pooling_type                =*/ LLAMA_POOLING_TYPE_UNSPECIFIED,
         /*.attention_type              =*/ LLAMA_ATTENTION_TYPE_UNSPECIFIED,
-        /*.flash_attn_type             =*/ LLAMA_FLASH_ATTN_TYPE_AUTO,
+        /*.flash_attn_type             =*/ LLAMA_FLASH_ATTN_TYPE_DISABLED,
         /*.rope_freq_base              =*/ 0.0f,
         /*.rope_freq_scale             =*/ 0.0f,
         /*.yarn_ext_factor             =*/ -1.0f,

@@ -94,7 +94,7 @@ bin/test-gbnf-validator: tests/CMakeFiles/test-gbnf-validator.dir/test-gbnf-vali
 bin/test-gbnf-validator: tests/CMakeFiles/test-gbnf-validator.dir/build.make
 bin/test-gbnf-validator: common/libcommon.a
 bin/test-gbnf-validator: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-gbnf-validator: bin/libllama.so.0.0.7649
+bin/test-gbnf-validator: bin/libllama.so.0.0.7650
 bin/test-gbnf-validator: bin/libggml.so.0.9.5
 bin/test-gbnf-validator: bin/libggml-cpu.so.0.9.5
 bin/test-gbnf-validator: bin/libggml-cuda.so.0.9.5

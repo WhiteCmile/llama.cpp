@@ -93,7 +93,7 @@ llama__gguf__split_EXTERNAL_OBJECTS =
 bin/llama-gguf-split: tools/gguf-split/CMakeFiles/llama-gguf-split.dir/gguf-split.cpp.o
 bin/llama-gguf-split: tools/gguf-split/CMakeFiles/llama-gguf-split.dir/build.make
 bin/llama-gguf-split: common/libcommon.a
-bin/llama-gguf-split: bin/libllama.so.0.0.7649
+bin/llama-gguf-split: bin/libllama.so.0.0.7650
 bin/llama-gguf-split: bin/libggml.so.0.9.5
 bin/llama-gguf-split: bin/libggml-cpu.so.0.9.5
 bin/llama-gguf-split: bin/libggml-cuda.so.0.9.5

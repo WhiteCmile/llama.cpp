@@ -93,7 +93,7 @@ llama__lookahead_EXTERNAL_OBJECTS =
 bin/llama-lookahead: examples/lookahead/CMakeFiles/llama-lookahead.dir/lookahead.cpp.o
 bin/llama-lookahead: examples/lookahead/CMakeFiles/llama-lookahead.dir/build.make
 bin/llama-lookahead: common/libcommon.a
-bin/llama-lookahead: bin/libllama.so.0.0.7649
+bin/llama-lookahead: bin/libllama.so.0.0.7650
 bin/llama-lookahead: bin/libggml.so.0.9.5
 bin/llama-lookahead: bin/libggml-cpu.so.0.9.5
 bin/llama-lookahead: bin/libggml-cuda.so.0.9.5

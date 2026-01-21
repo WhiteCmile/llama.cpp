@@ -93,7 +93,7 @@ llama__embedding_EXTERNAL_OBJECTS =
 bin/llama-embedding: examples/embedding/CMakeFiles/llama-embedding.dir/embedding.cpp.o
 bin/llama-embedding: examples/embedding/CMakeFiles/llama-embedding.dir/build.make
 bin/llama-embedding: common/libcommon.a
-bin/llama-embedding: bin/libllama.so.0.0.7649
+bin/llama-embedding: bin/libllama.so.0.0.7650
 bin/llama-embedding: bin/libggml.so.0.9.5
 bin/llama-embedding: bin/libggml-cpu.so.0.9.5
 bin/llama-embedding: bin/libggml-cuda.so.0.9.5

@@ -110,7 +110,7 @@ bin/test-thread-safety: tests/CMakeFiles/test-thread-safety.dir/get-model.cpp.o
 bin/test-thread-safety: tests/CMakeFiles/test-thread-safety.dir/build.make
 bin/test-thread-safety: common/libcommon.a
 bin/test-thread-safety: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-thread-safety: bin/libllama.so.0.0.7649
+bin/test-thread-safety: bin/libllama.so.0.0.7650
 bin/test-thread-safety: bin/libggml.so.0.9.5
 bin/test-thread-safety: bin/libggml-cpu.so.0.9.5
 bin/test-thread-safety: bin/libggml-cuda.so.0.9.5

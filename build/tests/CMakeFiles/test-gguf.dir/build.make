@@ -110,7 +110,7 @@ bin/test-gguf: tests/CMakeFiles/test-gguf.dir/get-model.cpp.o
 bin/test-gguf: tests/CMakeFiles/test-gguf.dir/build.make
 bin/test-gguf: common/libcommon.a
 bin/test-gguf: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-gguf: bin/libllama.so.0.0.7649
+bin/test-gguf: bin/libllama.so.0.0.7650
 bin/test-gguf: bin/libggml.so.0.9.5
 bin/test-gguf: bin/libggml-cpu.so.0.9.5
 bin/test-gguf: bin/libggml-cuda.so.0.9.5

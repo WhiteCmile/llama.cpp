@@ -93,7 +93,7 @@ llama__bench_EXTERNAL_OBJECTS =
 bin/llama-bench: tools/llama-bench/CMakeFiles/llama-bench.dir/llama-bench.cpp.o
 bin/llama-bench: tools/llama-bench/CMakeFiles/llama-bench.dir/build.make
 bin/llama-bench: common/libcommon.a
-bin/llama-bench: bin/libllama.so.0.0.7649
+bin/llama-bench: bin/libllama.so.0.0.7650
 bin/llama-bench: bin/libggml.so.0.9.5
 bin/llama-bench: bin/libggml-cpu.so.0.9.5
 bin/llama-bench: bin/libggml-cuda.so.0.9.5

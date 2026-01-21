@@ -93,7 +93,7 @@ llama__save__load__state_EXTERNAL_OBJECTS =
 bin/llama-save-load-state: examples/save-load-state/CMakeFiles/llama-save-load-state.dir/save-load-state.cpp.o
 bin/llama-save-load-state: examples/save-load-state/CMakeFiles/llama-save-load-state.dir/build.make
 bin/llama-save-load-state: common/libcommon.a
-bin/llama-save-load-state: bin/libllama.so.0.0.7649
+bin/llama-save-load-state: bin/libllama.so.0.0.7650
 bin/llama-save-load-state: bin/libggml.so.0.9.5
 bin/llama-save-load-state: bin/libggml-cpu.so.0.9.5
 bin/llama-save-load-state: bin/libggml-cuda.so.0.9.5

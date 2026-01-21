@@ -93,7 +93,7 @@ llama__parallel_EXTERNAL_OBJECTS =
 bin/llama-parallel: examples/parallel/CMakeFiles/llama-parallel.dir/parallel.cpp.o
 bin/llama-parallel: examples/parallel/CMakeFiles/llama-parallel.dir/build.make
 bin/llama-parallel: common/libcommon.a
-bin/llama-parallel: bin/libllama.so.0.0.7649
+bin/llama-parallel: bin/libllama.so.0.0.7650
 bin/llama-parallel: bin/libggml.so.0.9.5
 bin/llama-parallel: bin/libggml-cpu.so.0.9.5
 bin/llama-parallel: bin/libggml-cuda.so.0.9.5

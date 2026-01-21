@@ -136,8 +136,8 @@ bin/llama-server: tools/server/libserver-context.a
 bin/llama-server: common/libcommon.a
 bin/llama-server: vendor/cpp-httplib/libcpp-httplib.a
 bin/llama-server: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/llama-server: bin/libmtmd.so.0.0.7649
-bin/llama-server: bin/libllama.so.0.0.7649
+bin/llama-server: bin/libmtmd.so.0.0.7650
+bin/llama-server: bin/libllama.so.0.0.7650
 bin/llama-server: bin/libggml.so.0.9.5
 bin/llama-server: bin/libggml-cpu.so.0.9.5
 bin/llama-server: bin/libggml-cuda.so.0.9.5

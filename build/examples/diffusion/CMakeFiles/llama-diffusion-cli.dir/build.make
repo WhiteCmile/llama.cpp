@@ -93,7 +93,7 @@ llama__diffusion__cli_EXTERNAL_OBJECTS =
 bin/llama-diffusion-cli: examples/diffusion/CMakeFiles/llama-diffusion-cli.dir/diffusion-cli.cpp.o
 bin/llama-diffusion-cli: examples/diffusion/CMakeFiles/llama-diffusion-cli.dir/build.make
 bin/llama-diffusion-cli: common/libcommon.a
-bin/llama-diffusion-cli: bin/libllama.so.0.0.7649
+bin/llama-diffusion-cli: bin/libllama.so.0.0.7650
 bin/llama-diffusion-cli: bin/libggml.so.0.9.5
 bin/llama-diffusion-cli: bin/libggml-cpu.so.0.9.5
 bin/llama-diffusion-cli: bin/libggml-cuda.so.0.9.5

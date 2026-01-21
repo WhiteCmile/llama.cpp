@@ -2,7 +2,7 @@ file(REMOVE_RECURSE
   "../../bin/libmtmd.pdb"
   "../../bin/libmtmd.so"
   "../../bin/libmtmd.so.0"
-  "../../bin/libmtmd.so.0.0.7649"
+  "../../bin/libmtmd.so.0.0.7650"
   "CMakeFiles/mtmd.dir/clip.cpp.o"
   "CMakeFiles/mtmd.dir/clip.cpp.o.d"
   "CMakeFiles/mtmd.dir/models/cogvlm.cpp.o"

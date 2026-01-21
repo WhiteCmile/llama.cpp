@@ -110,7 +110,7 @@ bin/test-barrier: tests/CMakeFiles/test-barrier.dir/get-model.cpp.o
 bin/test-barrier: tests/CMakeFiles/test-barrier.dir/build.make
 bin/test-barrier: common/libcommon.a
 bin/test-barrier: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-barrier: bin/libllama.so.0.0.7649
+bin/test-barrier: bin/libllama.so.0.0.7650
 bin/test-barrier: bin/libggml.so.0.9.5
 bin/test-barrier: bin/libggml-cpu.so.0.9.5
 bin/test-barrier: bin/libggml-cuda.so.0.9.5

@@ -93,7 +93,7 @@ llama__idle_EXTERNAL_OBJECTS =
 bin/llama-idle: examples/idle/CMakeFiles/llama-idle.dir/idle.cpp.o
 bin/llama-idle: examples/idle/CMakeFiles/llama-idle.dir/build.make
 bin/llama-idle: common/libcommon.a
-bin/llama-idle: bin/libllama.so.0.0.7649
+bin/llama-idle: bin/libllama.so.0.0.7650
 bin/llama-idle: bin/libggml.so.0.9.5
 bin/llama-idle: bin/libggml-cpu.so.0.9.5
 bin/llama-idle: bin/libggml-cuda.so.0.9.5

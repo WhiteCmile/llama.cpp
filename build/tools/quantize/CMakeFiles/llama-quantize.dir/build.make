@@ -93,7 +93,7 @@ llama__quantize_EXTERNAL_OBJECTS =
 bin/llama-quantize: tools/quantize/CMakeFiles/llama-quantize.dir/quantize.cpp.o
 bin/llama-quantize: tools/quantize/CMakeFiles/llama-quantize.dir/build.make
 bin/llama-quantize: common/libcommon.a
-bin/llama-quantize: bin/libllama.so.0.0.7649
+bin/llama-quantize: bin/libllama.so.0.0.7650
 bin/llama-quantize: bin/libggml.so.0.9.5
 bin/llama-quantize: bin/libggml-cpu.so.0.9.5
 bin/llama-quantize: bin/libggml-cuda.so.0.9.5

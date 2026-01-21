@@ -93,7 +93,7 @@ llama__batched__bench_EXTERNAL_OBJECTS =
 bin/llama-batched-bench: tools/batched-bench/CMakeFiles/llama-batched-bench.dir/batched-bench.cpp.o
 bin/llama-batched-bench: tools/batched-bench/CMakeFiles/llama-batched-bench.dir/build.make
 bin/llama-batched-bench: common/libcommon.a
-bin/llama-batched-bench: bin/libllama.so.0.0.7649
+bin/llama-batched-bench: bin/libllama.so.0.0.7650
 bin/llama-batched-bench: bin/libggml.so.0.9.5
 bin/llama-batched-bench: bin/libggml-cpu.so.0.9.5
 bin/llama-batched-bench: bin/libggml-cuda.so.0.9.5

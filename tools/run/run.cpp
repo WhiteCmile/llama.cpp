@@ -1140,11 +1140,17 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
     // prepare a batch for the prompt
     llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
     llama_token new_token_id;
+
+    // measure generation-stage speed
+    int gen_tokens = 0;
+    const auto gen_start = std::chrono::steady_clock::now();
+
     while (true) {
         check_context_size(llama_data.context, batch);
         if (llama_decode(llama_data.context.get(), batch)) {
             printe("failed to decode\n");
-            return 1;
+            break;
+            // return 1;
         }
 
         // sample the next token, check is it an end of generation?
@@ -1160,10 +1166,16 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
 
         print_word_and_concatenate_to_response(piece, response);
 
+        // count generated tokens for speed measurement
+        ++gen_tokens;
+
         // prepare the next batch with the sampled token
         batch = llama_batch_get_one(&new_token_id, 1);
     }
-
+    const auto gen_end = std::chrono::steady_clock::now();
+    const double elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(gen_end - gen_start).count();
+    const double tps = elapsed > 0.0 ? (double)gen_tokens / elapsed : 0.0;
+    printf("\n[Generation: %.1f t/s]\n", tps);
     printf(LOG_COL_DEFAULT);
     return 0;
 }

@@ -110,7 +110,7 @@ bin/test-arg-parser: tests/CMakeFiles/test-arg-parser.dir/get-model.cpp.o
 bin/test-arg-parser: tests/CMakeFiles/test-arg-parser.dir/build.make
 bin/test-arg-parser: common/libcommon.a
 bin/test-arg-parser: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-arg-parser: bin/libllama.so.0.0.7649
+bin/test-arg-parser: bin/libllama.so.0.0.7650
 bin/test-arg-parser: bin/libggml.so.0.9.5
 bin/test-arg-parser: bin/libggml-cpu.so.0.9.5
 bin/test-arg-parser: bin/libggml-cuda.so.0.9.5

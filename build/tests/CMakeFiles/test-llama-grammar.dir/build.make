@@ -110,7 +110,7 @@ bin/test-llama-grammar: tests/CMakeFiles/test-llama-grammar.dir/get-model.cpp.o
 bin/test-llama-grammar: tests/CMakeFiles/test-llama-grammar.dir/build.make
 bin/test-llama-grammar: common/libcommon.a
 bin/test-llama-grammar: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-llama-grammar: bin/libllama.so.0.0.7649
+bin/test-llama-grammar: bin/libllama.so.0.0.7650
 bin/test-llama-grammar: bin/libggml.so.0.9.5
 bin/test-llama-grammar: bin/libggml-cpu.so.0.9.5
 bin/test-llama-grammar: bin/libggml-cuda.so.0.9.5

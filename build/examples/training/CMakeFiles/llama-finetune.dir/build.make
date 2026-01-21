@@ -93,7 +93,7 @@ llama__finetune_EXTERNAL_OBJECTS =
 bin/llama-finetune: examples/training/CMakeFiles/llama-finetune.dir/finetune.cpp.o
 bin/llama-finetune: examples/training/CMakeFiles/llama-finetune.dir/build.make
 bin/llama-finetune: common/libcommon.a
-bin/llama-finetune: bin/libllama.so.0.0.7649
+bin/llama-finetune: bin/libllama.so.0.0.7650
 bin/llama-finetune: bin/libggml.so.0.9.5
 bin/llama-finetune: bin/libggml-cpu.so.0.9.5
 bin/llama-finetune: bin/libggml-cuda.so.0.9.5

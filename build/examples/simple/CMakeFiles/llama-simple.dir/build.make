@@ -92,7 +92,7 @@ llama__simple_EXTERNAL_OBJECTS =
 
 bin/llama-simple: examples/simple/CMakeFiles/llama-simple.dir/simple.cpp.o
 bin/llama-simple: examples/simple/CMakeFiles/llama-simple.dir/build.make
-bin/llama-simple: bin/libllama.so.0.0.7649
+bin/llama-simple: bin/libllama.so.0.0.7650
 bin/llama-simple: bin/libggml.so.0.9.5
 bin/llama-simple: bin/libggml-cpu.so.0.9.5
 bin/llama-simple: bin/libggml-cuda.so.0.9.5

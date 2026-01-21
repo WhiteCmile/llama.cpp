@@ -110,7 +110,7 @@ bin/test-alloc: tests/CMakeFiles/test-alloc.dir/get-model.cpp.o
 bin/test-alloc: tests/CMakeFiles/test-alloc.dir/build.make
 bin/test-alloc: common/libcommon.a
 bin/test-alloc: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-alloc: bin/libllama.so.0.0.7649
+bin/test-alloc: bin/libllama.so.0.0.7650
 bin/test-alloc: bin/libggml.so.0.9.5
 bin/test-alloc: bin/libggml-cpu.so.0.9.5
 bin/test-alloc: bin/libggml-cuda.so.0.9.5

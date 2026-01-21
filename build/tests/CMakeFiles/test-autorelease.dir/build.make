@@ -110,7 +110,7 @@ bin/test-autorelease: tests/CMakeFiles/test-autorelease.dir/get-model.cpp.o
 bin/test-autorelease: tests/CMakeFiles/test-autorelease.dir/build.make
 bin/test-autorelease: common/libcommon.a
 bin/test-autorelease: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-autorelease: bin/libllama.so.0.0.7649
+bin/test-autorelease: bin/libllama.so.0.0.7650
 bin/test-autorelease: bin/libggml.so.0.9.5
 bin/test-autorelease: bin/libggml-cpu.so.0.9.5
 bin/test-autorelease: bin/libggml-cuda.so.0.9.5

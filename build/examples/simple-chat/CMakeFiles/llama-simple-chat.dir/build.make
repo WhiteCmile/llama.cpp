@@ -92,7 +92,7 @@ llama__simple__chat_EXTERNAL_OBJECTS =
 
 bin/llama-simple-chat: examples/simple-chat/CMakeFiles/llama-simple-chat.dir/simple-chat.cpp.o
 bin/llama-simple-chat: examples/simple-chat/CMakeFiles/llama-simple-chat.dir/build.make
-bin/llama-simple-chat: bin/libllama.so.0.0.7649
+bin/llama-simple-chat: bin/libllama.so.0.0.7650
 bin/llama-simple-chat: bin/libggml.so.0.9.5
 bin/llama-simple-chat: bin/libggml-cpu.so.0.9.5
 bin/llama-simple-chat: bin/libggml-cuda.so.0.9.5

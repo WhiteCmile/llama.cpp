@@ -94,7 +94,7 @@ bin/test-tokenizer-0: tests/CMakeFiles/test-tokenizer-0.dir/test-tokenizer-0.cpp
 bin/test-tokenizer-0: tests/CMakeFiles/test-tokenizer-0.dir/build.make
 bin/test-tokenizer-0: common/libcommon.a
 bin/test-tokenizer-0: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-tokenizer-0: bin/libllama.so.0.0.7649
+bin/test-tokenizer-0: bin/libllama.so.0.0.7650
 bin/test-tokenizer-0: bin/libggml.so.0.9.5
 bin/test-tokenizer-0: bin/libggml-cpu.so.0.9.5
 bin/test-tokenizer-0: bin/libggml-cuda.so.0.9.5

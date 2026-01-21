@@ -110,7 +110,7 @@ bin/test-json-schema-to-grammar: tests/CMakeFiles/test-json-schema-to-grammar.di
 bin/test-json-schema-to-grammar: tests/CMakeFiles/test-json-schema-to-grammar.dir/build.make
 bin/test-json-schema-to-grammar: common/libcommon.a
 bin/test-json-schema-to-grammar: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-json-schema-to-grammar: bin/libllama.so.0.0.7649
+bin/test-json-schema-to-grammar: bin/libllama.so.0.0.7650
 bin/test-json-schema-to-grammar: bin/libggml.so.0.9.5
 bin/test-json-schema-to-grammar: bin/libggml-cpu.so.0.9.5
 bin/test-json-schema-to-grammar: bin/libggml-cuda.so.0.9.5

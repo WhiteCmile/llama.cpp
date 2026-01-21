@@ -93,7 +93,7 @@ llama__convert__llama2c__to__ggml_EXTERNAL_OBJECTS =
 bin/llama-convert-llama2c-to-ggml: examples/convert-llama2c-to-ggml/CMakeFiles/llama-convert-llama2c-to-ggml.dir/convert-llama2c-to-ggml.cpp.o
 bin/llama-convert-llama2c-to-ggml: examples/convert-llama2c-to-ggml/CMakeFiles/llama-convert-llama2c-to-ggml.dir/build.make
 bin/llama-convert-llama2c-to-ggml: common/libcommon.a
-bin/llama-convert-llama2c-to-ggml: bin/libllama.so.0.0.7649
+bin/llama-convert-llama2c-to-ggml: bin/libllama.so.0.0.7650
 bin/llama-convert-llama2c-to-ggml: bin/libggml.so.0.9.5
 bin/llama-convert-llama2c-to-ggml: bin/libggml-cpu.so.0.9.5
 bin/llama-convert-llama2c-to-ggml: bin/libggml-cuda.so.0.9.5

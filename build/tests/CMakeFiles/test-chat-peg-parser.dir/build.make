@@ -126,7 +126,7 @@ bin/test-chat-peg-parser: tests/CMakeFiles/test-chat-peg-parser.dir/get-model.cp
 bin/test-chat-peg-parser: tests/CMakeFiles/test-chat-peg-parser.dir/build.make
 bin/test-chat-peg-parser: common/libcommon.a
 bin/test-chat-peg-parser: /usr/lib/x86_64-linux-gnu/libcurl.so
-bin/test-chat-peg-parser: bin/libllama.so.0.0.7649
+bin/test-chat-peg-parser: bin/libllama.so.0.0.7650
 bin/test-chat-peg-parser: bin/libggml.so.0.9.5
 bin/test-chat-peg-parser: bin/libggml-cpu.so.0.9.5
 bin/test-chat-peg-parser: bin/libggml-cuda.so.0.9.5
