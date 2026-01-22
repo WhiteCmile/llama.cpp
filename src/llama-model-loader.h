@@ -93,6 +93,12 @@ struct llama_model_loader {
     size_t size_data = 0;
     std::vector<std::pair<size_t, size_t>> mmaps_used;
 
+
+    // Add ffn_layer_config
+    // type: GGML_TYPE_I32; shape: [n_layers]
+    // value: 0 = Default(GPU), 1 = CPU
+    const struct ggml_tensor * ffn_layer_config = nullptr;
+
     llama_model_loader(
         const std::string & fname,
         std::vector<std::string> & splits, // optional, only need if the split does not follow naming scheme

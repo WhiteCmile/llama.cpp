@@ -31,6 +31,8 @@ else()
     set(LLAMA_STANDALONE OFF)
 endif()
 
+set(CUDA_INCLUDE_DIR "/usr/local/cuda-12.4/include")
+
 option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
 
 option(LLAMA_WASM_MEM64 "llama: use 64-bit memory in WASM builds" ON)

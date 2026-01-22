@@ -163,13 +163,7 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
                 model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
                 nullptr, reverse_mask, LLM_FFN_SILU, LLM_FFN_PAR, il
             );
-            // layer_input = build_ffn(
-            //     layer_input,
-            //     model.layers[il].adapter_up, nullptr, nullptr,
-            //     model.layers[il].adapter_gate, nullptr, nullptr,
-            //     model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
-            //     nullptr, LLM_FFN_SILU, LLM_FFN_PAR, il
-            // );
+
             cb(layer_input, "l_adapter", il);
             layer_input = ggml_add(ctx0, layer_input, inpSA);
             cb(layer_input, "adapter_output", il);

@@ -703,6 +703,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
     const bool use_mmap_buffer = true;
     
 
+    ml.use_mmap = true;
     LLAMA_LOG_INFO("%s: loading model tensors, this can take a while... (mmap = %s)\n", __func__, ml.use_mmap ? "true" : "false");
 
     // build a list of buffer types for the CPU and GPU devices
@@ -914,6 +915,19 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                     GGML_ABORT("invalid layer %d for tensor %s", info.layer, tn.str().c_str());
             }
 
+            // ==================== [new logic START: force buffer list modification] ====================
+            
+            // only for Repeating layer
+            if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && !static_gpu_list.count(tn.bid)) {
+                buft_list = &pimpl->cpu_buft_list;  //on cpu
+            }
+
+            // if (tn.bid == 0){
+            //     buft_list = &pimpl->gpu_buft_list;
+            // }
+      
+            // ==================== [new logic END] ====================
+
             ggml_backend_buffer_type_t buft = nullptr;
 
             // check overrides
@@ -944,6 +958,9 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                     throw std::runtime_error(format("failed to find a compatible buffer type for tensor %s", tn.str().c_str()));
                 }
             }
+
+            // Log tensor buffer assignment
+            LLAMA_LOG_INFO("Tensor %s (layer %d) assigned to backend: %s\n", tn.str().c_str(), tn.bid, ggml_backend_buft_name(buft));
 
             // avoid using a host buffer when using mmap
             auto * buft_dev = ggml_backend_buft_get_device(buft);

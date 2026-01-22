@@ -1,0 +1,460 @@
+Total tokens: 2028
+Total layers: 36
+
+Activation frequency per layer (0 to 35):
+Layer 0: 0.979
+Layer 1: 0.973
+Layer 2: 0.949
+Layer 3: 0.144
+Layer 4: 0.330
+Layer 5: 0.394
+Layer 6: 0.590
+Layer 7: 0.490
+Layer 8: 0.373
+Layer 9: 0.629
+Layer 10: 0.656
+Layer 11: 0.544
+Layer 12: 0.608
+Layer 13: 0.555
+Layer 14: 0.620
+Layer 15: 0.529
+Layer 16: 0.646
+Layer 17: 0.822
+Layer 18: 0.609
+Layer 19: 0.849
+Layer 20: 0.852
+Layer 21: 0.959
+Layer 22: 0.847
+Layer 23: 0.859
+Layer 24: 0.956
+Layer 25: 0.940
+Layer 26: 0.901
+Layer 27: 0.873
+Layer 28: 0.769
+Layer 29: 0.872
+Layer 30: 0.840
+Layer 31: 0.847
+Layer 32: 0.887
+Layer 33: 0.973
+Layer 34: 0.975
+Layer 35: 0.979
+
+Activation frequency changes over token position groups (group size ~202):
+Tokens 0-201:
+  Layer 0: 0.980
+  Layer 1: 0.970
+  Layer 2: 0.911
+  Layer 3: 0.203
+  Layer 4: 0.416
+  Layer 5: 0.535
+  Layer 6: 0.614
+  Layer 7: 0.564
+  Layer 8: 0.535
+  Layer 9: 0.733
+  Layer 10: 0.767
+  Layer 11: 0.663
+  Layer 12: 0.668
+  Layer 13: 0.693
+  Layer 14: 0.663
+  Layer 15: 0.663
+  Layer 16: 0.653
+  Layer 17: 0.668
+  Layer 18: 0.673
+  Layer 19: 0.876
+  Layer 20: 0.876
+  Layer 21: 0.936
+  Layer 22: 0.955
+  Layer 23: 0.965
+  Layer 24: 0.955
+  Layer 25: 0.931
+  Layer 26: 0.970
+  Layer 27: 0.901
+  Layer 28: 0.911
+  Layer 29: 0.931
+  Layer 30: 0.871
+  Layer 31: 0.926
+  Layer 32: 0.975
+  Layer 33: 0.985
+  Layer 34: 0.965
+  Layer 35: 0.985
+  Average activation: 0.791
+Tokens 202-403:
+  Layer 0: 0.990
+  Layer 1: 0.965
+  Layer 2: 0.941
+  Layer 3: 0.188
+  Layer 4: 0.411
+  Layer 5: 0.470
+  Layer 6: 0.634
+  Layer 7: 0.515
+  Layer 8: 0.455
+  Layer 9: 0.708
+  Layer 10: 0.743
+  Layer 11: 0.653
+  Layer 12: 0.644
+  Layer 13: 0.634
+  Layer 14: 0.644
+  Layer 15: 0.599
+  Layer 16: 0.644
+  Layer 17: 0.733
+  Layer 18: 0.663
+  Layer 19: 0.881
+  Layer 20: 0.896
+  Layer 21: 0.936
+  Layer 22: 0.921
+  Layer 23: 0.926
+  Layer 24: 0.980
+  Layer 25: 0.926
+  Layer 26: 0.960
+  Layer 27: 0.876
+  Layer 28: 0.891
+  Layer 29: 0.926
+  Layer 30: 0.817
+  Layer 31: 0.916
+  Layer 32: 0.975
+  Layer 33: 0.980
+  Layer 34: 0.970
+  Layer 35: 0.990
+  Average activation: 0.778
+Tokens 404-605:
+  Layer 0: 0.985
+  Layer 1: 0.975
+  Layer 2: 0.955
+  Layer 3: 0.149
+  Layer 4: 0.356
+  Layer 5: 0.421
+  Layer 6: 0.559
+  Layer 7: 0.559
+  Layer 8: 0.465
+  Layer 9: 0.678
+  Layer 10: 0.713
+  Layer 11: 0.619
+  Layer 12: 0.644
+  Layer 13: 0.624
+  Layer 14: 0.634
+  Layer 15: 0.594
+  Layer 16: 0.629
+  Layer 17: 0.723
+  Layer 18: 0.624
+  Layer 19: 0.817
+  Layer 20: 0.832
+  Layer 21: 0.891
+  Layer 22: 0.866
+  Layer 23: 0.926
+  Layer 24: 0.955
+  Layer 25: 0.886
+  Layer 26: 0.970
+  Layer 27: 0.861
+  Layer 28: 0.837
+  Layer 29: 0.886
+  Layer 30: 0.797
+  Layer 31: 0.847
+  Layer 32: 0.955
+  Layer 33: 0.931
+  Layer 34: 0.980
+  Layer 35: 0.980
+  Average activation: 0.753
+Tokens 606-807:
+  Layer 0: 0.856
+  Layer 1: 0.847
+  Layer 2: 1.000
+  Layer 3: 0.139
+  Layer 4: 0.282
+  Layer 5: 0.282
+  Layer 6: 0.426
+  Layer 7: 0.559
+  Layer 8: 0.282
+  Layer 9: 0.426
+  Layer 10: 0.569
+  Layer 11: 0.332
+  Layer 12: 0.426
+  Layer 13: 0.569
+  Layer 14: 0.569
+  Layer 15: 0.426
+  Layer 16: 0.713
+  Layer 17: 0.856
+  Layer 18: 0.426
+  Layer 19: 0.708
+  Layer 20: 0.713
+  Layer 21: 0.856
+  Layer 22: 0.569
+  Layer 23: 0.569
+  Layer 24: 0.713
+  Layer 25: 0.713
+  Layer 26: 0.856
+  Layer 27: 0.856
+  Layer 28: 0.569
+  Layer 29: 0.733
+  Layer 30: 0.713
+  Layer 31: 0.569
+  Layer 32: 0.713
+  Layer 33: 0.856
+  Layer 34: 0.856
+  Layer 35: 0.856
+  Average activation: 0.622
+Tokens 808-1009:
+  Layer 0: 0.980
+  Layer 1: 0.970
+  Layer 2: 0.985
+  Layer 3: 0.134
+  Layer 4: 0.282
+  Layer 5: 0.356
+  Layer 6: 0.550
+  Layer 7: 0.505
+  Layer 8: 0.356
+  Layer 9: 0.614
+  Layer 10: 0.639
+  Layer 11: 0.475
+  Layer 12: 0.574
+  Layer 13: 0.525
+  Layer 14: 0.619
+  Layer 15: 0.505
+  Layer 16: 0.683
+  Layer 17: 0.861
+  Layer 18: 0.584
+  Layer 19: 0.832
+  Layer 20: 0.832
+  Layer 21: 0.965
+  Layer 22: 0.792
+  Layer 23: 0.837
+  Layer 24: 0.950
+  Layer 25: 0.941
+  Layer 26: 0.881
+  Layer 27: 0.861
+  Layer 28: 0.738
+  Layer 29: 0.861
+  Layer 30: 0.827
+  Layer 31: 0.832
+  Layer 32: 0.871
+  Layer 33: 0.975
+  Layer 34: 0.975
+  Layer 35: 0.980
+  Average activation: 0.726
+Tokens 1010-1211:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.941
+  Layer 3: 0.129
+  Layer 4: 0.317
+  Layer 5: 0.376
+  Layer 6: 0.619
+  Layer 7: 0.441
+  Layer 8: 0.322
+  Layer 9: 0.629
+  Layer 10: 0.629
+  Layer 11: 0.599
+  Layer 12: 0.624
+  Layer 13: 0.505
+  Layer 14: 0.629
+  Layer 15: 0.505
+  Layer 16: 0.639
+  Layer 17: 0.881
+  Layer 18: 0.624
+  Layer 19: 0.871
+  Layer 20: 0.871
+  Layer 21: 1.000
+  Layer 22: 0.866
+  Layer 23: 0.871
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.871
+  Layer 27: 0.871
+  Layer 28: 0.748
+  Layer 29: 0.876
+  Layer 30: 0.871
+  Layer 31: 0.876
+  Layer 32: 0.876
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.747
+Tokens 1212-1413:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.946
+  Layer 3: 0.124
+  Layer 4: 0.302
+  Layer 5: 0.376
+  Layer 6: 0.629
+  Layer 7: 0.446
+  Layer 8: 0.322
+  Layer 9: 0.624
+  Layer 10: 0.624
+  Layer 11: 0.594
+  Layer 12: 0.624
+  Layer 13: 0.500
+  Layer 14: 0.614
+  Layer 15: 0.500
+  Layer 16: 0.624
+  Layer 17: 0.876
+  Layer 18: 0.624
+  Layer 19: 0.876
+  Layer 20: 0.876
+  Layer 21: 1.000
+  Layer 22: 0.876
+  Layer 23: 0.876
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.876
+  Layer 27: 0.876
+  Layer 28: 0.748
+  Layer 29: 0.881
+  Layer 30: 0.876
+  Layer 31: 0.871
+  Layer 32: 0.871
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.746
+Tokens 1414-1615:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.941
+  Layer 3: 0.124
+  Layer 4: 0.307
+  Layer 5: 0.371
+  Layer 6: 0.624
+  Layer 7: 0.441
+  Layer 8: 0.317
+  Layer 9: 0.624
+  Layer 10: 0.624
+  Layer 11: 0.505
+  Layer 12: 0.624
+  Layer 13: 0.495
+  Layer 14: 0.619
+  Layer 15: 0.495
+  Layer 16: 0.619
+  Layer 17: 0.871
+  Layer 18: 0.624
+  Layer 19: 0.876
+  Layer 20: 0.876
+  Layer 21: 1.000
+  Layer 22: 0.876
+  Layer 23: 0.876
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.876
+  Layer 27: 0.876
+  Layer 28: 0.752
+  Layer 29: 0.876
+  Layer 30: 0.876
+  Layer 31: 0.876
+  Layer 32: 0.876
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.743
+Tokens 1616-1817:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.936
+  Layer 3: 0.129
+  Layer 4: 0.317
+  Layer 5: 0.376
+  Layer 6: 0.624
+  Layer 7: 0.436
+  Layer 8: 0.337
+  Layer 9: 0.624
+  Layer 10: 0.624
+  Layer 11: 0.500
+  Layer 12: 0.624
+  Layer 13: 0.500
+  Layer 14: 0.624
+  Layer 15: 0.500
+  Layer 16: 0.629
+  Layer 17: 0.876
+  Layer 18: 0.629
+  Layer 19: 0.871
+  Layer 20: 0.871
+  Layer 21: 1.000
+  Layer 22: 0.871
+  Layer 23: 0.871
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.871
+  Layer 27: 0.871
+  Layer 28: 0.748
+  Layer 29: 0.876
+  Layer 30: 0.871
+  Layer 31: 0.876
+  Layer 32: 0.876
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.743
+Tokens 1818-2019:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.941
+  Layer 3: 0.124
+  Layer 4: 0.312
+  Layer 5: 0.376
+  Layer 6: 0.624
+  Layer 7: 0.441
+  Layer 8: 0.342
+  Layer 9: 0.629
+  Layer 10: 0.629
+  Layer 11: 0.505
+  Layer 12: 0.629
+  Layer 13: 0.505
+  Layer 14: 0.589
+  Layer 15: 0.505
+  Layer 16: 0.629
+  Layer 17: 0.876
+  Layer 18: 0.624
+  Layer 19: 0.876
+  Layer 20: 0.876
+  Layer 21: 1.000
+  Layer 22: 0.876
+  Layer 23: 0.876
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.876
+  Layer 27: 0.876
+  Layer 28: 0.752
+  Layer 29: 0.876
+  Layer 30: 0.876
+  Layer 31: 0.876
+  Layer 32: 0.876
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.744
+Tokens 2020-2027:
+  Layer 0: 1.000
+  Layer 1: 1.000
+  Layer 2: 0.875
+  Layer 3: 0.125
+  Layer 4: 0.375
+  Layer 5: 0.375
+  Layer 6: 0.625
+  Layer 7: 0.375
+  Layer 8: 0.250
+  Layer 9: 0.625
+  Layer 10: 0.625
+  Layer 11: 0.500
+  Layer 12: 0.625
+  Layer 13: 0.500
+  Layer 14: 0.625
+  Layer 15: 0.500
+  Layer 16: 0.625
+  Layer 17: 0.875
+  Layer 18: 0.625
+  Layer 19: 0.875
+  Layer 20: 0.875
+  Layer 21: 1.000
+  Layer 22: 0.875
+  Layer 23: 0.875
+  Layer 24: 1.000
+  Layer 25: 1.000
+  Layer 26: 0.875
+  Layer 27: 0.875
+  Layer 28: 0.750
+  Layer 29: 0.875
+  Layer 30: 0.875
+  Layer 31: 0.875
+  Layer 32: 0.875
+  Layer 33: 1.000
+  Layer 34: 1.000
+  Layer 35: 1.000
+  Average activation: 0.740

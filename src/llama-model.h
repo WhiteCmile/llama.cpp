@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 struct llama_cparams;
@@ -486,6 +487,9 @@ struct llama_model {
     struct ggml_tensor * router_up     = nullptr;
     struct ggml_tensor * router_down   = nullptr;
     struct ggml_tensor * router_down_b = nullptr;
+
+    // static layers on GPU
+    std::unordered_set<int> static_gpu_list = {0,1,2,9,10,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
 
     std::vector<llama_layer> layers;
 

@@ -11,6 +11,9 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#ifdef GGML_USE_CUDA
+    #include <nvToolsExt.h>
+#endif
 
 // ggml_compute_forward_dup
 
@@ -10429,6 +10432,10 @@ void ggml_compute_forward_layer_masked_bypassing(
 void ggml_compute_forward_layer_masked_mul_mat(
             const struct ggml_compute_params * params,
         struct ggml_tensor * dst) {
+
+            #ifdef GGML_USE_CUDA
+                nvtxRangePushA("compute_logic");
+            #endif
       
             // GGML_LOG_INFO("--- [MUL_MAT] Computing --- \n");
             // src0: weight, src1: x, src2: layer_mask

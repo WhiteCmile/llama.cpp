@@ -1143,7 +1143,7 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
 
     // measure generation-stage speed
     int gen_tokens = 0;
-    const auto gen_start = std::chrono::steady_clock::now();
+    auto gen_start = std::chrono::steady_clock::now();
 
     while (true) {
         check_context_size(llama_data.context, batch);
@@ -1168,13 +1168,16 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
 
         // count generated tokens for speed measurement
         ++gen_tokens;
+        if(gen_tokens == 1){
+            gen_start = std::chrono::steady_clock::now();
+        }
 
         // prepare the next batch with the sampled token
         batch = llama_batch_get_one(&new_token_id, 1);
     }
     const auto gen_end = std::chrono::steady_clock::now();
     const double elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(gen_end - gen_start).count();
-    const double tps = elapsed > 0.0 ? (double)gen_tokens / elapsed : 0.0;
+    const double tps = elapsed > 0.0 ? (double)(gen_tokens-1) / elapsed : 0.0;
     printf("\n[Generation: %.1f t/s]\n", tps);
     printf(LOG_COL_DEFAULT);
     return 0;
