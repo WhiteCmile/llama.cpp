@@ -163,13 +163,6 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
                 model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
                 nullptr, reverse_mask, LLM_FFN_SILU, LLM_FFN_PAR, il
             );
-            // layer_input = build_ffn(
-            //     layer_input,
-            //     model.layers[il].adapter_up, nullptr, nullptr,
-            //     model.layers[il].adapter_gate, nullptr, nullptr,
-            //     model.layers[il].adapter_down, nullptr, model.layers[il].adapter_scale,
-            //     nullptr, LLM_FFN_SILU, LLM_FFN_PAR, il
-            // );
             cb(layer_input, "l_adapter", il);
             layer_input = ggml_add(ctx0, layer_input, inpSA);
             cb(layer_input, "adapter_output", il);
@@ -291,6 +284,7 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         cb(router_cur, "router_logits", -1);
         router_cur = ggml_sigmoid_inplace(ctx0, router_cur);
         router_cur = ggml_round_inplace(ctx0, router_cur);
+        // router_cur = ggml_sub(ctx0, router_cur, router_cur);
         cb(router_cur, "router_mask", -1);
 
         res->router_mask = router_cur;

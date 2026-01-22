@@ -26,13 +26,12 @@ cmake --build build --config Release
 # 根据模式选择运行哪个版本
 if [ "$EAGLE_MODE" = true ]; then
     echo "运行Eagle版本..."
-    CUDA_VISIBLE_DEVICES=0 \
-    build/bin/llama-simple -m $MODEL_PATH \
-        -n 256 "Once upon a time, there is a big tree" \
-        >temp/out.txt 2>temp/out.err
+    CUDA_VISIBLE_DEVICES=2 \
+    build/bin/llama-bench -m $MODEL_PATH \
+        -b 1 -ub 1 -pg 512,2048 -p 0 -n 0
 else
     echo "运行标准版本..."
-    CUDA_VISIBLE_DEVICES=0 \
-    build/bin/llama-simple -m $MODEL_PATH \
-        -n 256 "Once upon a time, there is a big tree"
+    CUDA_VISIBLE_DEVICES=2 \
+    build/bin/llama-bench -m $MODEL_PATH \
+        -b 1 -ub 1 -pg 512,2048 -p 0 -n 0
 fi
