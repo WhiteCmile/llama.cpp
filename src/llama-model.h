@@ -489,8 +489,13 @@ struct llama_model {
     struct ggml_tensor * router_down_b = nullptr;
 
     // static layers on GPU
-    std::unordered_set<int> static_gpu_list = {0,1,2,9,10,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
+    std::unordered_set<int> static_gpu_list = {0,1,2,10,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};  //21 max
+    // std::unordered_set<int> static_gpu_list = {0,1,2,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};  //21 max
 
+
+    std::unordered_set<int> hot_layer = {0,1,2,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};  //512
+    // std::unordered_set<int> hot_layer = {0,1,2,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};  //1024
+    
     std::vector<llama_layer> layers;
 
     //Dense linear projections for SentenceTransformers models like embeddinggemma

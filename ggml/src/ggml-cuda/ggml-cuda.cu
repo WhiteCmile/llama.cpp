@@ -61,6 +61,7 @@
 #include "ggml-cuda/cumsum.cuh"
 #include "ggml-cuda/fill.cuh"
 #include "ggml-cuda/bypassing.cuh"
+#include "ggml-cuda/layer-masked-fattn.cuh"
 #include "ggml.h"
 
 #include <algorithm>
@@ -2805,9 +2806,9 @@ static bool ggml_cuda_compute_forward(ggml_backend_cuda_context & ctx, struct gg
         case GGML_OP_FLASH_ATTN_EXT:
             ggml_cuda_flash_attn_ext(ctx, dst);
             break;
-        // case GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT:
-        //     ggml_cuda_layer_masked_flash_attn_ext(ctx, dst);
-        //     break;
+        case GGML_OP_LAYER_MASKED_FLASH_ATTN_EXT:
+            ggml_cuda_layer_masked_flash_attn_ext(ctx, dst);
+            break;
         case GGML_OP_CROSS_ENTROPY_LOSS:
             ggml_cuda_cross_entropy_loss(ctx, dst);
             break;

@@ -1148,7 +1148,7 @@ static int generate(LlamaData & llama_data, const std::string & prompt, std::str
     while (true) {
         check_context_size(llama_data.context, batch);
         if (llama_decode(llama_data.context.get(), batch)) {
-            printe("failed to decode\n");
+            // printe("failed to decode\n");
             break;
             // return 1;
         }

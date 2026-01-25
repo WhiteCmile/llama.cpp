@@ -41,6 +41,31 @@ typedef void (* fattn_kernel_t)(
                             const int32_t ne31, const int32_t ne32, const int32_t ne33,
                             const int32_t nb31, const int32_t nb32, const int64_t nb33);
 
+typedef void (* layer_masked_fattn_kernel_t)(
+        const char * __restrict__ Q,
+        const char * __restrict__ K,
+        const char * __restrict__ V,
+        const char * __restrict__ mask,
+        const char * __restrict__ sinks,
+        const int  * __restrict__ KV_max,
+        float      * __restrict__ dst,
+        float2     * __restrict__ dst_meta,
+        const float * __restrict__ layer_mask,
+        const int layer_id,
+        const float scale,
+        const float max_bias,
+        const float m0,
+        const float m1,
+        const uint32_t n_head_log2,
+        const float logit_softcap,
+        const int32_t ne00, const uint3   ne01, const int32_t ne02, const int32_t ne03,
+                            const int32_t nb01, const int32_t nb02, const int32_t nb03,
+        const int32_t ne10, const int32_t ne11, const int32_t ne12, const int32_t ne13,
+                            const int32_t nb11, const int32_t nb12, const int64_t nb13,
+                            const int32_t nb21, const int32_t nb22, const int64_t nb23,
+                            const int32_t ne31, const int32_t ne32, const int32_t ne33,
+                            const int32_t nb31, const int32_t nb32, const int64_t nb33);
+
 typedef float (*vec_dot_KQ_t)(
     const char * __restrict__ K_c, const void * __restrict__ Q_v, const int * __restrict__ Q_q8 , const void * __restrict__ Q_ds);
 
@@ -991,6 +1016,260 @@ void launch_fattn(
         sinks ? ((const char *) sinks->data) : nullptr,
         KV_max.ptr,
         !stream_k && parallel_blocks > 1 ? dst_tmp.ptr : (float *) KQV->data, dst_tmp_meta.ptr,
+        scale, max_bias, m0, m1, n_head_log2, logit_softcap,
+        Q->ne[0], ne01,     Q->ne[2], Q->ne[3], Q->nb[1], Q->nb[2], Q->nb[3],
+        K->ne[0], K->ne[1], K->ne[2], K->ne[3], nb11, nb12, nb13,
+        nb21, nb22, nb23,
+        mask ? mask->ne[1] : 0, mask ? mask->ne[2] : 0, mask ? mask->ne[3] : 0,
+        mask ? mask->nb[1] : 0, mask ? mask->nb[2] : 0, mask ? mask->nb[3] : 0
+    );
+    CUDA_CHECK(cudaGetLastError());
+
+    if (stream_k) {
+        if (ntiles_total % blocks_num.x != 0) { // Fixup is only needed if the SMs work on fractional tiles.
+            const dim3 block_dim_combine(DV, 1, 1);
+            const dim3 blocks_num_combine = {blocks_num.x, ncols1, ncols2};
+
+            flash_attn_stream_k_fixup<DV, ncols1, ncols2>
+                <<<blocks_num_combine, block_dim_combine, 0, main_stream>>>
+                ((float *) KQV->data, dst_tmp_meta.ptr, Q->ne[1], Q->ne[2], Q->ne[3], K->ne[1], nbatch_fa);
+        }
+    } else if (parallel_blocks > 1) {
+        const dim3 block_dim_combine(DV, 1, 1);
+        const dim3 blocks_num_combine(Q->ne[1], Q->ne[2], Q->ne[3]);
+        const size_t nbytes_shared_combine = parallel_blocks*sizeof(float2);
+
+        flash_attn_combine_results<DV>
+            <<<blocks_num_combine, block_dim_combine, nbytes_shared_combine, main_stream>>>
+            (dst_tmp.ptr, dst_tmp_meta.ptr, (float *) KQV->data, parallel_blocks);
+    }
+    CUDA_CHECK(cudaGetLastError());
+}
+
+template <int DV, int ncols1, int ncols2>
+void launch_layer_masked_fattn(
+    ggml_backend_cuda_context & ctx, ggml_tensor * dst, layer_masked_fattn_kernel_t fattn_kernel, const int nwarps, const size_t nbytes_shared,
+    const int nbatch_fa, const bool need_f16_K, const bool need_f16_V, const bool stream_k, const int warp_size = WARP_SIZE
+) {
+    constexpr int ncols = ncols1 * ncols2;
+
+    const bool is_mla = DV == 512; // TODO better parameterization
+
+    const ggml_tensor * Q = dst->src[0];
+    const ggml_tensor * K = dst->src[1];
+    const ggml_tensor * V = dst->src[2];
+
+    GGML_ASSERT(V || is_mla);
+
+    const ggml_tensor * mask  = dst->src[3];
+    const ggml_tensor * sinks = dst->src[4];
+
+    ggml_tensor * KQV = dst;
+
+    GGML_ASSERT(Q->type == GGML_TYPE_F32);
+    GGML_ASSERT(KQV->type == GGML_TYPE_F32);
+
+    GGML_ASSERT(      Q->nb[0] == ggml_element_size(Q));
+    GGML_ASSERT(      K->nb[0] == ggml_element_size(K));
+    GGML_ASSERT(!V || V->nb[0] == ggml_element_size(V));
+
+    GGML_ASSERT(!mask || mask->type == GGML_TYPE_F16);
+
+    ggml_cuda_pool & pool = ctx.pool();
+    cudaStream_t main_stream = ctx.stream();
+    const int id  = ggml_cuda_get_device();
+    const int cc  = ggml_cuda_info().devices[id].cc;
+    const int nsm = ggml_cuda_info().devices[id].nsm;
+
+    ggml_cuda_pool_alloc<half>   K_f16(pool);
+    ggml_cuda_pool_alloc<half>   V_f16(pool);
+    ggml_cuda_pool_alloc<int>    KV_max(pool);
+    ggml_cuda_pool_alloc<float>  dst_tmp(pool);
+    ggml_cuda_pool_alloc<float2> dst_tmp_meta(pool);
+
+    const char * K_data = (const char *) K->data;
+    size_t nb11 = K->nb[1];
+    size_t nb12 = K->nb[2];
+    size_t nb13 = K->nb[3];
+
+    const char * V_data = V ? (const char *) V->data : nullptr;
+    size_t nb21 = V ? V->nb[1] : nb11;
+    size_t nb22 = V ? V->nb[2] : nb12;
+    size_t nb23 = V ? V->nb[3] : nb13;
+
+    if (need_f16_K && K->type != GGML_TYPE_F16) {
+        const size_t bs = ggml_blck_size(K->type);
+        const size_t ts = ggml_type_size(K->type);
+
+        K_f16.alloc(ggml_nelements(K));
+        if (ggml_is_contiguously_allocated(K)) {
+            to_fp16_cuda_t to_fp16 = ggml_get_to_fp16_cuda(K->type);
+            to_fp16(K_data, K_f16.ptr, ggml_nelements(K), main_stream);
+
+            nb11 = nb11*bs*sizeof(half)/ts;
+            nb12 = nb12*bs*sizeof(half)/ts;
+            nb13 = nb13*bs*sizeof(half)/ts;
+        } else {
+            GGML_ASSERT(K->nb[0] == ts);
+            to_fp16_nc_cuda_t to_fp16 = ggml_get_to_fp16_nc_cuda(K->type);
+            const int64_t s01 = nb11 / ts;
+            const int64_t s02 = nb12 / ts;
+            const int64_t s03 = nb13 / ts;
+            to_fp16(K_data, K_f16.ptr, K->ne[0], K->ne[1], K->ne[2], K->ne[3], s01, s02, s03, main_stream);
+
+            nb11 = K->ne[0] * sizeof(half);
+            nb12 = K->ne[1] * nb11;
+            nb13 = K->ne[2] * nb12;
+        }
+        K_data = (char *) K_f16.ptr;
+    }
+
+    if (V && need_f16_V && V->type != GGML_TYPE_F16) {
+        const size_t bs = ggml_blck_size(V->type);
+        const size_t ts = ggml_type_size(V->type);
+
+        V_f16.alloc(ggml_nelements(V));
+        if (ggml_is_contiguously_allocated(V)) {
+            to_fp16_cuda_t to_fp16 = ggml_get_to_fp16_cuda(V->type);
+            to_fp16(V_data, V_f16.ptr, ggml_nelements(V), main_stream);
+            V_data = (char *) V_f16.ptr;
+
+            nb21 = nb21*bs*sizeof(half)/ts;
+            nb22 = nb22*bs*sizeof(half)/ts;
+            nb23 = nb23*bs*sizeof(half)/ts;
+        } else {
+            GGML_ASSERT(V->nb[0] == ts);
+            to_fp16_nc_cuda_t to_fp16 = ggml_get_to_fp16_nc_cuda(V->type);
+            const int64_t s01 = nb21 / ts;
+            const int64_t s02 = nb22 / ts;
+            const int64_t s03 = nb23 / ts;
+            to_fp16(V_data, V_f16.ptr, V->ne[0], V->ne[1], V->ne[2], V->ne[3], s01, s02, s03, main_stream);
+
+            nb21 = V->ne[0] * sizeof(half);
+            nb22 = V->ne[1] * nb21;
+            nb23 = V->ne[2] * nb22;
+        }
+        V_data = (char *) V_f16.ptr;
+    }
+
+    const int ntiles_x = ((Q->ne[1] + ncols1 - 1) / ncols1);
+    const int ntiles_total = ntiles_x * (Q->ne[2] / ncols2) * Q->ne[3];
+
+    // Optional optimization where the mask is scanned to determine whether part of the calculation can be skipped.
+    // Only worth the overhead if there is at lease one FATTN_KQ_STRIDE x FATTN_KQ_STRIDE square to be skipped or
+    //     multiple sequences of possibly different lengths.
+    if (mask && K->ne[1] % FATTN_KQ_STRIDE == 0 && (Q->ne[1] >= 1024 || Q->ne[3] > 1)) {
+        const int s31 = mask->nb[1] / sizeof(half2);
+        const int s33 = mask->nb[3] / sizeof(half2);
+
+        const dim3 blocks_num_KV_max(ntiles_x, Q->ne[3], 1);
+        const dim3 block_dim_KV_max(FATTN_KQ_STRIDE/2, 1, 1);
+
+        const int ne_KV_max = blocks_num_KV_max.x*blocks_num_KV_max.y;
+        const int iter_k = K->ne[1] / FATTN_KQ_STRIDE;
+
+        KV_max.alloc(ne_KV_max);
+        flash_attn_mask_to_KV_max<ncols1><<<blocks_num_KV_max, block_dim_KV_max, 0, main_stream>>>
+            ((const half2 *) mask->data, KV_max.ptr, iter_k, s31, s33);
+        CUDA_CHECK(cudaGetLastError());
+    }
+
+    const dim3 block_dim(warp_size, nwarps, 1);
+    int max_blocks_per_sm = 1; // Max. number of active blocks limited by occupancy.
+    CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks_per_sm, fattn_kernel, block_dim.x * block_dim.y * block_dim.z, nbytes_shared));
+    GGML_ASSERT(max_blocks_per_sm > 0);
+    int parallel_blocks = max_blocks_per_sm;
+
+    dim3 blocks_num;
+    if (stream_k) {
+        // For short contexts it can be faster to have the SMs work on whole tiles because this lets us skip the fixup.
+        const int max_blocks = max_blocks_per_sm*nsm;
+        const int tiles_nwaves = (ntiles_total + max_blocks - 1) / max_blocks;
+        const int tiles_efficiency_percent = 100 * ntiles_total / (max_blocks*tiles_nwaves);
+
+        const int nblocks_stream_k = max_blocks;
+
+        const bool use_stream_k = cc >= GGML_CUDA_CC_ADA_LOVELACE || tiles_efficiency_percent < 75;
+
+        blocks_num.x = use_stream_k ? nblocks_stream_k : ntiles_total;
+        blocks_num.y = 1;
+        blocks_num.z = 1;
+
+        if (ntiles_total % blocks_num.x != 0) { // Fixup is only needed if the SMs work on fractional tiles.
+            dst_tmp_meta.alloc((size_t(blocks_num.x) * ncols * (2 + DV/2)));
+        }
+    } else {
+        const int ntiles_KQ = (K->ne[1] + nbatch_fa - 1) / nbatch_fa; // Max. number of parallel blocks limited by tensor size.
+
+        // parallel_blocks must not be larger than what the tensor size allows:
+        parallel_blocks = std::min(parallel_blocks, ntiles_KQ);
+
+        // If ntiles_total % blocks_per_wave != 0 then some efficiency is lost due to tail effects.
+        // Test whether parallel_blocks can be set to a higher value for better efficiency.
+        const int blocks_per_wave = nsm * max_blocks_per_sm;
+        int nwaves_best = 0;
+        int efficiency_percent_best = 0;
+        for (int parallel_blocks_test = parallel_blocks; parallel_blocks_test <= ntiles_KQ; ++parallel_blocks_test) {
+            const int nblocks_total = ntiles_total * parallel_blocks_test;
+            const int nwaves = (nblocks_total + blocks_per_wave - 1) / blocks_per_wave;
+            const int efficiency_percent = 100 * nblocks_total / (nwaves*blocks_per_wave);
+
+            // Stop trying configurations with more waves if we already have good efficiency to avoid excessive overhead.
+            if (efficiency_percent_best >= 95 && nwaves > nwaves_best) {
+                break;
+            }
+
+            if (efficiency_percent > efficiency_percent_best) {
+                nwaves_best = nwaves;
+                efficiency_percent_best = efficiency_percent;
+                parallel_blocks = parallel_blocks_test;
+            }
+        }
+
+        blocks_num.x = ntiles_x;
+        blocks_num.y = parallel_blocks;
+        blocks_num.z = (Q->ne[2]/ncols2)*Q->ne[3];
+
+        if (parallel_blocks > 1) {
+            dst_tmp.alloc(parallel_blocks*ggml_nelements(KQV));
+            dst_tmp_meta.alloc(parallel_blocks*ggml_nrows(KQV));
+        }
+    }
+
+    float scale         = 1.0f;
+    float max_bias      = 0.0f;
+    float logit_softcap = 0.0f;
+
+    memcpy(&scale,         (const float *) KQV->op_params + 0, sizeof(float));
+    memcpy(&max_bias,      (const float *) KQV->op_params + 1, sizeof(float));
+    memcpy(&logit_softcap, (const float *) KQV->op_params + 2, sizeof(float));
+
+    if (logit_softcap != 0.0f) {
+        scale /= logit_softcap;
+    }
+
+    const uint32_t n_head      = Q->ne[2];
+    const uint32_t n_head_log2 = 1u << uint32_t(floorf(log2f(float(n_head))));
+
+    const float m0 = powf(2.0f, -(max_bias       ) / n_head_log2);
+    const float m1 = powf(2.0f, -(max_bias / 2.0f) / n_head_log2);
+
+    // TODO other tensor dimensions after removal of WMMA kernel:
+    const uint3 ne01 = init_fastdiv_values(Q->ne[1]);
+
+    GGML_ASSERT(block_dim.x % warp_size == 0);
+
+    auto layer_mask_data = (float *) dst->src[8]->data;
+    auto layer_id = dst->layer_id;
+    fattn_kernel<<<blocks_num, block_dim, nbytes_shared, main_stream>>>(
+        (const char *) Q->data,
+        K_data,
+        V_data,
+        mask ? ((const char *) mask->data) : nullptr,
+        sinks ? ((const char *) sinks->data) : nullptr,
+        KV_max.ptr,
+        !stream_k && parallel_blocks > 1 ? dst_tmp.ptr : (float *) KQV->data, dst_tmp_meta.ptr,
+        layer_mask_data, layer_id,
         scale, max_bias, m0, m1, n_head_log2, logit_softcap,
         Q->ne[0], ne01,     Q->ne[2], Q->ne[3], Q->nb[1], Q->nb[2], Q->nb[3],
         K->ne[0], K->ne[1], K->ne[2], K->ne[3], nb11, nb12, nb13,

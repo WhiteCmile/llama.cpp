@@ -660,6 +660,10 @@ struct llm_graph_context {
     ggml_context * ctx0 = nullptr;
     ggml_cgraph  * gf   = nullptr;
 
+
+    ggml_cuda_layer_prefetch_ctx * layers_ctx = nullptr;
+    ggml_tensor * layer_to_slot = nullptr;
+
     llm_graph_context(const llm_graph_params & params);
     virtual ~llm_graph_context() = default;
 

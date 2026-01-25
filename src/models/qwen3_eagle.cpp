@@ -1,6 +1,7 @@
 #include "models.h"
 
-llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_graph_params & params) : llm_graph_context(params) {
+llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model,
+    const llm_graph_params & params) : llm_graph_context(params) {
     const int64_t n_embd_head = hparams.n_embd_head_v;
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k);
@@ -33,6 +34,11 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model, const llm_
         reverse_mask = ggml_sub(ctx0, layer_mask, ONE);
         reverse_mask = ggml_neg_inplace(ctx0, reverse_mask);
         cb(reverse_mask, "reverse_mask", -1);
+
+        layer_to_slot = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, n_layer);
+        ggml_set_input(layer_to_slot);
+        ggml_set_name(layer_to_slot, "layer_to_slot");
+        cb(layer_to_slot, "layer_to_slot", -1);
     }
 
     inpL = build_inp_embd(model.tok_embd);

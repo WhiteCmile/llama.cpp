@@ -3142,7 +3142,7 @@ llama_context_params llama_context_default_params() {
         /*.rope_scaling_type           =*/ LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED,
         /*.pooling_type                =*/ LLAMA_POOLING_TYPE_UNSPECIFIED,
         /*.attention_type              =*/ LLAMA_ATTENTION_TYPE_UNSPECIFIED,
-        /*.flash_attn_type             =*/ LLAMA_FLASH_ATTN_TYPE_DISABLED,
+        /*.flash_attn_type             =*/ LLAMA_FLASH_ATTN_TYPE_AUTO,
         /*.rope_freq_base              =*/ 0.0f,
         /*.rope_freq_scale             =*/ 0.0f,
         /*.yarn_ext_factor             =*/ -1.0f,
@@ -3674,9 +3674,9 @@ int32_t llama_decode(
         llama_context * ctx,
           llama_batch   batch) {
     const int ret = ctx->decode(batch);
-    if (ret != 0 && ret != 1) {
-        LLAMA_LOG_ERROR("%s: failed to decode, ret = %d\n", __func__, ret);
-    }
+    // if (ret != 0 && ret != 1) {
+    //     LLAMA_LOG_ERROR("%s: failed to decode, ret = %d\n", __func__, ret);
+    // }
 
     return ret;
 }

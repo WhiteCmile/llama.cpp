@@ -379,6 +379,8 @@ extern "C" {
     struct ggml_object;
     struct ggml_context;
     struct ggml_cgraph;
+    struct CUevent_st;
+    typedef struct CUevent_st* cudaEvent_t; 
 
     // NOTE: always add types at the end of the enum to keep backward compatibility
     enum ggml_type {
@@ -686,6 +688,29 @@ extern "C" {
         // char padding[8 + 12];
         char padding[4];
     };
+
+    struct ggml_cuda_layer_tensors {
+        struct ggml_tensor* ffn_norm;
+        struct ggml_tensor* ffn_up;
+        struct ggml_tensor* ffn_gate;
+        struct ggml_tensor* ffn_down;
+        };
+
+    struct ggml_cuda_layer_prefetch_ctx {
+        struct ggml_cuda_layer_tensors layer_tensor;   // CPU tensors
+        struct ggml_cuda_layer_tensors slot_tensor; // GPU tensors
+        cudaEvent_t slot_free_event;
+        cudaEvent_t weight_ready_event;
+        };
+
+    struct ggml_cuda_prefetch_params {
+        struct ggml_cuda_layer_prefetch_ctx* layers_ctx;
+        int n_layers;
+        bool * static_mask;
+        void * slots_data;
+        };
+
+
 
     static const size_t GGML_TENSOR_SIZE = sizeof(struct ggml_tensor);
 

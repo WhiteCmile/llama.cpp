@@ -917,10 +917,32 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
 
             // ==================== [new logic START: force buffer list modification] ====================
             
-            // only for Repeating layer
-            if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && !static_gpu_list.count(tn.bid)) {
+            std::string tensor_name = tn.str();
+
+            bool is_ffn = (tensor_name.find("ffn") != std::string::npos && tensor_name.find("ffn_norm") == std::string::npos);
+            bool is_attn = (tensor_name.find("attn") != std::string::npos);
+            // is_ffn = true;
+            bool is_adapter = (tensor_name.find("adapter") != std::string::npos);
+
+            // cold layers' ffn on cpu and very hot layers'adapter on cpu
+            if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && ((!static_gpu_list.count(tn.bid) && is_ffn) || (hot_layer.count(tn.bid) && is_adapter))) {
                 buft_list = &pimpl->cpu_buft_list;  //on cpu
             }
+
+            // cold layers' ffn on cpu
+            // if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && !static_gpu_list.count(tn.bid) && is_ffn) {
+            //     buft_list = &pimpl->cpu_buft_list;  //on cpu
+            // }
+            
+            // cold layers' ffn and all adapter on cpu
+            // if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && ((!static_gpu_list.count(tn.bid) && is_ffn) || is_adapter)) {
+            //     buft_list = &pimpl->cpu_buft_list;  //on cpu
+            // }
+
+            // // whole layer
+            // if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && !static_gpu_list.count(tn.bid)) {
+            //     buft_list = &pimpl->cpu_buft_list;  //on cpu
+            // }
 
             // if (tn.bid == 0){
             //     buft_list = &pimpl->gpu_buft_list;
@@ -960,7 +982,7 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
             }
 
             // Log tensor buffer assignment
-            LLAMA_LOG_INFO("Tensor %s (layer %d) assigned to backend: %s\n", tn.str().c_str(), tn.bid, ggml_backend_buft_name(buft));
+            // LLAMA_LOG_INFO("Tensor %s (layer %d) assigned to backend: %s\n", tn.str().c_str(), tn.bid, ggml_backend_buft_name(buft));
 
             // avoid using a host buffer when using mmap
             auto * buft_dev = ggml_backend_buft_get_device(buft);
