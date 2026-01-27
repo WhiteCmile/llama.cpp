@@ -10,7 +10,7 @@ while getopts "e" opt; do
   case $opt in
     e)
       EAGLE_MODE=true
-      MODEL_PATH="../../models/Qwen3-8B-GGUF-EAGLE3/qwen3-8b-eagle.gguf"
+      MODEL_PATH="../../models/Qwen3-14B-mdf/qwen3_14b_eagle.gguf"
       ;;
     \?)
       echo "无效选项: -$OPTARG" >&2

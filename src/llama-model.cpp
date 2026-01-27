@@ -917,17 +917,17 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
 
             // ==================== [new logic START: force buffer list modification] ====================
             
-            std::string tensor_name = tn.str();
+            // std::string tensor_name = tn.str();
 
-            bool is_ffn = (tensor_name.find("ffn") != std::string::npos && tensor_name.find("ffn_norm") == std::string::npos);
-            bool is_attn = (tensor_name.find("attn") != std::string::npos);
+            // bool is_ffn = (tensor_name.find("ffn") != std::string::npos && tensor_name.find("ffn_norm") == std::string::npos);
+            // bool is_attn = (tensor_name.find("attn") != std::string::npos);
             // is_ffn = true;
-            bool is_adapter = (tensor_name.find("adapter") != std::string::npos);
+            // bool is_adapter = (tensor_name.find("adapter") != std::string::npos);
 
             // cold layers' ffn on cpu and very hot layers'adapter on cpu
-            if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && ((!static_gpu_list.count(tn.bid) && is_ffn) || (hot_layer.count(tn.bid) && is_adapter))) {
-                buft_list = &pimpl->cpu_buft_list;  //on cpu
-            }
+            // if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && ((!static_gpu_list.count(tn.bid) && is_ffn) || (hot_layer.count(tn.bid) && is_adapter))) {
+            //     buft_list = &pimpl->cpu_buft_list;  //on cpu
+            // }
 
             // cold layers' ffn on cpu
             // if (tn.bid != -1 && info.layer == LLM_TENSOR_LAYER_REPEATING && !static_gpu_list.count(tn.bid) && is_ffn) {
@@ -1157,8 +1157,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         layer.ffn_down = create_tensor(tn(LLM_TENSOR_FFN_DOWN, "weight", i), {  n_ff, n_embd}, 0);
                         layer.ffn_up   = create_tensor(tn(LLM_TENSOR_FFN_UP,   "weight", i), {n_embd,   n_ff}, 0);
 
-                        // adapter for layer 2-33
-                        if (i >= 2 && i <= 33) {
+                        // adapter
+                        if (i >= 2 && i <= n_layer-3) {
                             layer.adapter_scale = create_tensor(tn(LLM_TENSOR_ADAPTER_SCALE, "weight", i), {1}, 0);
                             layer.adapter_norm  = create_tensor(tn(LLM_TENSOR_ADAPTER_NORM,  "weight", i), {n_embd}, 0);
                             layer.adapter_gate  = create_tensor(tn(LLM_TENSOR_ADAPTER_GATE,  "weight", i), {n_embd, 1024}, 0);
@@ -1177,8 +1177,8 @@ bool llama_model::load_tensors(llama_model_loader & ml) {
                         eagle_up_proj     = create_tensor(tn(LLM_TENSOR_EAGLE_UP_PROJ, "weight", 0),     {n_embd, n_ff}, 0);
                         eagle_ffn_norm    = create_tensor(tn(LLM_TENSOR_EAGLE_FFN_NORM, "weight", 0),    {n_embd}, 0);
                         eagle_k_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_K_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
-                        eagle_o_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_O_PROJ, "weight", 0),      {4096, n_embd}, 0);
-                        eagle_q_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_Q_PORJ, "weight", 0),      {2 * n_embd, 4096}, 0);
+                        eagle_o_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_O_PROJ, "weight", 0),      {n_embd, n_embd}, 0);
+                        eagle_q_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_Q_PORJ, "weight", 0),      {2 * n_embd, n_embd}, 0);
                         eagle_v_proj      = create_tensor(tn(LLM_TENSOR_EAGLE_V_PROJ, "weight", 0),      {2 * n_embd, 1024}, 0);
                         eagle_output_norm = create_tensor(tn(LLM_TENSOR_EAGLE_OUTPUT_NORM, "weight", 0), {n_embd}, 0);
                     }

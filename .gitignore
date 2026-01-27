@@ -44,7 +44,8 @@
 
 /tags
 /.build/
-/build*  local:don't ignore
+# /build*  local:don't ignore
+build*
 /release
 /debug
 /libllama.so
@@ -141,3 +142,4 @@ a.out.*
 # output
 out.txt
 out.err
+*.nsys-rep

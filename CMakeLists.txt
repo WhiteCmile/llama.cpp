@@ -31,7 +31,7 @@ else()
     set(LLAMA_STANDALONE OFF)
 endif()
 
-set(CUDA_INCLUDE_DIR "/usr/local/cuda-12.4/include")
+set(CUDA_INCLUDE_DIR "/usr/local/cuda/include")
 
 option(LLAMA_USE_SYSTEM_GGML "Use system libggml" OFF)
 

@@ -58,9 +58,14 @@ llm_build_qwen3eagle::llm_build_qwen3eagle(const llama_model & model,
         ggml_tensor * inpSA = inpL;
 
         // hard-code for n_layer=36
+        // if (il == 2) hid_inp_1 = inpL;
+        // if (il == 18) hid_inp_2 = inpL;
+        // if (il == 33) hid_inp_3 = inpL;
+
+        // hard-code for n_layer=40
         if (il == 2) hid_inp_1 = inpL;
-        if (il == 18) hid_inp_2 = inpL;
-        if (il == 33) hid_inp_3 = inpL;
+        if (il == 20) hid_inp_2 = inpL;
+        if (il == 37) hid_inp_3 = inpL;
 
         // norm
         cur = build_norm(inpL,

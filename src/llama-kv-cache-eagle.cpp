@@ -99,7 +99,7 @@ llama_kv_cache_eagle::llama_kv_cache_eagle(
         v_stream.push_back(ggml_view_2d(ctx, v, n_embd_v_gqa, kv_size, v->nb[1], s*v->nb[2]));
     }
 
-    eagle_layer = kv_layer({ 36, k, v, k_stream, v_stream, });  // TODO: avoid hard code
+    eagle_layer = kv_layer({ _hparams().n_layer, k, v, k_stream, v_stream, });
 
     // allocate tensors and initialize the buffers to avoid NaNs in the padding
     for (auto & [buft, ctx] : ctx_map) {

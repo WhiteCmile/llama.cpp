@@ -4,105 +4,109 @@ from safetensors import safe_open
 from safetensors.torch import save_file
 import torch
 
-def replace_gate_scale_in_safetensors(input_path, output_path):
+def remove_adapter_weights(input_path, output_path, prefixes):
     """
-    将safetensors文件中所有包含'gate_scale'的权重名称替换为'scale.weight'
+    从 safetensors 文件中删除指定前缀的权重
     
     Args:
-        input_path (str): 输入safetensors文件路径
-        output_path (str): 输出safetensors文件路径
+        input_path: 输入 safetensors 文件路径
+        output_path: 输出 safetensors 文件路径
+        prefixes: 要删除的权重前缀列表
     """
-    print(f"读取safetensors文件: {input_path}")
+    # 检查输入文件是否存在
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"输入文件不存在: {input_path}")
     
-    # 1. 读取原始safetensors文件
-    try:
-        # 获取metadata
-        with safe_open(input_path, framework="pt") as f:
-            metadata = f.metadata()
-            print(f"获取到metadata: {metadata}")
+    # 读取原始权重
+    tensors = {}
+    deleted_tensors = {}
+    total_params_before = 0
+    deleted_params = 0
+    
+    with safe_open(input_path, framework="pt", device="cpu") as f:
+        for key in f.keys():
+            tensor = f.get_tensor(key)
+            num_params = tensor.numel()
+            total_params_before += num_params
             
-            # 读取所有权重
-            weights = {}
-            for key in f.keys():
-                weights[key] = f.get_tensor(key)
-                print(f"  读取权重: {key} -> shape: {weights[key].shape}")
-        
-        print(f"总共读取到 {len(weights)} 个权重")
-        
-    except Exception as e:
-        print(f"读取文件失败: {e}")
-        raise
+            # 检查是否需要删除
+            if any(key.startswith(prefix) for prefix in prefixes):
+                deleted_tensors[key] = tensor
+                deleted_params += num_params
+            else:
+                tensors[key] = tensor
     
-    # 2. 重命名权重
-    new_weights = {}
-    renamed_count = 0
+    # 统计信息
+    total_params_after = total_params_before - deleted_params
+    reduction_percent = (deleted_params / total_params_before * 100) if total_params_before > 0 else 0
     
-    for old_key, tensor in weights.items():
-        if 'gate_scale' in old_key:
-            # 将'gate_scale'替换为'scale.weight'
-            new_key = old_key.replace('gate_scale', 'scale.weight')
-            new_weights[new_key] = tensor
-            print(f"重命名: '{old_key}' -> '{new_key}'")
-            renamed_count += 1
-        else:
-            new_weights[old_key] = tensor
+    # 打印详细报告
+    print("=" * 60)
+    print("Safetensors 权重清理报告")
+    print("=" * 60)
+    print(f"输入文件: {input_path}")
+    print(f"输出文件: {output_path}")
+    print(f"\n删除的前缀:")
+    for prefix in prefixes:
+        print(f"  - {prefix}")
     
-    print(f"总共重命名了 {renamed_count} 个权重")
+    print(f"\n统计信息:")
+    print(f"  原始总参数量: {total_params_before:,}")
+    print(f"  删除参数量:   {deleted_params:,}")
+    print(f"  剩余参数量:   {total_params_after:,}")
+    print(f"  参数减少比例: {reduction_percent:.2f}%")
     
-    # 3. 保存到新的safetensors文件
-    print(f"保存到新文件: {output_path}")
-    try:
-        save_file(new_weights, output_path, metadata=metadata)
-        print(f"成功保存文件，新文件大小: {os.path.getsize(output_path)} bytes")
-    except Exception as e:
-        print(f"保存文件失败: {e}")
-        raise
+    # 打印被删除的权重详情（按大小排序）
+    if deleted_tensors:
+        print(f"\n被删除的权重 ({len(deleted_tensors)} 个):")
+        sorted_deleted = sorted(
+            [(k, v.numel()) for k, v in deleted_tensors.items()],
+            key=lambda x: x[1],
+            reverse=True
+        )
+        for i, (key, numel) in enumerate(sorted_deleted[:10], 1):  # 只显示前10个
+            print(f"  {i}. {key} ({numel:,} params)")
+        if len(sorted_deleted) > 10:
+            print(f"  ... 还有 {len(sorted_deleted) - 10} 个权重未显示")
+    else:
+        print("\n⚠️  未找到匹配的权重，文件未做修改")
     
-    # 4. 验证保存结果
-    print("\n验证保存结果...")
-    try:
-        with safe_open(output_path, framework="pt") as f:
-            saved_keys = list(f.keys())
-            print(f"验证成功! 文件中包含 {len(saved_keys)} 个权重")
-            
-            # 检查是否有重命名后的权重
-            renamed_keys = [key for key in saved_keys if 'scale.weight' in key]
-            print(f"包含'scale.weight'的权重数量: {len(renamed_keys)}")
-            
-            if renamed_keys:
-                print("部分重命名后的权重:")
-                for i, key in enumerate(renamed_keys[:5]):
-                    print(f"  {i+1}. {key}")
+    # 保存新文件
+    if deleted_tensors:  # 仅当有删除操作时才保存新文件
+        save_file(tensors, output_path)
+        print(f"\n✓ 已保存清理后的文件到: {output_path}")
+        print(f"✓ 文件大小减少: "
+              f"{os.path.getsize(input_path) / 1024**2:.2f} MB → "
+              f"{os.path.getsize(output_path) / 1024**2:.2f} MB "
+              f"({(1 - os.path.getsize(output_path)/os.path.getsize(input_path))*100:.2f}%)")
+    else:
+        # 如果没有删除任何权重，可以选择复制原文件或跳过保存
+        print("\n⚠️  无权重被删除，未生成新文件")
     
-    except Exception as e:
-        print(f"验证文件失败: {e}")
-        raise
+    print("=" * 60)
+    return deleted_params
 
 def main():
-    parser = argparse.ArgumentParser(description='将safetensors文件中gate_scale替换为scale.weight')
-    parser.add_argument('--input', required=True, help='输入safetensors文件路径')
-    parser.add_argument('--output', required=True, help='输出safetensors文件路径')
+    parser = argparse.ArgumentParser(
+        description="从 safetensors 文件中删除指定前缀的 adapter 权重"
+    )
+    parser.add_argument("input", help="输入 safetensors 文件路径")
+    parser.add_argument("output", help="输出 safetensors 文件路径")
+    parser.add_argument(
+        "--prefixes", 
+        nargs="+", 
+        default=["model.layers.adapter.1.", "model.layers.adapter.39."],
+        help="要删除的权重前缀（默认: model.layers.adapter.1. 和 model.layers.adapter.39.）"
+    )
     
     args = parser.parse_args()
     
-    # 检查输入文件是否存在
-    if not os.path.exists(args.input):
-        print(f"错误: 输入文件不存在: {args.input}")
-        return
-    
-    # 确保输出目录存在
-    output_dir = os.path.dirname(os.path.abspath(args.output))
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        print(f"创建输出目录: {output_dir}")
-    
     try:
-        replace_gate_scale_in_safetensors(args.input, args.output)
-        print("\n✅ 操作完成!")
+        deleted_count = remove_adapter_weights(args.input, args.output, args.prefixes)
+        print(f"\n✅ 共删除 {deleted_count:,} 个参数")
     except Exception as e:
-        print(f"\n❌ 操作失败: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ 处理失败: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     main()
